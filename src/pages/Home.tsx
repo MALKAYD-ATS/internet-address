@@ -30,7 +30,105 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
+// Icon mapping for dynamic icon rendering
+const iconMap: { [key: string]: React.ComponentType<any> } = {
+  Award,
+  Shield,
+  Users,
+  Plane,
+  Triangle,
+  Cpu,
+  CheckCircle,
+  Eye,
+  Target,
+  Leaf,
+  Zap: Energy,
+  Recycle,
+  Rocket,
+  Globe,
+  Heart: Users, // fallback
+  Mountain,
+  Lightbulb
+};
+
+// Interface definitions for database tables
+interface HomeTitleSection {
+  name: string;
+  text: string;
+  slogan: string;
+  video: string | null;
+}
+
+interface HomeNumber {
+  number: string;
+  label: string;
+}
+
+interface ChooseATS {
+  symbol: string;
+  name: string;
+  text: string;
+}
+
+interface DroneSolution {
+  symbol: string;
+  text: string;
+}
+
+interface Principle {
+  symbol: string;
+  title: string;
+  text: string;
+}
+
+interface HeadingCard {
+  symbol: string;
+  title: string;
+  text: string;
+  video: string | null;
+}
+
+interface Venture {
+  logo_url: string;
+  name: string;
+  relationship: string;
+  text: string;
+  video_url: string | null;
+}
+
+interface ContactInfo {
+  phone: string;
+  email: string;
+}
+
+interface ContactLocation {
+  location_name: string;
+  address: string;
+}
+
+interface StudentStory {
+  photo_url: string;
+  name: string;
+  position: string;
+  company: string;
+  rating: number;
+  text: string;
+}
+
 const Home: React.FC = () => {
+  // State for all dynamic content
+  const [titleSection, setTitleSection] = useState<HomeTitleSection | null>(null);
+  const [homeNumbers, setHomeNumbers] = useState<HomeNumber[]>([]);
+  const [chooseATSItems, setChooseATSItems] = useState<ChooseATS[]>([]);
+  const [droneSolutions, setDroneSolutions] = useState<DroneSolution[]>([]);
+  const [principles, setPrinciples] = useState<Principle[]>([]);
+  const [headingCards, setHeadingCards] = useState<HeadingCard[]>([]);
+  const [ventures, setVentures] = useState<Venture[]>([]);
+  const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
+  const [contactLocations, setContactLocations] = useState<ContactLocation[]>([]);
+  const [studentStories, setStudentStories] = useState<StudentStory[]>([]);
+
+  // Form states
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -42,13 +140,11 @@ const Home: React.FC = () => {
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [isNewsletterSubmitting, setIsNewsletterSubmitting] = useState(false);
   const [isNewsletterSubmitted, setIsNewsletterSubmitted] = useState(false);
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   // Vision and Mission flip states
-  const [visionFlipped, setVisionFlipped] = useState(false);
-  const [missionFlipped, setMissionFlipped] = useState(false);
+  const [flippedPrinciples, setFlippedPrinciples] = useState<Set<string>>(new Set());
 
   // Load Elfsight script for Google Reviews
   useEffect(() => {
@@ -57,161 +153,116 @@ const Home: React.FC = () => {
     script.async = true;
     script.defer = true;
     
-    // Check if script is already loaded
     const existingScript = document.querySelector('script[src="https://static.elfsight.com/platform/platform.js"]');
     if (!existingScript) {
       document.head.appendChild(script);
     }
 
     return () => {
-      // Cleanup if needed
       if (script.parentNode) {
         script.parentNode.removeChild(script);
       }
     };
   }, []);
 
-  const features = [
-    {
-      icon: <Award className="h-8 w-8 text-blue-600" />,
-      title: "Professional Certification",
-      description: "Industry-recognized RPAS training programs with comprehensive certification pathways for professional drone operations."
-    },
-    {
-      icon: <Shield className="h-8 w-8 text-blue-600" />,
-      title: "Safety First Approach",
-      description: "Comprehensive safety training ensuring responsible and compliant drone operations."
-    },
-    {
-      icon: <Users className="h-8 w-8 text-blue-600" />,
-      title: "Expert Instructors",
-      description: "Learn from experienced professionals with extensive commercial drone operation backgrounds."
-    },
-    {
-      icon: <Plane className="h-8 w-8 text-blue-600" />,
-      title: "Modern Equipment",
-      description: "Access to the latest drone technology and equipment for hands-on training experience."
-    },
-    {
-      icon: <Triangle className="h-8 w-8 text-blue-600" />,
-      title: "Indigenous Values",
-      description: "Rooted in tradition, guided by community."
-    },
-    {
-      icon: <Cpu className="h-8 w-8 text-blue-600" />,
-      title: "Innovative Training Solutions",
-      description: "Blending cutting-edge tech with practical skills."
-    }
-  ];
+  // Fetch all dynamic content from Supabase
+  useEffect(() => {
+    const fetchAllContent = async () => {
+      try {
+        // Fetch title section
+        const { data: titleData } = await supabase
+          .from('home_page_title_section')
+          .select('*')
+          .single();
+        if (titleData) setTitleSection(titleData);
 
-  const stats = [
-    { number: "500+", label: "Students Trained" },
-    { number: "98%", label: "Pass Rate" },
-    { number: "50+", label: "Corporate Clients" },
-    { number: "10+", label: "Years Experience" }
-  ];
+        // Fetch home numbers
+        const { data: numbersData } = await supabase
+          .from('home_numbers')
+          .select('*')
+          .order('order_index');
+        if (numbersData) setHomeNumbers(numbersData);
 
-  const ventures = [
-    {
-      name: "TimesFly Aerospace",
-      website: "https://timesflyaerospace.com",
-      logo: "/Timesfly.png",
-      description: "Leading aerospace technology company specializing in advanced drone systems and flight control software.",
-      partnership: "Technology and Innovation Partner"
-    },
-    {
-      name: "HK Drone Services",
-      website: "https://hkdroneservice.com/",
-      logo: "/H&K copy.png",
-      description: "Professional drone services company providing commercial & industrial applications across Western Canada.",
-      partnership: "Sales and Services Partner"
-    },
-    {
-      name: "Timespreneur Ventures Inc",
-      website: "https://timespreneur.com",
-      logo: "/Timespreneur.jpg",
-      description: "Innovation consulting and business development firm focused on emerging technologies and entrepreneurship.",
-      partnership: "Strategic and Business Partner"
-    },
-    {
-      name: "TIMES GROUP",
-      website: "https://timesgroup.com",
-      logo: "/times-group.jpg",
-      description: "Comprehensive business solutions and strategic consulting group providing integrated services across multiple industries.",
-      partnership: "Strategic Business Partner"
-    },
-    {
-      name: "Turtle Island Aeronautical Association",
-      website: "#",
-      logo: "/turtle-island-aeronautical-association.png",
-      description: "Aeronautical association promoting aviation excellence and aerospace education across North America.",
-      partnership: "Aviation and Aerospace Partner"
-    }
-  ];
+        // Fetch choose ATS items
+        const { data: chooseData } = await supabase
+          .from('choose_ats')
+          .select('*')
+          .order('order_index');
+        if (chooseData) setChooseATSItems(chooseData);
 
-  const testimonials = [
-    {
-      id: 1,
-      name: "Sarah Mitchell",
-      role: "Commercial Drone Pilot",
-      company: "SkyView Surveying",
-      rating: 5,
-      content: "The RPAS Advanced Certification course at ATS was exceptional. The instructors' expertise and hands-on approach gave me the confidence to start my commercial drone business.",
-      image: "https://images.pexels.com/photos/3763188/pexels-photo-3763188.jpeg?auto=compress&cs=tinysrgb&w=150"
-    },
-    {
-      id: 2,
-      name: "David Chen",
-      role: "Safety Manager",
-      company: "Alberta Infrastructure",
-      rating: 5,
-      content: "ATS provided our team with comprehensive drone safety training. Their customized corporate program addressed our specific operational needs and regulatory requirements.",
-      image: "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150"
-    },
-    {
-      id: 3,
-      name: "Maria Rodriguez",
-      role: "Real Estate Photographer",
-      company: "Horizon Properties",
-      rating: 5,
-      content: "Started with zero drone experience and now I'm confidently shooting aerial real estate photography. The basic certification course was well-structured.",
-      image: "https://images.pexels.com/photos/3756681/pexels-photo-3756681.jpeg?auto=compress&cs=tinysrgb&w=150"
-    }
-  ];
+        // Fetch drone solutions
+        const { data: solutionsData } = await supabase
+          .from('drone_solutions')
+          .select('*')
+          .order('order_index');
+        if (solutionsData) setDroneSolutions(solutionsData);
 
-  // Where We Are Heading data with Supabase video URLs
-  const futureDirections = [
-    {
-      title: "Building Future Workforce",
-      description: "Developing future workforce training programs",
-      videoUrl: "https://nnhgbtrkxepkeotpdnxw.supabase.co/storage/v1/object/public/media-assets/videos/building-future-workforce.mp4",
-      icon: <Users className="h-6 w-6 text-white" />
-    },
-    {
-      title: "Innovating While Protecting the Environment",
-      description: "Bringing people and technology together while protecting the environment",
-      videoUrl: "https://nnhgbtrkxepkeotpdnxw.supabase.co/storage/v1/object/public/media-assets/videos/innovating-while-protecting-the-environment.mp4",
-      icon: <Leaf className="h-6 w-6 text-white" />
-    },
-    {
-      title: "Green Energy Future",
-      description: "Train Indigenous communities to lead Canada's green energy future",
-      videoUrl: "https://nnhgbtrkxepkeotpdnxw.supabase.co/storage/v1/object/public/media-assets/videos/green-energy-future.mp4",
-      icon: <Energy className="h-6 w-6 text-white" />
-    },
-    {
-      title: "Clean Technology & Innovation",
-      description: "Empower Indigenous Peoples to champion clean technology and innovation",
-      videoUrl: "https://nnhgbtrkxepkeotpdnxw.supabase.co/storage/v1/object/public/media-assets/videos/clean-technology-and-innovation.mp4",
-      icon: <Recycle className="h-6 w-6 text-white" />
-    },
-    {
-      title: "Space Exploration",
-      description: "Pioneering Indigenous leadership in aerospace and space technology",
-      videoUrl: "https://nnhgbtrkxepkeotpdnxw.supabase.co/storage/v1/object/public/media-assets/videos/space-exploration-video-background%20(1).mp4",
-      icon: <Rocket className="h-6 w-6 text-white" />
+        // Fetch principles
+        const { data: principlesData } = await supabase
+          .from('principles')
+          .select('*')
+          .order('order_index');
+        if (principlesData) setPrinciples(principlesData);
+
+        // Fetch heading cards
+        const { data: headingData } = await supabase
+          .from('heading')
+          .select('*')
+          .order('order_index');
+        if (headingData) setHeadingCards(headingData);
+
+        // Fetch ventures
+        const { data: venturesData } = await supabase
+          .from('ventures')
+          .select('*')
+          .order('order_index');
+        if (venturesData) setVentures(venturesData);
+
+        // Fetch contact information
+        const { data: contactData } = await supabase
+          .from('contact_information')
+          .select('*')
+          .single();
+        if (contactData) setContactInfo(contactData);
+
+        // Fetch contact locations
+        const { data: locationsData } = await supabase
+          .from('contact_locations')
+          .select('*')
+          .order('order_index');
+        if (locationsData) setContactLocations(locationsData);
+
+        // Fetch student success stories
+        const { data: storiesData } = await supabase
+          .from('student_success_stories')
+          .select('*')
+          .order('order_index');
+        if (storiesData) setStudentStories(storiesData);
+
+      } catch (error) {
+        console.error('Error fetching content:', error);
+      }
+    };
+
+    fetchAllContent();
+  }, []);
+
+  // Helper function to render icons dynamically
+  const renderIcon = (iconName: string, className: string = "h-8 w-8") => {
+    const IconComponent = iconMap[iconName] || Award; // fallback to Award icon
+    return <IconComponent className={className} />;
+  };
+
+  // Helper function to toggle principle flip state
+  const togglePrincipleFlip = (title: string) => {
+    const newFlipped = new Set(flippedPrinciples);
+    if (newFlipped.has(title)) {
+      newFlipped.delete(title);
+    } else {
+      newFlipped.add(title);
     }
-  ];
+    setFlippedPrinciples(newFlipped);
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -241,7 +292,6 @@ const Home: React.FC = () => {
         `
       };
       
-      // In a real implementation, this would send an email via your backend
       console.log('Email would be sent:', emailData);
       
       // Simulate email sending
@@ -262,7 +312,6 @@ const Home: React.FC = () => {
       }, 3000);
     } catch (error) {
       console.error('Error sending email:', error);
-      // Still show success for demo
       setIsSubmitted(true);
       setTimeout(() => {
         setIsSubmitted(false);
@@ -284,14 +333,9 @@ const Home: React.FC = () => {
     setIsNewsletterSubmitting(true);
 
     try {
-      // Store newsletter subscription in Supabase
       const { error } = await supabase
-        .from('mailing_list_ats')
-        .insert([
-          {
-            email: newsletterEmail
-          }
-        ]);
+        .from('newsletter')
+        .insert([{ email: newsletterEmail }]);
 
       if (error) {
         console.error('Error saving newsletter subscription:', error);
@@ -299,14 +343,12 @@ const Home: React.FC = () => {
 
       setIsNewsletterSubmitted(true);
       
-      // Reset form after 3 seconds
       setTimeout(() => {
         setIsNewsletterSubmitted(false);
         setNewsletterEmail('');
       }, 3000);
     } catch (error) {
       console.error('Newsletter subscription error:', error);
-      // Still show success for demo
       setIsNewsletterSubmitted(true);
       setTimeout(() => {
         setIsNewsletterSubmitted(false);
@@ -339,22 +381,23 @@ const Home: React.FC = () => {
       {/* Hero Section with Background Video */}
       <section className="relative bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 text-white overflow-hidden">
         {/* Background Video */}
-        <div className="absolute inset-0 w-full h-full">
-          <video
-            className="absolute inset-0 w-full h-full object-cover"
-            autoPlay
-            muted
-            loop
-            playsInline
-            onError={(e) => {
-              // Fallback to gradient background if video fails
-              e.currentTarget.style.display = 'none';
-            }}
-          >
-            <source src="https://nnhgbtrkxepkeotpdnxw.supabase.co/storage/v1/object/public/media-assets/videos/building-future-workforce.mp4" type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
-        </div>
+        {titleSection?.video && (
+          <div className="absolute inset-0 w-full h-full">
+            <video
+              className="absolute inset-0 w-full h-full object-cover"
+              autoPlay
+              muted
+              loop
+              playsInline
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            >
+              <source src={titleSection.video} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        )}
         
         {/* Overlay */}
         <div className="absolute inset-0 bg-black opacity-40"></div>
@@ -362,13 +405,13 @@ const Home: React.FC = () => {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 transform transition-all duration-1000 hover:scale-[1.02] z-10">
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight animate-fade-in">
-              Professional Drone Academy
+              {titleSection?.name || 'Professional Drone Academy'}
             </h1>
             <p className="text-2xl md:text-3xl mb-4 text-blue-100 font-semibold whitespace-nowrap">
-              Advocate, Encourage, and Unite Indigenous Peoples & Communities to lead the Drone Industry.
+              {titleSection?.text || 'Advocate, Encourage, and Unite Indigenous Peoples & Communities to lead the Drone Industry.'}
             </p>
             <p className="text-xl md:text-2xl mb-8 text-blue-200 max-w-3xl mx-auto leading-relaxed">
-              Training for the Future
+              {titleSection?.slogan || 'Training for the Future'}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
@@ -393,7 +436,7 @@ const Home: React.FC = () => {
       <section className="py-16 bg-gray-50 transform transition-all duration-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
+            {homeNumbers.map((stat, index) => (
               <div key={index} className="text-center transform transition-all duration-500 hover:scale-110 hover:shadow-lg bg-white rounded-xl p-6">
                 <div className="text-3xl md:text-4xl font-bold text-blue-700 mb-2">{stat.number}</div>
                 <div className="text-gray-600 font-medium">{stat.label}</div>
@@ -417,13 +460,13 @@ const Home: React.FC = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
+            {chooseATSItems.map((feature, index) => (
               <div key={index} className="text-center group transform transition-all duration-500 hover:scale-105">
                 <div className="bg-blue-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6 group-hover:bg-blue-100 transition-all duration-300 group-hover:shadow-lg">
-                  {feature.icon}
+                  {renderIcon(feature.symbol, "h-8 w-8 text-blue-600")}
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">{feature.title}</h3>
-                <p className="text-gray-600 leading-relaxed">{feature.description}</p>
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">{feature.name}</h3>
+                <p className="text-gray-600 leading-relaxed">{feature.text}</p>
               </div>
             ))}
           </div>
@@ -444,34 +487,12 @@ const Home: React.FC = () => {
               </p>
               
               <ul className="space-y-4 mb-8">
-                <li className="flex items-center transform transition-all duration-300 hover:translate-x-2">
-                  <CheckCircle className="h-6 w-6 text-green-500 mr-3" />
-                  <span className="text-gray-700">RPAS Basic, Advanced & Level 1 Complex Certification</span>
-                </li>
-                <li className="flex items-center transform transition-all duration-300 hover:translate-x-2">
-                  <CheckCircle className="h-6 w-6 text-green-500 mr-3" />
-                  <span className="text-gray-700">Commercial and Industrial Applications</span>
-                </li>
-                <li className="flex items-center transform transition-all duration-300 hover:translate-x-2">
-                  <CheckCircle className="h-6 w-6 text-green-500 mr-3" />
-                  <span className="text-gray-700">Professional RPAS Regulations and Applications Courses</span>
-                </li>
-                <li className="flex items-center transform transition-all duration-300 hover:translate-x-2">
-                  <CheckCircle className="h-6 w-6 text-green-500 mr-3" />
-                  <span className="text-gray-700">Corporate Training Programs</span>
-                </li>
-                <li className="flex items-center transform transition-all duration-300 hover:translate-x-2">
-                  <CheckCircle className="h-6 w-6 text-green-500 mr-3" />
-                  <span className="text-gray-700">Customized Training Solutions</span>
-                </li>
-                <li className="flex items-center transform transition-all duration-300 hover:translate-x-2">
-                  <CheckCircle className="h-6 w-6 text-green-500 mr-3" />
-                  <span className="text-gray-700">First Nations, Métis, and Inuit Training</span>
-                </li>
-                <li className="flex items-center transform transition-all duration-300 hover:translate-x-2">
-                  <CheckCircle className="h-6 w-6 text-green-500 mr-3" />
-                  <span className="text-gray-700">First Nations Service Agreements</span>
-                </li>
+                {droneSolutions.map((solution, index) => (
+                  <li key={index} className="flex items-center transform transition-all duration-300 hover:translate-x-2">
+                    {renderIcon(solution.symbol, "h-6 w-6 text-green-500 mr-3")}
+                    <span className="text-gray-700">{solution.text}</span>
+                  </li>
+                ))}
               </ul>
               
               <Link
@@ -523,77 +544,48 @@ const Home: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {/* Vision Card */}
-            <div className="relative h-80 perspective-1000">
-              <div className={`relative w-full h-full transition-transform duration-700 transform-style-preserve-3d ${
-                visionFlipped ? 'rotate-y-180' : ''
-              }`}>
-                {/* Front of Vision Card */}
-                <div 
-                  className="absolute inset-0 w-full h-full backface-hidden cursor-pointer"
-                  onClick={() => setVisionFlipped(!visionFlipped)}
-                >
-                  <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl shadow-lg h-full flex items-center justify-center transform transition-all duration-500 hover:scale-105 hover:shadow-2xl">
-                    <div className="text-center text-white">
-                      <Eye className="h-16 w-16 mx-auto mb-4" />
-                      <h3 className="text-3xl font-bold">Vision</h3>
-                      <p className="text-blue-100 mt-2">Click to reveal</p>
+            {principles.map((principle, index) => {
+              const isFlipped = flippedPrinciples.has(principle.title);
+              const colorClass = principle.title.toLowerCase() === 'vision' ? 'from-blue-600 to-blue-800' : 'from-green-600 to-green-800';
+              const borderClass = principle.title.toLowerCase() === 'vision' ? 'border-blue-200' : 'border-green-200';
+              
+              return (
+                <div key={index} className="relative h-80 perspective-1000">
+                  <div className={`relative w-full h-full transition-transform duration-700 transform-style-preserve-3d ${
+                    isFlipped ? 'rotate-y-180' : ''
+                  }`}>
+                    {/* Front of Card */}
+                    <div 
+                      className="absolute inset-0 w-full h-full backface-hidden cursor-pointer"
+                      onClick={() => togglePrincipleFlip(principle.title)}
+                    >
+                      <div className={`bg-gradient-to-br ${colorClass} rounded-xl shadow-lg h-full flex items-center justify-center transform transition-all duration-500 hover:scale-105 hover:shadow-2xl`}>
+                        <div className="text-center text-white">
+                          {renderIcon(principle.symbol, "h-16 w-16 mx-auto mb-4")}
+                          <h3 className="text-3xl font-bold">{principle.title}</h3>
+                          <p className="text-blue-100 mt-2">Click to reveal</p>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
 
-                {/* Back of Vision Card */}
-                <div 
-                  className="absolute inset-0 w-full h-full backface-hidden rotate-y-180 cursor-pointer"
-                  onClick={() => setVisionFlipped(!visionFlipped)}
-                >
-                  <div className="bg-white border-2 border-blue-200 rounded-xl shadow-lg h-full flex items-center justify-center p-8 transform transition-all duration-500 hover:shadow-2xl">
-                    <div className="text-center">
-                      <h3 className="text-2xl font-bold text-gray-900 mb-4">Our Vision</h3>
-                      <p className="text-lg text-gray-700 leading-relaxed">
-                        Create Leaders, Innovators, Entrepreneurs, and Strong Youth within Indigenous Communities
-                      </p>
+                    {/* Back of Card */}
+                    <div 
+                      className="absolute inset-0 w-full h-full backface-hidden rotate-y-180 cursor-pointer"
+                      onClick={() => togglePrincipleFlip(principle.title)}
+                    >
+                      <div className={`bg-white border-2 ${borderClass} rounded-xl shadow-lg h-full flex items-center justify-center p-8 transform transition-all duration-500 hover:shadow-2xl`}>
+                        <div className="text-center">
+                          <h3 className="text-2xl font-bold text-gray-900 mb-4">Our {principle.title}</h3>
+                          <p className="text-lg text-gray-700 leading-relaxed">
+                            {principle.text}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Mission Card */}
-            <div className="relative h-80 perspective-1000">
-              <div className={`relative w-full h-full transition-transform duration-700 transform-style-preserve-3d ${
-                missionFlipped ? 'rotate-y-180' : ''
-              }`}>
-                {/* Front of Mission Card */}
-                <div 
-                  className="absolute inset-0 w-full h-full backface-hidden cursor-pointer"
-                  onClick={() => setMissionFlipped(!missionFlipped)}
-                >
-                  <div className="bg-gradient-to-br from-green-600 to-green-800 rounded-xl shadow-lg h-full flex items-center justify-center transform transition-all duration-500 hover:scale-105 hover:shadow-2xl">
-                    <div className="text-center text-white">
-                      <Target className="h-16 w-16 mx-auto mb-4" />
-                      <h3 className="text-3xl font-bold">Mission</h3>
-                      <p className="text-green-100 mt-2">Click to reveal</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Back of Mission Card */}
-                <div 
-                  className="absolute inset-0 w-full h-full backface-hidden rotate-y-180 cursor-pointer"
-                  onClick={() => setMissionFlipped(!missionFlipped)}
-                >
-                  <div className="bg-white border-2 border-green-200 rounded-xl shadow-lg h-full flex items-center justify-center p-8 transform transition-all duration-500 hover:shadow-2xl">
-                    <div className="text-center">
-                      <h3 className="text-2xl font-bold text-gray-900 mb-4">Our Mission</h3>
-                      <p className="text-lg text-gray-700 leading-relaxed">
-                        Train and Prepare Individuals, Organizations, First Nations Peoples & Communities for Drone Technology and Innovation
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -611,24 +603,27 @@ const Home: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {futureDirections.map((direction, index) => (
+            {headingCards.map((direction, index) => (
               <div key={index} className="relative bg-white rounded-xl shadow-lg overflow-hidden transform transition-all duration-500 hover:scale-105 hover:shadow-2xl">
                 {/* Video Background */}
                 <div className="relative h-64 overflow-hidden">
-                  <video
-                    className="absolute inset-0 w-full h-full object-cover"
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    onError={(e) => {
-                      // Fallback to a solid color background if video fails
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  >
-                    <source src={direction.videoUrl} type="video/mp4" />
-                    Your browser does not support the video tag.
-                  </video>
+                  {direction.video ? (
+                    <video
+                      className="absolute inset-0 w-full h-full object-cover"
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    >
+                      <source src={direction.video} type="video/mp4" />
+                      Your browser does not support the video tag.
+                    </video>
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-blue-800"></div>
+                  )}
                   
                   {/* Overlay */}
                   <div className="absolute inset-0 bg-black bg-opacity-40"></div>
@@ -637,10 +632,10 @@ const Home: React.FC = () => {
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-center text-white p-6">
                       <div className="bg-white bg-opacity-20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
-                        {direction.icon}
+                        {renderIcon(direction.symbol, "h-6 w-6 text-white")}
                       </div>
                       <h3 className="text-xl font-bold mb-2 drop-shadow-lg">{direction.title}</h3>
-                      <p className="text-sm text-gray-100 drop-shadow-md">{direction.description}</p>
+                      <p className="text-sm text-gray-100 drop-shadow-md">{direction.text}</p>
                     </div>
                   </div>
                 </div>
@@ -649,10 +644,10 @@ const Home: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center" style={{ zIndex: -1 }}>
                   <div className="text-center text-white p-6">
                     <div className="bg-white bg-opacity-20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                      {direction.icon}
+                      {renderIcon(direction.symbol, "h-6 w-6 text-white")}
                     </div>
                     <h3 className="text-xl font-bold mb-2">{direction.title}</h3>
-                    <p className="text-sm text-blue-100">{direction.description}</p>
+                    <p className="text-sm text-blue-100">{direction.text}</p>
                   </div>
                 </div>
               </div>
@@ -681,7 +676,7 @@ const Home: React.FC = () => {
                   <div className="md:w-1/3 p-8 bg-gradient-to-br from-blue-50 to-blue-100">
                     <div className="flex items-center justify-center h-32 mb-6">
                       <img
-                        src={venture.logo}
+                        src={venture.logo_url}
                         alt={`${venture.name} logo`}
                         className="max-h-20 max-w-full object-contain transform transition-all duration-300 hover:scale-110"
                       />
@@ -689,26 +684,24 @@ const Home: React.FC = () => {
                     <div className="text-center">
                       <h3 className="text-2xl font-bold text-gray-900 mb-2">{venture.name}</h3>
                       <span className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                        {venture.partnership}
+                        {venture.relationship}
                       </span>
                     </div>
                   </div>
                   
                   <div className="md:w-2/3 p-8">
-                    <p className="text-gray-600 mb-6 leading-relaxed">{venture.description}</p>
+                    <p className="text-gray-600 mb-6 leading-relaxed">{venture.text}</p>
                     
                     <div className="flex flex-col sm:flex-row gap-4">
-                      {venture.website !== "#" && (
-                        <a
-                          href={venture.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 inline-flex items-center justify-center"
-                        >
-                          Visit Website
-                          <ExternalLink className="ml-2 h-4 w-4" />
-                        </a>
-                      )}
+                      <a
+                        href={`https://${venture.name.toLowerCase().replace(/\s+/g, '')}.com`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 inline-flex items-center justify-center"
+                      >
+                        Visit Website
+                        <ExternalLink className="ml-2 h-4 w-4" />
+                      </a>
                     </div>
                   </div>
                 </div>
@@ -732,23 +725,27 @@ const Home: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-            <div className="bg-white rounded-xl shadow-lg p-6 text-center transform transition-all duration-500 hover:scale-105 hover:shadow-xl">
-              <div className="bg-blue-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <Phone className="h-6 w-6 text-blue-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Phone</h3>
-              <p className="text-blue-700 font-medium mb-2">+1 (587) 524-0275</p>
-              <p className="text-gray-600 text-sm">Call us for immediate assistance</p>
-            </div>
+            {contactInfo && (
+              <>
+                <div className="bg-white rounded-xl shadow-lg p-6 text-center transform transition-all duration-500 hover:scale-105 hover:shadow-xl">
+                  <div className="bg-blue-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                    <Phone className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Phone</h3>
+                  <p className="text-blue-700 font-medium mb-2">{contactInfo.phone}</p>
+                  <p className="text-gray-600 text-sm">Call us for immediate assistance</p>
+                </div>
 
-            <div className="bg-white rounded-xl shadow-lg p-6 text-center transform transition-all duration-500 hover:scale-105 hover:shadow-xl">
-              <div className="bg-blue-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <Mail className="h-6 w-6 text-blue-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Email</h3>
-              <p className="text-blue-700 font-medium mb-2">darcy@abtraining.ca</p>
-              <p className="text-gray-600 text-sm">Send us an email anytime</p>
-            </div>
+                <div className="bg-white rounded-xl shadow-lg p-6 text-center transform transition-all duration-500 hover:scale-105 hover:shadow-xl">
+                  <div className="bg-blue-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                    <Mail className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Email</h3>
+                  <p className="text-blue-700 font-medium mb-2">{contactInfo.email}</p>
+                  <p className="text-gray-600 text-sm">Send us an email anytime</p>
+                </div>
+              </>
+            )}
 
             <div className="bg-white rounded-xl shadow-lg p-6 text-center transform transition-all duration-500 hover:scale-105 hover:shadow-xl">
               <div className="bg-blue-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
@@ -756,18 +753,12 @@ const Home: React.FC = () => {
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Locations</h3>
               <div className="text-blue-700 font-medium mb-2 space-y-1">
-                <div className="flex items-center justify-center">
-                  <MapPin className="h-4 w-4 mr-1" />
-                  <span>Edmonton, Alberta, Canada</span>
-                </div>
-                <div className="flex items-center justify-center">
-                  <MapPin className="h-4 w-4 mr-1" />
-                  <span>Chicago, Illinois, USA</span>
-                </div>
-                <div className="flex items-center justify-center">
-                  <MapPin className="h-4 w-4 mr-1" />
-                  <span>Karachi, Sindh, Pakistan</span>
-                </div>
+                {contactLocations.map((location, index) => (
+                  <div key={index} className="flex items-center justify-center">
+                    <MapPin className="h-4 w-4 mr-1" />
+                    <span>{location.location_name}</span>
+                  </div>
+                ))}
               </div>
               <p className="text-gray-600 text-sm">Global training presence</p>
             </div>
@@ -946,17 +937,17 @@ const Home: React.FC = () => {
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {testimonials.map((testimonial) => (
-              <div key={testimonial.id} className="bg-white rounded-xl shadow-lg p-8 transform transition-all duration-500 hover:scale-105 hover:shadow-2xl">
+            {studentStories.map((testimonial, index) => (
+              <div key={index} className="bg-white rounded-xl shadow-lg p-8 transform transition-all duration-500 hover:scale-105 hover:shadow-2xl">
                 <div className="flex items-center mb-6">
                   <img
-                    src={testimonial.image}
+                    src={testimonial.photo_url}
                     alt={testimonial.name}
                     className="h-16 w-16 rounded-full object-cover mr-4"
                   />
                   <div>
                     <h3 className="font-bold text-gray-900 text-lg">{testimonial.name}</h3>
-                    <p className="text-blue-700 font-medium">{testimonial.role}</p>
+                    <p className="text-blue-700 font-medium">{testimonial.position}</p>
                     <p className="text-gray-600 text-sm">{testimonial.company}</p>
                   </div>
                 </div>
@@ -968,7 +959,7 @@ const Home: React.FC = () => {
                 <div className="relative">
                   <Quote className="absolute top-0 left-0 h-8 w-8 text-blue-200 -mt-2 -ml-2" />
                   <p className="text-gray-700 italic leading-relaxed pl-6">
-                    {testimonial.content}
+                    {testimonial.text}
                   </p>
                 </div>
               </div>
