@@ -236,7 +236,6 @@ const Home: React.FC = () => {
         const { data: storiesData } = await supabase
           .from('student_success_stories')
           .select('*');
-        if (storiesData) setStudentStories(storiesData);
 
       } catch (error) {
         console.error('Error fetching content:', error);
