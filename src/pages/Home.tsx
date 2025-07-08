@@ -228,8 +228,7 @@ const Home: React.FC = () => {
         // Fetch contact locations
         const { data: locationsData } = await supabase
           .from('contact_locations')
-          .select('*')
-          .order('order_index');
+          .select('*');
         if (locationsData) setContactLocations(locationsData);
 
         // Fetch student success stories
