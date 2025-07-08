@@ -1,0 +1,10 @@
+node_modules/
+*.mp4
+*.mov
+*.avi
+*.zip
+*.rar
+*.tar.gz
+media/
+assets/
+public/videos/
