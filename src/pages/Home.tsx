@@ -235,8 +235,7 @@ const Home: React.FC = () => {
         // Fetch student success stories
         const { data: storiesData } = await supabase
           .from('student_success_stories')
-          .select('*')
-          .order('order_index');
+          .select('*');
         if (storiesData) setStudentStories(storiesData);
 
       } catch (error) {
