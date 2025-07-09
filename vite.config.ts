@@ -6,9 +6,10 @@ export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
     exclude: ['lucide-react'],
-    include: ['pdfjs-dist'],
+    include: ['pdfjs-dist', 'pdfjs-dist/build/pdf.worker.js'],
   },
   define: {
     global: 'globalThis',
   },
+  assetsInclude: ['**/*.worker.js'],
 });

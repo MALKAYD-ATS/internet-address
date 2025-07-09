@@ -2,8 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, X, Loader2, AlertCircle, ZoomIn, ZoomOut } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Set up PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// Configure PDF.js worker to use local build instead of CDN
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.js',
+  import.meta.url
+).toString();
 
 interface PDFSlideViewerProps {
   pdfUrl: string;
