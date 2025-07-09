@@ -214,8 +214,7 @@ const Home: React.FC = () => {
         // Fetch ventures
         const { data: venturesData } = await supabase
           .from('ventures')
-          .select('*')
-          .order('order_index');
+          .select('*');
         if (venturesData) setVentures(venturesData);
 
         // Fetch contact information
