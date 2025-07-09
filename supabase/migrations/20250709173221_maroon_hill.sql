@@ -321,7 +321,7 @@ SELECT * FROM (VALUES
 WHERE NOT EXISTS (SELECT 1 FROM principles);
 
 -- Heading (Where We Are Heading)
-INSERT INTO heading (symbol, title, text, video, order_index) 
+INSERT INTO heading (symbol, title, text, video_url, order_index) 
 SELECT * FROM (VALUES 
   ('Users', 'Building Future Workforce', 'Developing future workforce training programs', 'https://nnhgbtrkxepkeotpdnxw.supabase.co/storage/v1/object/public/media-assets/videos/building-future-workforce.mp4', 1),
   ('Leaf', 'Innovating While Protecting the Environment', 'Bringing people and technology together while protecting the environment', 'https://nnhgbtrkxepkeotpdnxw.supabase.co/storage/v1/object/public/media-assets/videos/innovating-while-protecting-the-environment.mp4', 2),
