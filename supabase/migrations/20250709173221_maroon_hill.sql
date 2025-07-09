@@ -273,7 +273,7 @@ END $$;
 -- Insert sample data only if tables are empty
 
 -- Home Page Title Section
-INSERT INTO home_page_title_section (name, text, slogan, video) 
+INSERT INTO home_page_title_section (name, text, slogan, video_url) 
 SELECT 'Professional Drone Academy', 'Advocate, Encourage, and Unite Indigenous Peoples & Communities to lead the Drone Industry.', 'Training for the Future', 'https://nnhgbtrkxepkeotpdnxw.supabase.co/storage/v1/object/public/media-assets/videos/building-future-workforce.mp4'
 WHERE NOT EXISTS (SELECT 1 FROM home_page_title_section);
 
