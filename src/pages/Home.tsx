@@ -180,41 +180,49 @@ const Home: React.FC = () => {
         const { data: numbersData } = await supabase
           .from('home_numbers')
           .select('*')
-          .order('order_index');
-        if (numbersData) setHomeNumbers(numbersData);
+          .order('order_index', { ascending: true });
+        if (numbersData) {
+          // Map to expected interface format
+          const formattedNumbers = numbersData.map(item => ({
+            number: item.number,
+            label: item.description // Use description field as label
+          }));
+          setHomeNumbers(formattedNumbers);
+        }
 
         // Fetch choose ATS items
         const { data: chooseData } = await supabase
           .from('choose_ats')
           .select('*')
-          .order('order_index');
+          .order('order_index', { ascending: true });
         if (chooseData) setChooseATSItems(chooseData);
 
         // Fetch drone solutions
         const { data: solutionsData } = await supabase
           .from('drone_solutions')
           .select('*')
-          .order('order_index');
+          .order('order_index', { ascending: true });
         if (solutionsData) setDroneSolutions(solutionsData);
 
         // Fetch principles
         const { data: principlesData } = await supabase
           .from('principles')
           .select('*')
-          .order('order_index');
+          .order('order_index', { ascending: true });
         if (principlesData) setPrinciples(principlesData);
 
         // Fetch heading cards
         const { data: headingData } = await supabase
           .from('heading')
           .select('*')
-          .order('order_index');
+          .order('order_index', { ascending: true });
         if (headingData) setHeadingCards(headingData);
 
         // Fetch ventures
         const { data: venturesData } = await supabase
           .from('ventures')
-          .select('*');
+          .select('*')
+          .order('order_index', { ascending: true });
         if (venturesData) setVentures(venturesData);
 
         // Fetch contact information
@@ -228,13 +236,15 @@ const Home: React.FC = () => {
         const { data: locationsData } = await supabase
           .from('contact_locations')
           .select('*')
-          .order('location_name');
+          .order('order_index', { ascending: true });
         if (locationsData) setContactLocations(locationsData);
 
         // Fetch student success stories
         const { data: storiesData } = await supabase
           .from('student_success_stories')
-          .select('*');
+          .select('*')
+          .order('order_index', { ascending: true });
+        if (storiesData) setStudentStories(storiesData);
 
       } catch (error) {
         console.error('Error fetching content:', error);
@@ -378,7 +388,7 @@ const Home: React.FC = () => {
       {/* Hero Section with Background Video */}
       <section className="relative bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 text-white overflow-hidden">
         {/* Background Video */}
-        {titleSection?.video && (
+        {titleSection?.video_url && (
           <div className="absolute inset-0 w-full h-full">
             <video
               className="absolute inset-0 w-full h-full object-cover"
@@ -390,7 +400,7 @@ const Home: React.FC = () => {
                 e.currentTarget.style.display = 'none';
               }}
             >
-              <source src={titleSection.video} type="video/mp4" />
+              <source src={titleSection.video_url} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
           </div>
@@ -604,7 +614,7 @@ const Home: React.FC = () => {
               <div key={index} className="relative bg-white rounded-xl shadow-lg overflow-hidden transform transition-all duration-500 hover:scale-105 hover:shadow-2xl">
                 {/* Video Background */}
                 <div className="relative h-64 overflow-hidden">
-                  {direction.video ? (
+                  {direction.video_url ? (
                     <video
                       className="absolute inset-0 w-full h-full object-cover"
                       autoPlay
@@ -615,7 +625,7 @@ const Home: React.FC = () => {
                         e.currentTarget.style.display = 'none';
                       }}
                     >
-                      <source src={direction.video} type="video/mp4" />
+                      <source src={direction.video_url} type="video/mp4" />
                       Your browser does not support the video tag.
                     </video>
                   ) : (
