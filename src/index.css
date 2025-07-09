@@ -83,3 +83,63 @@ section {
 ::-webkit-scrollbar-thumb:hover {
   background: #1d4ed8;
 }
+
+/* Enhanced video responsiveness */
+.video-container {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  overflow: hidden;
+}
+
+.video-container video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Responsive video utilities */
+.responsive-video {
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  object-fit: cover;
+}
+
+/* Prevent video overflow */
+.video-wrapper {
+  overflow: hidden;
+  position: relative;
+}
+
+.video-wrapper video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Mobile video optimizations */
+@media (max-width: 768px) {
+  .video-container {
+    padding-bottom: 75%; /* Adjust aspect ratio for mobile */
+  }
+  
+  .responsive-video {
+    max-height: 300px;
+  }
+}
+
+/* Ensure videos don't cause horizontal scroll */
+body {
+  overflow-x: hidden;
+}
+
+.container-fluid {
+  max-width: 100vw;
+  overflow-x: hidden;
+}

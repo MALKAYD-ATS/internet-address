@@ -1,11 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Phone, Mail } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+
+interface HeaderLogo {
+  id: string;
+  logo_url: string;
+  alt_text: string;
+  order_index: number;
+  is_active: boolean;
+}
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [headerLogo, setHeaderLogo] = useState<HeaderLogo | null>(null);
   const location = useLocation();
 
   const navigation = [
@@ -15,6 +25,47 @@ const Header: React.FC = () => {
   ];
 
   const isActiveLink = (href: string) => location.pathname === href;
+
+  // Fetch header logo from Supabase
+  useEffect(() => {
+    const fetchHeaderLogo = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('header_logo')
+          .select('*')
+          .eq('is_active', true)
+          .order('order_index', { ascending: true })
+          .limit(1)
+          .single();
+
+        if (error) {
+          console.error('Error fetching header logo:', error);
+          // Use fallback logo if database query fails
+          setHeaderLogo({
+            id: 'fallback',
+            logo_url: '/ATS.png',
+            alt_text: 'Aboriginal Training Services',
+            order_index: 0,
+            is_active: true
+          });
+        } else {
+          setHeaderLogo(data);
+        }
+      } catch (err) {
+        console.error('Header logo fetch error:', err);
+        // Use fallback logo
+        setHeaderLogo({
+          id: 'fallback',
+          logo_url: '/ATS.png',
+          alt_text: 'Aboriginal Training Services',
+          order_index: 0,
+          is_active: true
+        });
+      }
+    };
+
+    fetchHeaderLogo();
+  }, []);
 
   useEffect(() => {
     const controlNavbar = () => {
@@ -71,11 +122,23 @@ const Header: React.FC = () => {
           {/* Logo */}
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
-              <img
-                src="/ATS.png"
-                alt="Aboriginal Training Services"
-                className="h-12 sm:h-14 md:h-16 w-auto transition-transform duration-300 hover:scale-105"
-              />
+              {headerLogo ? (
+                <img
+                  src={headerLogo.logo_url}
+                  alt={headerLogo.alt_text}
+                  className="h-12 sm:h-14 md:h-16 w-auto transition-transform duration-300 hover:scale-105"
+                  onError={(e) => {
+                    // Fallback to default logo if image fails to load
+                    e.currentTarget.src = '/ATS.png';
+                    e.currentTarget.alt = 'Aboriginal Training Services';
+                  }}
+                />
+              ) : (
+                // Fallback content while loading or if no logo found
+                <div className="h-12 sm:h-14 md:h-16 flex items-center">
+                  <span className="text-xl font-bold text-blue-700">ATS</span>
+                </div>
+              )}
             </Link>
           </div>
 

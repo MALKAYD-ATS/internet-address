@@ -1,7 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 import { Lock, Mail, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
+
+interface HeaderLogo {
+  id: string;
+  logo_url: string;
+  alt_text: string;
+  order_index: number;
+  is_active: boolean;
+}
 
 const Login: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -11,9 +20,33 @@ const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [headerLogo, setHeaderLogo] = useState<HeaderLogo | null>(null);
 
   const { signIn, user } = useAuth();
   const navigate = useNavigate();
+
+  // Fetch header logo
+  useEffect(() => {
+    const fetchHeaderLogo = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('header_logo')
+          .select('*')
+          .eq('is_active', true)
+          .order('order_index', { ascending: true })
+          .limit(1)
+          .single();
+
+        if (!error && data) {
+          setHeaderLogo(data);
+        }
+      } catch (err) {
+        console.error('Header logo fetch error:', err);
+      }
+    };
+
+    fetchHeaderLogo();
+  }, []);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -70,9 +103,13 @@ const Login: React.FC = () => {
         <div className="text-center">
           <Link to="/" className="inline-block">
             <img
-              src="/ATS.png"
-              alt="Aboriginal Training Services"
+              src={headerLogo?.logo_url || "/ATS.png"}
+              alt={headerLogo?.alt_text || "Aboriginal Training Services"}
               className="h-16 w-auto mx-auto mb-6 transition-transform duration-300 hover:scale-105"
+              onError={(e) => {
+                e.currentTarget.src = '/ATS.png';
+                e.currentTarget.alt = 'Aboriginal Training Services';
+              }}
             />
           </Link>
           <h2 className="text-3xl font-bold text-gray-900 mb-2">Student Portal</h2>

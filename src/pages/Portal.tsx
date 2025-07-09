@@ -2,6 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+
+interface HeaderLogo {
+  id: string;
+  logo_url: string;
+  alt_text: string;
+  order_index: number;
+  is_active: boolean;
+}
+
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import 'swiper/css';
@@ -72,6 +81,7 @@ const Portal: React.FC = () => {
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [headerLogo, setHeaderLogo] = useState<HeaderLogo | null>(null);
 
   // Course state
   const [courses, setCourses] = useState<Course[]>([]);
@@ -82,6 +92,29 @@ const Portal: React.FC = () => {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [enrollingCourseId, setEnrollingCourseId] = useState<number | null>(null);
   const [enrollmentMessage, setEnrollmentMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+
+  // Fetch header logo
+  useEffect(() => {
+    const fetchHeaderLogo = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('header_logo')
+          .select('*')
+          .eq('is_active', true)
+          .order('order_index', { ascending: true })
+          .limit(1)
+          .single();
+
+        if (!error && data) {
+          setHeaderLogo(data);
+        }
+      } catch (err) {
+        console.error('Header logo fetch error:', err);
+      }
+    };
+
+    fetchHeaderLogo();
+  }, []);
 
   // Fetch student profile data
   useEffect(() => {
@@ -308,9 +341,13 @@ const Portal: React.FC = () => {
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center">
               <img
-                src="/ATS.png"
-                alt="Aboriginal Training Services"
+                src={headerLogo?.logo_url || "/ATS.png"}
+                alt={headerLogo?.alt_text || "Aboriginal Training Services"}
                 className="h-12 w-auto mr-4"
+                onError={(e) => {
+                  e.currentTarget.src = '/ATS.png';
+                  e.currentTarget.alt = 'Aboriginal Training Services';
+                }}
               />
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Student Portal</h1>
