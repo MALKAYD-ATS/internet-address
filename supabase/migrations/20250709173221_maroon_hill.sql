@@ -278,7 +278,7 @@ SELECT 'Professional Drone Academy', 'Advocate, Encourage, and Unite Indigenous 
 WHERE NOT EXISTS (SELECT 1 FROM home_page_title_section);
 
 -- Home Numbers
-INSERT INTO home_numbers (number, label, order_index) 
+INSERT INTO home_numbers (number, description, order_index) 
 SELECT * FROM (VALUES 
   ('500+', 'Students Trained', 1),
   ('98%', 'Pass Rate', 2),
