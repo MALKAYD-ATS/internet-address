@@ -79,6 +79,8 @@ interface Principle {
   symbol: string;
   title: string;
   text: string;
+  color_from: string;
+  color_to: string;
 }
 
 interface HeadingCard {
@@ -394,19 +396,20 @@ const Home: React.FC = () => {
       <section className="relative bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 text-white overflow-hidden">
         {/* Background Video */}
         {titleSection?.video_url && (
-          <div className="absolute inset-0 w-full h-full">
+          <div className="absolute inset-0 w-full h-full overflow-hidden">
             <video
-              className="absolute inset-0 w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-cover min-w-full min-h-full"
               autoPlay
               muted
               loop
               playsInline
               onError={(e) => {
-                e.currentTarget.style.display = 'none';
+                // Hide video on error, fallback to gradient background
+                const target = e.currentTarget;
+                target.style.display = 'none';
               }}
             >
               <source src={titleSection.video_url} type="video/mp4" />
-              Your browser does not support the video tag.
             </video>
           </div>
         )}
@@ -416,13 +419,13 @@ const Home: React.FC = () => {
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 transform transition-all duration-1000 hover:scale-[1.02] z-10">
           <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight animate-fade-in">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight animate-fade-in">
               {titleSection?.name || 'Professional Drone Academy'}
             </h1>
-            <p className="text-2xl md:text-3xl mb-4 text-blue-100 font-semibold whitespace-nowrap">
+            <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl mb-4 text-blue-100 font-semibold">
               {titleSection?.text || 'Advocate, Encourage, and Unite Indigenous Peoples & Communities to lead the Drone Industry.'}
             </p>
-            <p className="text-xl md:text-2xl mb-8 text-blue-200 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl mb-8 text-blue-200 max-w-3xl mx-auto leading-relaxed">
               {titleSection?.slogan || 'Training for the Future'}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -558,8 +561,17 @@ const Home: React.FC = () => {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
       {principles.map((principle, index) => {
         const isFlipped = flippedPrinciples.has(principle.title);
-        const gradientClass = `bg-gradient-to-br ${principle.color_from} ${principle.color_to}`;
-        const borderClass = principle.color_from?.replace('from-', 'border-') || 'border-gray-200';
+        
+        // Create gradient class with fallbacks
+        const colorFrom = principle.color_from || 'from-blue-600';
+        const colorTo = principle.color_to || 'to-blue-800';
+        const gradientClass = `bg-gradient-to-br ${colorFrom} ${colorTo}`;
+        
+        // Create border class from color_from
+        const borderClass = colorFrom.replace('from-', 'border-').replace('-600', '-200') || 'border-blue-200';
+        
+        // Ensure we have a valid symbol
+        const symbolToRender = principle.symbol || 'Award';
 
         return (
           <div key={index} className="relative h-80 perspective-1000">
@@ -577,8 +589,8 @@ const Home: React.FC = () => {
                   className={`${gradientClass} rounded-xl shadow-lg h-full flex items-center justify-center transform transition-all duration-500 hover:scale-105 hover:shadow-2xl`}
                 >
                   <div className="text-center text-white">
-                    {renderIcon(principle.symbol, 'h-16 w-16 mx-auto mb-4')}
-                    <h3 className="text-3xl font-bold">{principle.title}</h3>
+                    {renderIcon(symbolToRender, 'h-16 w-16 mx-auto mb-4')}
+                    <h3 className="text-3xl font-bold">{principle.title || 'Principle'}</h3>
                     <p className="text-blue-100 mt-2">Click to reveal</p>
                   </div>
                 </div>
@@ -594,10 +606,10 @@ const Home: React.FC = () => {
                 >
                   <div className="text-center">
                     <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                      Our {principle.title}
+                      Our {principle.title || 'Principle'}
                     </h3>
                     <p className="text-lg text-gray-700 leading-relaxed">
-                      {principle.text}
+                      {principle.text || 'Description coming soon.'}
                     </p>
                   </div>
                 </div>
@@ -625,8 +637,8 @@ const Home: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {headingCards.map((direction, index) => (
               <div key={index} className="relative bg-white rounded-xl shadow-lg overflow-hidden transform transition-all duration-500 hover:scale-105 hover:shadow-2xl">
-                {/* Video Background */}
-                <div className="relative h-64 overflow-hidden">
+                {/* Video Background - Responsive Container */}
+                <div className="relative h-48 sm:h-56 md:h-64 overflow-hidden">
                   {direction.video_url ? (
                     <video
                       className="absolute inset-0 w-full h-full object-cover"
@@ -635,11 +647,16 @@ const Home: React.FC = () => {
                       loop
                       playsInline
                       onError={(e) => {
-                        e.currentTarget.style.display = 'none';
+                        // Hide video and show fallback background
+                        const target = e.currentTarget;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent) {
+                          parent.classList.add('bg-gradient-to-br', 'from-blue-600', 'to-blue-800');
+                        }
                       }}
                     >
                       <source src={direction.video_url} type="video/mp4" />
-                      Your browser does not support the video tag.
                     </video>
                   ) : (
                     <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-blue-800"></div>
@@ -650,24 +667,13 @@ const Home: React.FC = () => {
                   
                   {/* Content Overlay */}
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center text-white p-6">
+                    <div className="text-center text-white p-4 sm:p-6">
                       <div className="bg-white bg-opacity-20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
                         {renderIcon(direction.symbol, "h-6 w-6 text-white")}
                       </div>
-                      <h3 className="text-xl font-bold mb-2 drop-shadow-lg">{direction.title}</h3>
-                      <p className="text-sm text-gray-100 drop-shadow-md">{direction.text}</p>
+                      <h3 className="text-lg sm:text-xl font-bold mb-2 drop-shadow-lg">{direction.title}</h3>
+                      <p className="text-xs sm:text-sm text-gray-100 drop-shadow-md leading-tight">{direction.text}</p>
                     </div>
-                  </div>
-                </div>
-
-                {/* Fallback content if video doesn't load */}
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center" style={{ zIndex: -1 }}>
-                  <div className="text-center text-white p-6">
-                    <div className="bg-white bg-opacity-20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                      {renderIcon(direction.symbol, "h-6 w-6 text-white")}
-                    </div>
-                    <h3 className="text-xl font-bold mb-2">{direction.title}</h3>
-                    <p className="text-sm text-blue-100">{direction.text}</p>
                   </div>
                 </div>
               </div>
