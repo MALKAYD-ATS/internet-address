@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import PDFSlideViewer from '../components/PDFSlideViewer';
 
 interface HeaderLogo {
   id: string;
@@ -97,6 +98,15 @@ const CourseDetail: React.FC = () => {
   const [modules, setModules] = useState<CourseModule[]>([]);
   const [loadingModules, setLoadingModules] = useState(false);
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
+  const [pdfViewer, setPdfViewer] = useState<{
+    isOpen: boolean;
+    pdfUrl: string;
+    lessonTitle: string;
+  }>({
+    isOpen: false,
+    pdfUrl: '',
+    lessonTitle: ''
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -312,11 +322,32 @@ const CourseDetail: React.FC = () => {
     }
   };
 
-  const handleDownloadLesson = (lesson: ModuleLesson) => {
+  const handleViewLesson = (lesson: ModuleLesson) => {
     if (lesson.content) {
-      // Open in new tab for viewing/downloading
-      window.open(lesson.content, '_blank', 'noopener,noreferrer');
+      // Check if it's a PDF file
+      const isPDF = lesson.type.toLowerCase() === 'pdf' || 
+                   lesson.content.toLowerCase().includes('.pdf');
+      
+      if (isPDF) {
+        // Open in PDF slide viewer
+        setPdfViewer({
+          isOpen: true,
+          pdfUrl: lesson.content,
+          lessonTitle: lesson.title
+        });
+      } else {
+        // Open in new tab for non-PDF files
+        window.open(lesson.content, '_blank', 'noopener,noreferrer');
+      }
     }
+  };
+
+  const closePdfViewer = () => {
+    setPdfViewer({
+      isOpen: false,
+      pdfUrl: '',
+      lessonTitle: ''
+    });
   };
 
   if (loading) {
@@ -571,7 +602,7 @@ const CourseDetail: React.FC = () => {
                                         
                                         {lesson.content ? (
                                           <button
-                                            onClick={() => handleDownloadLesson(lesson)}
+                                            onClick={() => handleViewLesson(lesson)}
                                             className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 ml-4"
                                           >
                                             <ExternalLink className="h-4 w-4 mr-2" />
@@ -761,6 +792,15 @@ const CourseDetail: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* PDF Slide Viewer */}
+      {pdfViewer.isOpen && (
+        <PDFSlideViewer
+          pdfUrl={pdfViewer.pdfUrl}
+          lessonTitle={pdfViewer.lessonTitle}
+          onClose={closePdfViewer}
+        />
+      )}
     </div>
   );
 };
