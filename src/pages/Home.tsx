@@ -29,6 +29,7 @@ import {
   Triangle
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import GoogleReviewsCarousel from '../components/GoogleReviewsCarousel';
 
 // Icon mapping for dynamic icon rendering
 const iconMap: { [key: string]: React.ComponentType<any> } = {
@@ -150,21 +151,7 @@ const Home: React.FC = () => {
 
   // Load Elfsight script for Google Reviews
   useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://static.elfsight.com/platform/platform.js';
-    script.async = true;
-    script.defer = true;
-    
-    const existingScript = document.querySelector('script[src="https://static.elfsight.com/platform/platform.js"]');
-    if (!existingScript) {
-      document.head.appendChild(script);
-    }
-
-    return () => {
-      if (script.parentNode) {
-        script.parentNode.removeChild(script);
-      }
-    };
+    // Elfsight script removed - now using custom database-driven carousel
   }, []);
 
   // Fetch all dynamic content from Supabase
@@ -941,30 +928,7 @@ const Home: React.FC = () => {
           </div>
           
           <div className="bg-white rounded-xl shadow-lg p-8 transform transition-all duration-500 hover:shadow-2xl">
-            <div className="text-center mb-8">
-              <div className="flex justify-center items-center mb-4">
-                <div className="flex">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-8 w-8 text-yellow-400 fill-current" />
-                  ))}
-                </div>
-                <span className="ml-3 text-2xl font-bold text-gray-900">5.0</span>
-              </div>
-              <p className="text-gray-600">Based on Google Reviews</p>
-            </div>
-            
-            {/* Elfsight Google Reviews Widget */}
-            <div 
-              className="elfsight-app-8de22c1a-1c97-4667-9ce2-2f4767ca6072" 
-              data-elfsight-app-lazy
-              style={{ minHeight: '400px' }}
-            ></div>
-            
-            {/* Fallback content while widget loads */}
-            <div className="text-center py-8 text-gray-500">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p>Loading Google Reviews...</p>
-            </div>
+            <GoogleReviewsCarousel />
           </div>
         </div>
       </section>
