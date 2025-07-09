@@ -543,64 +543,72 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Vision and Mission Section */}
-      <section className="py-20 bg-white transform transition-all duration-500">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Our Vision & Mission
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              Guiding principles that drive our commitment to Indigenous excellence in drone technology, innovation and education.
-            </p>
-          </div>
+{/* Vision and Mission Section */}
+<section className="py-20 bg-white transform transition-all duration-500">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="text-center mb-16">
+      <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+        Our Vision & Mission
+      </h2>
+      <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+        Guiding principles that drive our commitment to Indigenous excellence in drone technology, innovation and education.
+      </p>
+    </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {principles.map((principle, index) => {
-              const isFlipped = flippedPrinciples.has(principle.title);
-              const colorClass = principle.title.toLowerCase() === 'vision' ? 'from-blue-600 to-blue-800' : 'from-green-600 to-green-800';
-              const borderClass = principle.title.toLowerCase() === 'vision' ? 'border-blue-200' : 'border-green-200';
-              
-              return (
-                <div key={index} className="relative h-80 perspective-1000">
-                  <div className={`relative w-full h-full transition-transform duration-700 transform-style-preserve-3d ${
-                    isFlipped ? 'rotate-y-180' : ''
-                  }`}>
-                    {/* Front of Card */}
-                    <div 
-                      className="absolute inset-0 w-full h-full backface-hidden cursor-pointer"
-                      onClick={() => togglePrincipleFlip(principle.title)}
-                    >
-                      <div className={`bg-gradient-to-br ${colorClass} rounded-xl shadow-lg h-full flex items-center justify-center transform transition-all duration-500 hover:scale-105 hover:shadow-2xl`}>
-                        <div className="text-center text-white">
-                          {renderIcon(principle.symbol, "h-16 w-16 mx-auto mb-4")}
-                          <h3 className="text-3xl font-bold">{principle.title}</h3>
-                          <p className="text-blue-100 mt-2">Click to reveal</p>
-                        </div>
-                      </div>
-                    </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+      {principles.map((principle, index) => {
+        const isFlipped = flippedPrinciples.has(principle.title);
+        const gradientClass = `bg-gradient-to-br ${principle.color_from} ${principle.color_to}`;
+        const borderClass = principle.color_from?.replace('from-', 'border-') || 'border-gray-200';
 
-                    {/* Back of Card */}
-                    <div 
-                      className="absolute inset-0 w-full h-full backface-hidden rotate-y-180 cursor-pointer"
-                      onClick={() => togglePrincipleFlip(principle.title)}
-                    >
-                      <div className={`bg-white border-2 ${borderClass} rounded-xl shadow-lg h-full flex items-center justify-center p-8 transform transition-all duration-500 hover:shadow-2xl`}>
-                        <div className="text-center">
-                          <h3 className="text-2xl font-bold text-gray-900 mb-4">Our {principle.title}</h3>
-                          <p className="text-lg text-gray-700 leading-relaxed">
-                            {principle.text}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
+        return (
+          <div key={index} className="relative h-80 perspective-1000">
+            <div
+              className={`relative w-full h-full transition-transform duration-700 transform-style-preserve-3d ${
+                isFlipped ? 'rotate-y-180' : ''
+              }`}
+            >
+              {/* Front of Card */}
+              <div
+                className="absolute inset-0 w-full h-full backface-hidden cursor-pointer"
+                onClick={() => togglePrincipleFlip(principle.title)}
+              >
+                <div
+                  className={`${gradientClass} rounded-xl shadow-lg h-full flex items-center justify-center transform transition-all duration-500 hover:scale-105 hover:shadow-2xl`}
+                >
+                  <div className="text-center text-white">
+                    {renderIcon(principle.symbol, 'h-16 w-16 mx-auto mb-4')}
+                    <h3 className="text-3xl font-bold">{principle.title}</h3>
+                    <p className="text-blue-100 mt-2">Click to reveal</p>
                   </div>
                 </div>
-              );
-            })}
+              </div>
+
+              {/* Back of Card */}
+              <div
+                className="absolute inset-0 w-full h-full backface-hidden rotate-y-180 cursor-pointer"
+                onClick={() => togglePrincipleFlip(principle.title)}
+              >
+                <div
+                  className={`bg-white border-2 ${borderClass} rounded-xl shadow-lg h-full flex items-center justify-center p-8 transform transition-all duration-500 hover:shadow-2xl`}
+                >
+                  <div className="text-center">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                      Our {principle.title}
+                    </h3>
+                    <p className="text-lg text-gray-700 leading-relaxed">
+                      {principle.text}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
+        );
+      })}
+    </div>
+  </div>
+</section>
 
       {/* Where We Are Heading Section */}
       <section className="py-20 bg-gray-50 transform transition-all duration-500">
