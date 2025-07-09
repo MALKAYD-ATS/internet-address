@@ -185,7 +185,7 @@ const Home: React.FC = () => {
           // Map to expected interface format
           const formattedNumbers = numbersData.map(item => ({
             number: item.number,
-            label: item.description // Use description field as label
+            label: item.description || item.label // Use description field as label, fallback to label
           }));
           setHomeNumbers(formattedNumbers);
         }
@@ -223,7 +223,12 @@ const Home: React.FC = () => {
           .from('ventures')
           .select('*')
           .order('order_index', { ascending: true });
-        if (venturesData) setVentures(venturesData);
+        if (venturesData && venturesData.length > 0) {
+          console.log('Ventures data loaded:', venturesData);
+          setVentures(venturesData);
+        } else {
+          console.log('No ventures data found');
+        }
 
         // Fetch contact information
         const { data: contactData } = await supabase
@@ -676,28 +681,47 @@ const Home: React.FC = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-1 gap-12">
+          {ventures.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading ventures...</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-1 gap-12">
             {ventures.map((venture, index) => (
               <div key={index} className="bg-white rounded-xl shadow-lg overflow-hidden transform transition-all duration-500 hover:scale-105 hover:shadow-2xl">
                 <div className="md:flex">
                   <div className="md:w-1/3 p-8 bg-gradient-to-br from-blue-50 to-blue-100">
                     <div className="flex items-center justify-center h-32 mb-6">
-                      <img
-                        src={venture.logo_url}
-                        alt={`${venture.name} logo`}
-                        className="max-h-20 max-w-full object-contain transform transition-all duration-300 hover:scale-110"
-                      />
+                      {venture.logo_url ? (
+                        <img
+                          src={venture.logo_url}
+                          alt={`${venture.name} logo`}
+                          className="max-h-20 max-w-full object-contain transform transition-all duration-300 hover:scale-110"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <div className="w-20 h-20 bg-blue-200 rounded-lg flex items-center justify-center">
+                          <span className="text-blue-600 font-bold text-lg">{venture.name.charAt(0)}</span>
+                        </div>
+                      )}
                     </div>
                     <div className="text-center">
                       <h3 className="text-2xl font-bold text-gray-900 mb-2">{venture.name}</h3>
-                      <span className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                        {venture.relationship}
-                      </span>
+                      {venture.relationship && (
+                        <span className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                          {venture.relationship}
+                        </span>
+                      )}
                     </div>
                   </div>
                   
                   <div className="md:w-2/3 p-8">
-                    <p className="text-gray-600 mb-6 leading-relaxed">{venture.text}</p>
+                    {venture.text && (
+                      <p className="text-gray-600 mb-6 leading-relaxed">{venture.text}</p>
+                    )}
                     
                     <div className="flex flex-col sm:flex-row gap-4">
                       <a
@@ -714,7 +738,8 @@ const Home: React.FC = () => {
                 </div>
               </div>
             ))}
-          </div>
+            </div>
+          )}
         </div>
       </section>
 
