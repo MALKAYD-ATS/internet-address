@@ -108,6 +108,8 @@ const CourseDetail: React.FC = () => {
   const [headerLogo, setHeaderLogo] = useState<HeaderLogo | null>(null);
   
   const [course, setCourse] = useState<Course | null>(null);
+  const [moduleProgress, setModuleProgress] = useState<StudentModuleProgress[]>([]);
+
   const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
   const [modules, setModules] = useState<CourseModule[]>([]);
   const [totalModules, setTotalModules] = useState<number>(0);
