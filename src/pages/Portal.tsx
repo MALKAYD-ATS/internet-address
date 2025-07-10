@@ -94,6 +94,7 @@ const Portal: React.FC = () => {
   const [enrollingCourseId, setEnrollingCourseId] = useState<number | null>(null);
   const [enrollmentMessage, setEnrollmentMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [showEditProfile, setShowEditProfile] = useState(false);
+  const [certificates, setCertificates] = useState<any[]>([]);
 
   // Fetch header logo
   useEffect(() => {
@@ -209,6 +210,31 @@ const Portal: React.FC = () => {
     };
 
     fetchEnrollments();
+  }, [user]);
+
+  // Fetch user certificates
+  useEffect(() => {
+    const fetchCertificates = async () => {
+      if (!user) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('student_certificates')
+          .select('*')
+          .eq('student_id', user.id)
+          .order('issued_at', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching certificates:', error);
+        } else {
+          setCertificates(data || []);
+        }
+      } catch (err) {
+        console.error('Certificates fetch error:', err);
+      }
+    };
+
+    fetchCertificates();
   }, [user]);
 
   // Check if user is enrolled in a course
@@ -535,7 +561,7 @@ const Portal: React.FC = () => {
                       768: {
                         slidesPerView: 2,
                       },
-                    onClick={() => navigate('/portal')}
+                    }}
                     className="course-carousel px-12"
                   >
                     {courses.map((course) => {
@@ -736,22 +762,50 @@ const Portal: React.FC = () => {
                 <Award className="h-6 w-6 mr-2 text-blue-600" />
                 My Certificates
               </h2>
-              <div className="text-center py-12">
-                <Award className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No Certificates Yet</h3>
-                <p className="text-gray-600 mb-4">
-                  Complete courses to earn your professional drone certifications.
-                </p>
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <div className="flex items-center justify-center">
-                    <Award className="h-5 w-5 text-green-600 mr-2" />
-                    <span className="text-green-800 font-medium">Coming Soon</span>
-                  </div>
-                  <p className="text-green-700 text-sm mt-2">
-                    Back to Portal
+              
+              {certificates.length === 0 ? (
+                <div className="text-center py-12">
+                  <Award className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Certificates Yet</h3>
+                  <p className="text-gray-600 mb-4">
+                    Complete courses to earn your professional drone certifications.
                   </p>
                 </div>
-              </div>
+              ) : (
+                <div className="space-y-4">
+                  {certificates.map((cert) => (
+                    <div key={cert.id} className="border border-gray-200 rounded-lg p-6">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-2">{cert.course_title}</h3>
+                          <p className="text-gray-600 text-sm mb-2">Issued to: {cert.student_name}</p>
+                          <p className="text-gray-600 text-sm">
+                            Date: {new Date(cert.issued_at).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                          </p>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                            Active
+                          </span>
+                          <a
+                            href={cert.certificate_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center justify-center"
+                          >
+                            <FileText className="h-4 w-4 mr-2" />
+                            View Certificate
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Notifications Section */}
