@@ -432,6 +432,34 @@ const CourseDetail: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Practice Questions Section */}
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Practice Questions</h3>
+                  <div className="border rounded-lg p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-medium text-gray-900 mb-2">Course Practice Questions</h4>
+                        <p className="text-sm text-gray-600 mb-4">
+                          Test your knowledge with practice questions to reinforce your learning. 
+                          These questions are available anytime to help you prepare.
+                        </p>
+                        <div className="text-sm text-gray-500 space-y-1">
+                          <p>• Multiple choice questions</p>
+                          <p>• Instant feedback and explanations</p>
+                          <p>• Available anytime during the course</p>
+                        </div>
+                      </div>
+                      <div className="ml-4">
+                        <button
+                          onClick={() => navigate(`/portal/practice-questions/${courseId}`)}
+                          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium"
+                        >
+                          Start Practice
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 {/* Practice Exams Section */}
                 <div className="bg-white rounded-lg shadow-sm p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Practice Exams</h3>
@@ -533,8 +561,9 @@ const CourseDetail: React.FC = () => {
                                       <button
                                         key={resource.id}
                                         onClick={() => {
-                                          if (resource.resource_type === 'file' && resource.url) {
-                                            openPdfViewer(resource.url, lesson.title, lesson.id, module.id);
+                                          if (resource.resource_type === 'file' && (resource.url || resource.file_path)) {
+                                            const pdfUrl = resource.url || resource.file_path;
+                                            openPdfViewer(pdfUrl, lesson.title, lesson.id, module.id);
                                           } else if (resource.resource_type === 'link' && resource.url) {
                                             window.open(resource.url, '_blank');
                                           }
