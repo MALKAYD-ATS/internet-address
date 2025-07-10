@@ -114,6 +114,7 @@ const CourseDetail: React.FC = () => {
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
   const [moduleProgress, setModuleProgress] = useState<ModuleProgress[]>([]);
   const [completingModule, setCompletingModule] = useState<string | null>(null);
+  const [hasModulesData, setHasModulesData] = useState(false);
   const [pdfViewer, setPdfViewer] = useState<{
     isOpen: boolean;
     pdfUrl: string;
@@ -188,6 +189,10 @@ const CourseDetail: React.FC = () => {
 
         // If user is enrolled, fetch course materials
         if (enrollmentData) {
+        }
+
+        // Always try to fetch course modules for enrolled students
+        if (enrollmentData) {
           await fetchCourseModules();
           await fetchModuleProgress();
         }
@@ -221,6 +226,7 @@ const CourseDetail: React.FC = () => {
     const fetchCourseModules = async () => {
       try {
         setLoadingModules(true);
+        setHasModulesData(false);
 
         // Fetch modules for this course
         const { data: modulesData, error: modulesError } = await supabase
@@ -231,11 +237,13 @@ const CourseDetail: React.FC = () => {
 
         if (modulesError) {
           console.error('Error fetching modules:', modulesError);
+          setModules([]);
           return;
         }
 
         if (!modulesData || modulesData.length === 0) {
           setModules([]);
+          setHasModulesData(true);
           return;
         }
 
@@ -261,6 +269,7 @@ const CourseDetail: React.FC = () => {
         }
 
         setModules(modulesWithLessons);
+        setHasModulesData(true);
         
         // Auto-expand first module if it has lessons
         if (modulesWithLessons.length > 0 && modulesWithLessons[0].lessons.length > 0) {
@@ -678,6 +687,14 @@ const CourseDetail: React.FC = () => {
                       <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
                       <p className="text-gray-600">Loading course materials...</p>
                     </div>
+                  ) : !hasModulesData ? (
+                    <div className="text-center py-8">
+                      <AlertCircle className="h-12 w-12 text-orange-400 mx-auto mb-4" />
+                      <h3 className="text-xl font-bold text-gray-900 mb-2">Loading Course Materials</h3>
+                      <p className="text-gray-600">
+                        Please wait while we load your course materials...
+                      </p>
+                    </div>
                   ) : modules.length === 0 ? (
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
                       <BookOpen className="h-16 w-16 text-blue-600 mx-auto mb-4" />
@@ -685,6 +702,15 @@ const CourseDetail: React.FC = () => {
                       <p className="text-gray-600 mb-6">
                         Course materials are being prepared and will be available here once ready.
                       </p>
+                      <div className="bg-white rounded-lg p-4 border border-blue-200">
+                        <h4 className="font-semibold text-blue-900 mb-2">What to expect:</h4>
+                        <ul className="text-blue-800 text-sm space-y-1">
+                          <li>• Interactive learning modules</li>
+                          <li>• Video lessons and presentations</li>
+                          <li>• Downloadable resources</li>
+                          <li>• Practice exercises</li>
+                        </ul>
+                      </div>
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -779,6 +805,11 @@ const CourseDetail: React.FC = () => {
                                               <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
                                                 {getFileTypeLabel(lesson.type)}
                                               </span>
+                                              {lesson.content && (
+                                                <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full ml-2">
+                                                  Available
+                                                </span>
+                                              )}
                                             </div>
                                           </div>
                                         </div>
@@ -792,7 +823,10 @@ const CourseDetail: React.FC = () => {
                                             <span className="hidden sm:inline">View</span>
                                           </button>
                                         ) : (
-                                          <span className="text-sm text-gray-400 ml-4">Coming Soon</span>
+                                          <div className="flex items-center ml-4">
+                                            <Clock className="h-4 w-4 text-gray-400 mr-1" />
+                                            <span className="text-sm text-gray-400">Coming Soon</span>
+                                          </div>
                                         )}
                                       </div>
                                     </div>
@@ -872,7 +906,7 @@ const CourseDetail: React.FC = () => {
             )}
 
             {/* Practice Exams Locked Message */}
-            {enrollment && !areAllModulesCompleted() && (
+            {enrollment && hasModulesData && modules.length > 0 && !areAllModulesCompleted() && (
               <div className="bg-white rounded-xl shadow-lg p-8">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
                   <Trophy className="h-6 w-6 mr-3 text-gray-400" />
