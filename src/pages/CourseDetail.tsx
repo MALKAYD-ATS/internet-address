@@ -1048,7 +1048,7 @@ if (progressError) {
     </div>
   </div>
 </div>
-
+</div> 
 {pdfViewer.isOpen && pdfViewer.pdfUrl && (
   <PDFSlideViewer
     pdfUrl={pdfViewer.pdfUrl}
