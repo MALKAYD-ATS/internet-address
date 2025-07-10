@@ -134,19 +134,14 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({ pdfUrl, lessonTitle, on
 
   // Render current page
   useEffect(() => {
+    let renderTask: pdfjsLib.RenderTask | null = null;
+
     const renderPage = async () => {
       if (!pdf || !canvasRef.current) return;
 
       try {
         setPageLoading(true);
         console.log('Rendering page:', currentPage);
-        
-        // Cancel any previous render task before starting a new one
-        if (renderTaskRef.current) {
-          console.log('Cancelling previous render task...');
-          renderTaskRef.current.cancel();
-          renderTaskRef.current = null;
-        }
         
         const page = await pdf.getPage(currentPage);
         const canvas = canvasRef.current;
@@ -177,20 +172,25 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({ pdfUrl, lessonTitle, on
         // Clear canvas
         context.clearRect(0, 0, canvas.width, canvas.height);
 
+        // Cancel any previous render task before starting a new one
+        if (renderTask) {
+          console.log('Cancelling previous render task...');
+          renderTask.cancel();
+        }
+
         // Render page
         const renderContext = {
           canvasContext: context,
           viewport: scaledViewport,
         };
 
-        // Store the render task so it can be cancelled if needed
-        const renderTask = page.render(renderContext);
-        renderTaskRef.current = renderTask;
+        // Create and store the render task
+        renderTask = page.render(renderContext);
         
         await renderTask.promise;
         
-        // Clear the render task ref after successful completion
-        renderTaskRef.current = null;
+        // Clear the render task after successful completion
+        renderTask = null;
         console.log('Page rendered successfully:', currentPage);
       } catch (err: any) {
         // Handle cancellation errors (these are expected and normal)
@@ -208,12 +208,12 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({ pdfUrl, lessonTitle, on
 
     renderPage();
     
-    // Cleanup function to cancel any ongoing render task
+    // Cleanup function to cancel any ongoing render task when dependencies change
     return () => {
-      if (renderTaskRef.current) {
-        console.log('Cleaning up render task on unmount/dependency change...');
-        renderTaskRef.current.cancel();
-        renderTaskRef.current = null;
+      if (renderTask) {
+        console.log('Cleaning up render task on dependency change...');
+        renderTask.cancel();
+        renderTask = null;
       }
     };
   }, [pdf, currentPage, scale]);
