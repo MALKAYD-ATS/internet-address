@@ -1,5 +1,3 @@
-this is the entire file, do you see anything wrong:
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
