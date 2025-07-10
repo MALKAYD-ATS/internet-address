@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import { User, BookOpen, Award, Clock, Edit2, Save, X, CheckCircle } from 'lucide-react';
+import { User, BookOpen, Award, Clock, Edit2, Save, X, CheckCircle, ArrowRight } from 'lucide-react';
 
 interface Course {
   id: string;
@@ -30,6 +31,7 @@ interface StudentProfile {
 
 export default function Portal() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
   const [profile, setProfile] = useState<StudentProfile | null>(null);
@@ -200,6 +202,10 @@ export default function Portal() {
     }
   };
 
+  const handleAccessCourse = (courseId: string) => {
+    navigate(`/student/courses/${courseId}`);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -360,11 +366,20 @@ export default function Portal() {
                             </span>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-sm text-gray-500">Enrolled</p>
-                          <p className="text-xs text-gray-400">
-                            {new Date(enrollment.enrolled_at).toLocaleDateString()}
-                          </p>
+                        <div className="text-right space-y-2">
+                          <div>
+                            <p className="text-sm text-gray-500">Enrolled</p>
+                            <p className="text-xs text-gray-400">
+                              {new Date(enrollment.enrolled_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => handleAccessCourse(enrollment.course_id)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center"
+                          >
+                            Access Course
+                            <ArrowRight className="h-4 w-4 ml-2" />
+                          </button>
                         </div>
                       </div>
                     </div>
