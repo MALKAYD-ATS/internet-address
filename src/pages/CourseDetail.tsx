@@ -799,16 +799,6 @@ const CourseDetail: React.FC = () => {
               <div className="space-y-3">
                 {enrollment ? (
                   <>
-                    <button className="w-full flex items-center justify-center px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200">
-                      <Play className="h-5 w-5 mr-2" />
-                      Continue Learning
-                      <span className="ml-2 text-xs bg-blue-500 px-2 py-1 rounded">Soon</span>
-                    </button>
-                    <button className="w-full flex items-center justify-center px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors duration-200">
-                      <Download className="h-5 w-5 mr-2" />
-                      Download Materials
-                      <span className="ml-2 text-xs bg-gray-300 px-2 py-1 rounded">Soon</span>
-                    </button>
                     <Link
                       to={`/portal/practice-questions/${courseId}`}
                       className="w-full flex items-center justify-center px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors duration-200"
@@ -816,46 +806,6 @@ const CourseDetail: React.FC = () => {
                       <Target className="h-5 w-5 mr-2" />
                       Practice Questions
                     </Link>
-                    
-                    {/* Practice Exams - Only show when all modules are complete */}
-                    {enrollment && (
-                      <div className="space-y-2">
-                        {areAllModulesCompleted() ? (
-                          <Link
-                            to={`/portal/practice-exams/${courseId}`}
-                            className="w-full flex items-center justify-center px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors duration-200"
-                          >
-                            <Award className="h-5 w-5 mr-2" />
-                            Practice Exams
-                          </Link>
-                        ) : (
-                          <div className="w-full px-4 py-3 bg-gray-100 rounded-lg">
-                            <div className="flex items-center justify-center text-gray-500 font-medium mb-2">
-                              <Award className="h-5 w-5 mr-2" />
-                              Practice Exams Locked
-                            </div>
-                            <div className="text-center text-sm text-gray-600">
-                              Complete all modules to unlock
-                            </div>
-                            <div className="text-center text-xs text-gray-500 mt-1">
-                              Progress: {completedModules}/{totalModules} modules completed
-                            </div>
-                          </div>
-                        )}
-                        
-                        {/* Show exam metadata when available */}
-                        {examMetadata && areAllModulesCompleted() && (
-                          <div className="text-xs text-gray-600 text-center space-y-1">
-                            {examMetadata.exam_number_of_questions && (
-                              <div>Questions: {examMetadata.exam_number_of_questions}</div>
-                            )}
-                            {examMetadata.exam_time_limit_minutes && (
-                              <div>Time Limit: {examMetadata.exam_time_limit_minutes} minutes</div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )}
                   </>
                 ) : (
                   <Link
@@ -868,6 +818,72 @@ const CourseDetail: React.FC = () => {
                 )}
               </div>
             </div>
+
+            {/* Practice Exams Section - Always visible for enrolled students */}
+            {enrollment && (
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                  <Award className="h-6 w-6 mr-2 text-purple-600" />
+                  Practice Exams
+                </h3>
+                
+                <div className="space-y-4">
+                  <p className="text-gray-600 text-sm">
+                    Test your knowledge with comprehensive practice exams designed to prepare you for certification.
+                  </p>
+                  
+                  {/* Exam Metadata */}
+                  {examMetadata && (
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <h4 className="font-medium text-gray-900 mb-2">Exam Details:</h4>
+                      <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                        {examMetadata.exam_number_of_questions && (
+                          <div className="flex items-center">
+                            <FileText className="h-4 w-4 mr-2" />
+                            <span>{examMetadata.exam_number_of_questions} Questions</span>
+                          </div>
+                        )}
+                        {examMetadata.exam_time_limit_minutes && (
+                          <div className="flex items-center">
+                            <Clock className="h-4 w-4 mr-2" />
+                            <span>{examMetadata.exam_time_limit_minutes} Minutes</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Progress and Button */}
+                  <div className="space-y-3">
+                    <div className="text-sm text-gray-600">
+                      <span className="font-medium">Module Progress: </span>
+                      <span className={`${areAllModulesCompleted() ? 'text-green-600' : 'text-orange-600'}`}>
+                        {completedModules}/{totalModules} completed
+                      </span>
+                    </div>
+                    
+                    {areAllModulesCompleted() ? (
+                      <Link
+                        to={`/portal/practice-exams/${courseId}`}
+                        className="w-full flex items-center justify-center px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors duration-200"
+                      >
+                        <Award className="h-5 w-5 mr-2" />
+                        Start Practice Exam
+                      </Link>
+                    ) : (
+                      <button
+                        disabled
+                        className="w-full flex items-center justify-center px-4 py-3 bg-gray-300 text-gray-500 font-medium rounded-lg cursor-not-allowed"
+                        title="Complete all modules to unlock the exam"
+                      >
+                        <Lock className="h-5 w-5 mr-2" />
+                        Complete All Modules to Unlock
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Support */}
             <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
@@ -882,31 +898,6 @@ const CourseDetail: React.FC = () => {
           </div>
         </div>
 
-        {/* Development Notice */}
-        <div className="mt-12 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-8 text-center border border-blue-200">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Enhanced Learning Features Coming Soon</h2>
-          <p className="text-lg text-gray-600 mb-6 max-w-3xl mx-auto">
-            Additional features like progress tracking, interactive quizzes, and completion certificates 
-            will be added to enhance your learning experience.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center">
-              <CheckCircle className="h-8 w-8 text-blue-600 mx-auto mb-3" />
-              <h3 className="font-semibold text-gray-900 mb-2">Progress Tracking</h3>
-              <p className="text-gray-600 text-sm">Track your completion status</p>
-            </div>
-            <div className="text-center">
-              <Target className="h-8 w-8 text-blue-600 mx-auto mb-3" />
-              <h3 className="font-semibold text-gray-900 mb-2">Interactive Quizzes</h3>
-              <p className="text-gray-600 text-sm">Test your knowledge as you learn</p>
-            </div>
-            <div className="text-center">
-              <Award className="h-8 w-8 text-blue-600 mx-auto mb-3" />
-              <h3 className="font-semibold text-gray-900 mb-2">Certificates</h3>
-              <p className="text-gray-600 text-sm">Earn completion certificates</p>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* PDF Slide Viewer */}
