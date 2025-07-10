@@ -52,6 +52,14 @@ function App() {
               </ProtectedRoute>
             } 
           />
+          <Route 
+            path="/portal/practice-exam/:courseId" 
+            element={
+              <ProtectedRoute>
+                <PracticeExam />
+              </ProtectedRoute>
+            } 
+          />
         </Routes>
       </Router>
     </AuthProvider>
