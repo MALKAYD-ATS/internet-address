@@ -87,6 +87,15 @@ interface ModuleLesson {
   created_at: string;
 }
 
+interface StudentModuleProgress {
+  id: string;
+  student_id: string;
+  course_id: string;
+  module_id: string;
+  completed: boolean;
+  completed_at: string | null;
+}
+
 const CourseDetail: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
@@ -96,6 +105,7 @@ const CourseDetail: React.FC = () => {
   const [course, setCourse] = useState<Course | null>(null);
   const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
   const [modules, setModules] = useState<CourseModule[]>([]);
+  const [moduleProgress, setModuleProgress] = useState<StudentModuleProgress[]>([]);
   const [loadingModules, setLoadingModules] = useState(false);
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
   const [pdfViewer, setPdfViewer] = useState<{
@@ -173,6 +183,7 @@ const CourseDetail: React.FC = () => {
         // If user is enrolled, fetch course materials
         if (enrollmentData) {
           await fetchCourseModules();
+          await fetchModuleProgress();
         }
 
       } catch (err) {
@@ -236,6 +247,27 @@ const CourseDetail: React.FC = () => {
         console.error('Error fetching course modules:', err);
       } finally {
         setLoadingModules(false);
+      }
+    };
+
+    const fetchModuleProgress = async () => {
+      if (!user || !courseId) return;
+
+      try {
+        const { data: progressData, error: progressError } = await supabase
+          .from('student_module_progress')
+          .select('*')
+          .eq('student_id', user.id)
+          .eq('course_id', courseId);
+
+        if (progressError) {
+          console.error('Error fetching module progress:', progressError);
+          return;
+        }
+
+        setModuleProgress(progressData || []);
+      } catch (err) {
+        console.error('Error fetching module progress:', err);
       }
     };
 
@@ -320,6 +352,17 @@ const CourseDetail: React.FC = () => {
       default:
         return type.toUpperCase();
     }
+  };
+
+  // Check if all modules are completed
+  const areAllModulesCompleted = () => {
+    if (modules.length === 0) return false;
+    
+    const completedModuleIds = moduleProgress
+      .filter(progress => progress.completed)
+      .map(progress => progress.module_id);
+    
+    return modules.every(module => completedModuleIds.includes(module.id));
   };
 
   const handleViewLesson = (lesson: ModuleLesson) => {
@@ -745,9 +788,7 @@ const CourseDetail: React.FC = () => {
                     </Link>
                     
                     {/* Practice Exams - Only show when all modules are complete */}
-                    {modules.length > 0 && modules.every(module => 
-                      module.lessons.every(lesson => lesson.completed || false)
-                    ) && (
+                    {areAllModulesCompleted() ? (
                       <Link
                         to={`/portal/practice-exams/${courseId}`}
                         className="w-full flex items-center justify-center px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors duration-200"
@@ -755,6 +796,11 @@ const CourseDetail: React.FC = () => {
                         <Award className="h-5 w-5 mr-2" />
                         Practice Exams
                       </Link>
+                    ) : (
+                      <div className="w-full flex items-center justify-center px-4 py-3 bg-gray-100 text-gray-500 font-medium rounded-lg cursor-not-allowed">
+                        <Award className="h-5 w-5 mr-2" />
+                        Complete all modules to unlock Practice Exams
+                      </div>
                     )}
                   </>
                 ) : (
