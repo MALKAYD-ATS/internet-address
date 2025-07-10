@@ -743,6 +743,19 @@ const CourseDetail: React.FC = () => {
                       <Target className="h-5 w-5 mr-2" />
                       Practice Questions
                     </Link>
+                    
+                    {/* Practice Exams - Only show when all modules are complete */}
+                    {modules.length > 0 && modules.every(module => 
+                      module.lessons.every(lesson => lesson.completed || false)
+                    ) && (
+                      <Link
+                        to={`/portal/practice-exams/${courseId}`}
+                        className="w-full flex items-center justify-center px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors duration-200"
+                      >
+                        <Award className="h-5 w-5 mr-2" />
+                        Practice Exams
+                      </Link>
+                    )}
                   </>
                 ) : (
                   <Link
