@@ -324,14 +324,11 @@ const CourseDetail: React.FC = () => {
 
   const handleViewLesson = (lesson: ModuleLesson) => {
     if (lesson.content) {
-      console.log('Opening lesson:', lesson.title, 'Content URL:', lesson.content);
-      
       // Check if it's a PDF file
       const isPDF = lesson.type.toLowerCase() === 'pdf' || 
                    lesson.content.toLowerCase().includes('.pdf');
       
       if (isPDF) {
-        console.log('Opening PDF in slide viewer');
         // Open in PDF slide viewer
         setPdfViewer({
           isOpen: true,
@@ -339,14 +336,12 @@ const CourseDetail: React.FC = () => {
           lessonTitle: lesson.title
         });
       } else {
-        console.log('Opening non-PDF content in new tab');
         // Open in new tab for non-PDF files
         window.open(lesson.content, '_blank', 'noopener,noreferrer');
       }
     } else {
-      console.warn('No content URL available for lesson:', lesson.title);
       // Show user-friendly message for missing content
-      alert('This lesson content is not yet available. Please contact support if you believe this is an error.');
+      setError('This lesson content is not yet available. Please contact support if you believe this is an error.');
     }
   };
 
