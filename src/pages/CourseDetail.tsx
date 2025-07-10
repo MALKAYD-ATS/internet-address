@@ -79,6 +79,20 @@ const CourseDetail: React.FC = () => {
   const [completedModules, setCompletedModules] = useState(0);
   const [completingLesson, setCompletingLesson] = useState<string | null>(null);
   
+  // Helper function to check if a module should be accessible
+  const isModuleAccessible = (moduleOrder: number) => {
+    if (moduleOrder === 1) return true; // First module is always accessible
+    
+    // Check if all previous modules are completed
+    for (let i = 1; i < moduleOrder; i++) {
+      const previousModule = modules.find(m => m.order === i);
+      if (previousModule && !isModuleCompleted(previousModule.id)) {
+        return false;
+      }
+    }
+    return true;
+  };
+
   const [pdfViewer, setPdfViewer] = useState<{
     isOpen: boolean;
     pdfUrl: string | null;
@@ -264,6 +278,7 @@ const CourseDetail: React.FC = () => {
   };
 
   const openPdfViewer = (pdfUrl: string, lessonTitle: string, lessonId: string, moduleId: string) => {
+    console.log('Opening PDF viewer with URL:', pdfUrl); // Debug log
     setPdfViewer({
       isOpen: true,
       pdfUrl,
@@ -509,11 +524,22 @@ const CourseDetail: React.FC = () => {
                     {modules.map((module) => (
                       <div key={module.id} className="border rounded-lg">
                         <button
-                          onClick={() => setExpandedModule(expandedModule === module.id ? null : module.id)}
-                          className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors"
+                          onClick={() => {
+                            if (isModuleAccessible(module.order)) {
+                              setExpandedModule(expandedModule === module.id ? null : module.id);
+                            }
+                          }}
+                          disabled={!isModuleAccessible(module.order)}
+                          className={`w-full flex items-center justify-between p-4 text-left transition-colors ${
+                            isModuleAccessible(module.order) 
+                              ? 'hover:bg-gray-50 cursor-pointer' 
+                              : 'bg-gray-100 cursor-not-allowed opacity-60'
+                          }`}
                         >
                           <div className="flex items-center space-x-3">
-                            {isModuleCompleted(module.id) ? (
+                            {!isModuleAccessible(module.order) ? (
+                              <Lock className="w-5 h-5 text-gray-400" />
+                            ) : isModuleCompleted(module.id) ? (
                               <CheckCircle className="w-5 h-5 text-green-600" />
                             ) : (
                               <div className="w-5 h-5 border-2 border-gray-300 rounded-full" />
@@ -523,10 +549,15 @@ const CourseDetail: React.FC = () => {
                               {module.description && (
                                 <p className="text-sm text-gray-600">{module.description}</p>
                               )}
+                              {!isModuleAccessible(module.order) && (
+                                <p className="text-xs text-red-600 mt-1">
+                                  Complete previous modules to unlock
+                                </p>
+                              )}
                             </div>
                           </div>
                           <div className="flex items-center space-x-2">
-                            {!isModuleCompleted(module.id) && (
+                            {isModuleAccessible(module.order) && !isModuleCompleted(module.id) && (
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -561,8 +592,144 @@ const CourseDetail: React.FC = () => {
                                       <button
                                         key={resource.id}
                                         onClick={() => {
-                                          if (resource.resource_type === 'file' && (resource.url || resource.file_path)) {
-                                            const pdfUrl = resource.url || resource.file_path;
+                                          console.log('Resource clicked:', resource); // Debug log
+                                          if (resource.resource_type === 'file') {
+                                            // Try both URL and file_path, ensure we have a valid URL
+                                            let pdfUrl = resource.url || resource.file_path;
+                                            
+                                            // If it's a relative path, make it absolute
+                                            if (pdfUrl && !pdfUrl.startsWith('http') && !pdfUrl.startsWith('/')) {
+                                              pdfUrl = '/' + pdfUrl;
+                                            }
+                                            
+                                            console.log('Final PDF URL:', pdfUrl); // Debug log
+                                            
+                                            if (pdfUrl) {
+                                              openPdfViewer(pdfUrl, lesson.title, lesson.id, module.id);
+                                            } else {
+                                              console.error('No valid PDF URL found for resource:', resource);
+                                              alert('PDF file not found. Please contact support.');
+                                            }
+                                          } else if (resource.resource_type === 'link' && resource.url) {
+                                            window.open(resource.url, '_blank');
+                                          }
+                                        }}
+                                        disabled={!isModuleAccessible(module.order)}
+                                        className={`text-sm px-3 py-1 rounded transition-colors ${
+                                          isModuleAccessible(module.order)
+                                            ? 'bg-blue-600 text-white hover:bg-blue-700'
+                                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                        }`}
+                                      >
+                                        {resource.resource_type === 'file' ? 'View PDF' : 'Open Link'}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Sidebar */}
+              <div className="space-y-6">
+                {/* Progress Overview */}
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Progress</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex justify-between text-sm text-gray-600 mb-1">
+                        <span>Course Completion</span>
+                        <span>{Math.round((completedModules / totalModules) * 100) || 0}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${(completedModules / totalModules) * 100 || 0}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 text-center">
+                      <div className="bg-blue-50 rounded-lg p-3">
+                        <div className="text-2xl font-bold text-blue-600">{completedModules}</div>
+                        <div className="text-sm text-gray-600">Completed</div>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <div className="text-2xl font-bold text-gray-600">{totalModules - completedModules}</div>
+                        <div className="text-sm text-gray-600">Remaining</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Course Info */}
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Course Information</h3>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Duration:</span>
+                      <span className="font-medium">{course.duration}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Level:</span>
+                      <span className="font-medium">{course.level}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Type:</span>
+                      <span className="font-medium">{course.type}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Max Students:</span>
+                      <span className="font-medium">{course.max_students}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Instructor */}
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Instructor</h3>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+                      <User className="w-6 h-6 text-gray-400" />
+                    </div>
+                    <div>
+                      <div className="font-medium text-gray-900">Course Instructor</div>
+                      <div className="text-sm text-gray-600">Aboriginal Training Services</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* PDF Viewer Modal */}
+      {pdfViewer.isOpen && pdfViewer.pdfUrl && (
+        <PDFSlideViewer
+          pdfUrl={pdfViewer.pdfUrl}
+          lessonTitle={pdfViewer.lessonTitle || "Untitled"}
+          onClose={closePdfViewer}
+          onComplete={
+            pdfViewer.lessonId && pdfViewer.moduleId
+              ? () => handleMarkLessonComplete(pdfViewer.lessonId!, pdfViewer.moduleId!)
+              : undefined
+          }
+          showCompleteButton={
+            pdfViewer.moduleId ? !isModuleCompleted(pdfViewer.moduleId) : false
+          }
+        />
+      )}
+    </>
+  );
+};
+
+export default CourseDetail;
                                             openPdfViewer(pdfUrl, lesson.title, lesson.id, module.id);
                                           } else if (resource.resource_type === 'link' && resource.url) {
                                             window.open(resource.url, '_blank');
