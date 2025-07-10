@@ -61,7 +61,7 @@ const EditProfile: React.FC<EditProfileProps> = ({ onClose, onUpdate }) => {
         full_name: data.full_name || '',
         email: user.email || '',
         phone_number: data.phone_number || '',
-        profile_image_url: data.profile_image_url || ''
+        profile_image_url: data.profile_image || ''
       }));
     } catch (err) {
       console.error('Profile fetch error:', err);
@@ -158,7 +158,7 @@ const EditProfile: React.FC<EditProfileProps> = ({ onClose, onUpdate }) => {
         .update({
           full_name: formData.full_name,
           phone_number: formData.phone_number,
-          profile_image_url: formData.profile_image_url
+          profile_image: formData.profile_image_url
         })
         .eq('id', user.id);
 
