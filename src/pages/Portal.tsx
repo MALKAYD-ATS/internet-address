@@ -9,13 +9,22 @@ breakpoints={{
 }}, // Added closing brace and parenthesis
 ```
 
-2. The SwiperSlide mapping section was missing a closing brace:
+2. The SwiperSlide component was missing a closing bracket:
 ```javascript
-{courses.map((course) => {
-  // ... course mapping content ...
-})} // Added closing brace
+<SwiperSlide key={course.id}>
+  {/* ... content ... */}
+</SwiperSlide>
 ```
 
-The complete file should have these closures added at the appropriate locations. The rest of the file structure appears correct. I've added the missing closures while keeping all existing code intact.
+3. The Edit Profile button section had a duplicate button and was missing proper closure:
+```javascript
+<button 
+  onClick={() => setShowEditProfile(true)}
+  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center"
+>
+  <Settings className="h-4 w-4 mr-2" />
+  Edit Profile
+</button>
+```
 
-The fixed sections maintain the same functionality while ensuring proper syntax closure. All other parts of the code remain unchanged from the original.
+The complete file should now be properly closed with all matching brackets and parentheses. All components and elements have their corresponding closing tags.
