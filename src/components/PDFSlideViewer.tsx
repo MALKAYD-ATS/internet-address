@@ -27,6 +27,7 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({ pdfUrl, lessonTitle, on
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const renderTaskRef = useRef<pdfjsLib.RenderTask | null>(null);
 
   // Load PDF document
   useEffect(() => {
@@ -123,6 +124,11 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({ pdfUrl, lessonTitle, on
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);
       }
+      // Also cleanup any active render task
+      if (renderTaskRef.current) {
+        renderTaskRef.current.cancel();
+        renderTaskRef.current = null;
+      }
     };
   }, [pdfUrl, retryCount]);
 
@@ -134,6 +140,13 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({ pdfUrl, lessonTitle, on
       try {
         setPageLoading(true);
         console.log('Rendering page:', currentPage);
+        
+        // Cancel any previous render task before starting a new one
+        if (renderTaskRef.current) {
+          console.log('Cancelling previous render task...');
+          renderTaskRef.current.cancel();
+          renderTaskRef.current = null;
+        }
         
         const page = await pdf.getPage(currentPage);
         const canvas = canvasRef.current;
@@ -164,9 +177,22 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({ pdfUrl, lessonTitle, on
           viewport: scaledViewport,
         };
 
-        await page.render(renderContext).promise;
+        // Store the render task so it can be cancelled if needed
+        const renderTask = page.render(renderContext);
+        renderTaskRef.current = renderTask;
+        
+        await renderTask.promise;
+        
+        // Clear the render task ref after successful completion
+        renderTaskRef.current = null;
         console.log('Page rendered successfully:', currentPage);
-      } catch (err) {
+      } catch (err: any) {
+        // Handle cancellation errors (these are expected and normal)
+        if (err?.name === 'RenderingCancelledException') {
+          console.log('Rendering cancelled (expected).');
+          return; // Don't set error state for cancellations
+        }
+        
         console.error('Error rendering page:', err);
         setError('Failed to render page. Please try again.');
       } finally {
@@ -175,6 +201,15 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({ pdfUrl, lessonTitle, on
     };
 
     renderPage();
+    
+    // Cleanup function to cancel any ongoing render task
+    return () => {
+      if (renderTaskRef.current) {
+        console.log('Cleaning up render task on unmount/dependency change...');
+        renderTaskRef.current.cancel();
+        renderTaskRef.current = null;
+      }
+    };
   }, [pdf, currentPage, scale]);
 
   // Handle keyboard navigation
