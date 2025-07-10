@@ -1,15 +1,47 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
+
+interface HeaderLogo {
+  id: string;
+  logo_url: string;
+  alt_text: string;
+  order_index: number;
+  is_active: boolean;
+}
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [headerLogo, setHeaderLogo] = useState<HeaderLogo | null>(null);
   const navigate = useNavigate();
   const { signIn } = useAuth();
+
+  // Fetch header logo
+  useEffect(() => {
+    const fetchHeaderLogo = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('header_logo')
+          .select('*')
+          .eq('is_active', true)
+          .order('order_index', { ascending: true })
+          .limit(1)
+          .single();
+
+        if (!error && data) {
+          setHeaderLogo(data);
+        }
+      } catch (err) {
+        console.error('Header logo fetch error:', err);
+      }
+    };
+
+    fetchHeaderLogo();
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,6 +66,17 @@ const Login: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
+          <div className="mb-6">
+            <img
+              src={headerLogo?.logo_url || "/ATS.png"}
+              alt={headerLogo?.alt_text || "Aboriginal Training Services"}
+              className="h-16 w-auto mx-auto"
+              onError={(e) => {
+                e.currentTarget.src = '/ATS.png';
+                e.currentTarget.alt = 'Aboriginal Training Services';
+              }}
+            />
+          </div>
           <h2 className="text-3xl font-bold text-gray-900">Student Portal</h2>
           <p className="mt-2 text-gray-600">Sign in to access your courses</p>
         </div>

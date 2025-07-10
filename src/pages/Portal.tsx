@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import EditProfile from '../components/EditProfile';
 
 interface HeaderLogo {
   id: string;
@@ -92,6 +93,7 @@ const Portal: React.FC = () => {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [enrollingCourseId, setEnrollingCourseId] = useState<number | null>(null);
   const [enrollmentMessage, setEnrollmentMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [showEditProfile, setShowEditProfile] = useState(false);
 
   // Fetch header logo
   useEffect(() => {
@@ -351,7 +353,7 @@ const Portal: React.FC = () => {
               />
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Student Portal</h1>
-                <p className="text-gray-600 text-sm sm:text-base">Welcome back!</p>
+                <p className="text-gray-600 text-xs sm:text-sm md:text-base">Welcome back!</p>
               </div>
             </div>
             <button
@@ -444,8 +446,13 @@ const Portal: React.FC = () => {
 
                   <button className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center">
                     <Settings className="h-4 w-4 mr-2" />
-                    Edit Profile
-                    <span className="ml-2 text-xs bg-blue-500 px-2 py-1 rounded">Coming Soon</span>
+                    <button
+                      onClick={() => setShowEditProfile(true)}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center"
+                    >
+                      <Settings className="h-4 w-4 mr-2" />
+                      Edit Profile
+                    </button>
                   </button>
                 </div>
               ) : null}
@@ -528,7 +535,7 @@ const Portal: React.FC = () => {
                       768: {
                         slidesPerView: 2,
                       },
-                    }}
+                    onClick={() => navigate('/portal')}
                     className="course-carousel px-12"
                   >
                     {courses.map((course) => {
@@ -741,7 +748,7 @@ const Portal: React.FC = () => {
                     <span className="text-green-800 font-medium">Coming Soon</span>
                   </div>
                   <p className="text-green-700 text-sm mt-2">
-                    Digital certificates and verification system will be available here.
+                    Back to Portal
                   </p>
                 </div>
               </div>
@@ -765,6 +772,32 @@ const Portal: React.FC = () => {
         </div>
 
       </div>
+
+      {/* Edit Profile Modal */}
+      {showEditProfile && (
+        <EditProfile
+          onClose={() => setShowEditProfile(false)}
+          onUpdate={() => {
+            // Refresh profile data
+            const fetchProfile = async () => {
+              if (!user) return;
+              try {
+                const { data, error } = await supabase
+                  .from('students')
+                  .select('*')
+                  .eq('id', user.id)
+                  .single();
+                if (!error && data) {
+                  setProfile(data);
+                }
+              } catch (err) {
+                console.error('Profile refresh error:', err);
+              }
+            };
+            fetchProfile();
+          }}
+        />
+      )}
 
       {/* Custom Styles for Swiper */}
       <style jsx>{`
