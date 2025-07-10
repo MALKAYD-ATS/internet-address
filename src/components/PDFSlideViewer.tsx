@@ -132,91 +132,71 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({ pdfUrl, lessonTitle, on
     };
   }, [pdfUrl, retryCount]);
 
-  // Render current page
   useEffect(() => {
-    let renderTask: pdfjsLib.RenderTask | null = null;
+  let renderTask: pdfjsLib.PDFRenderTask | null = null;
 
-    const renderPage = async () => {
-      if (!pdf || !canvasRef.current) return;
+  const renderPage = async () => {
+    if (!pdf || !canvasRef.current) return;
 
-      try {
-        setPageLoading(true);
-        console.log('Rendering page:', currentPage);
-        
-        const page = await pdf.getPage(currentPage);
-        const canvas = canvasRef.current;
-        const context = canvas.getContext('2d');
+    try {
+      setPageLoading(true);
 
-        if (!context) return;
+      const page = await pdf.getPage(currentPage);
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+      if (!context) return;
 
-        // Calculate scale based on container width
-        const containerWidth = containerRef.current?.clientWidth || 800;
-        const viewport = page.getViewport({ scale: 1.0 });
-        
-        // Compute a base scale to fit the container (both width and height)
-        const containerHeight = window.innerHeight - 200; // Account for header/footer
-        const baseScale = Math.min(
-          (containerWidth - 40) / viewport.width,
-          containerHeight / viewport.height
-        );
+      // ALWAYS use the same scale factor (100%)
+      const baseViewport = page.getViewport({ scale: 1.0 });
 
-        // Combine the base scale with the zoom factor
-        const calculatedScale = baseScale * scale;
+      // Instead of progressively calculating, just clamp to container size once
+      const containerWidth = containerRef.current?.clientWidth || window.innerWidth;
+      const containerHeight = window.innerHeight - 200; // adjust for header/footer
+      const scaleFactor = Math.min(
+        containerWidth / baseViewport.width,
+        containerHeight / baseViewport.height,
+        1 // never upscale beyond 100%
+      ) * scale; // apply zoom factor
 
-        const scaledViewport = page.getViewport({ scale: calculatedScale });
+      const viewport = page.getViewport({ scale: scaleFactor });
 
-        // Set canvas dimensions
-        canvas.height = scaledViewport.height;
-        canvas.width = scaledViewport.width;
-
-        // Clear canvas
-        context.clearRect(0, 0, canvas.width, canvas.height);
-
-        // Cancel any previous render task before starting a new one
-        if (renderTask) {
-          console.log('Cancelling previous render task...');
-          renderTask.cancel();
-        }
-
-        // Render page
-        const renderContext = {
-          canvasContext: context,
-          viewport: scaledViewport,
-        };
-
-        // Create and store the render task
-        renderTask = page.render(renderContext);
-        
-        await renderTask.promise;
-        
-        // Clear the render task after successful completion
-        renderTask = null;
-        console.log('Page rendered successfully:', currentPage);
-      } catch (err: any) {
-        // Handle cancellation errors (these are expected and normal)
-        if (err?.name === 'RenderingCancelledException') {
-          console.log('Rendering cancelled (expected).');
-          return; // Don't set error state for cancellations
-        }
-        
-        console.error('Error rendering page:', err);
-        setError('Failed to render page. Please try again.');
-      } finally {
-        setPageLoading(false);
-      }
-    };
-
-    renderPage();
-    
-    // Cleanup function to cancel any ongoing render task when dependencies change
-    return () => {
+      // Cancel previous render
       if (renderTask) {
-        console.log('Cleaning up render task on dependency change...');
         renderTask.cancel();
-        renderTask = null;
       }
-    };
-  }, [pdf, currentPage, scale]);
+
+      // Set canvas size
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+
+      // Clear canvas
+      context.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Start render
+      renderTask = page.render({
+        canvasContext: context,
+        viewport: viewport,
+      });
+
+      await renderTask.promise;
+    } catch (err) {
+      if (err?.name !== "RenderingCancelledException") {
+        console.error("Error rendering page:", err);
+        setError("Failed to render page. Please try again.");
+      }
+    } finally {
+      setPageLoading(false);
+    }
+  };
+
+  renderPage();
+
+  return () => {
+    if (renderTask) {
+      renderTask.cancel();
+    }
+  };
+}, [pdf, currentPage, scale]);
 
   // Handle keyboard navigation
   useEffect(() => {
