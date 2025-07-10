@@ -130,93 +130,103 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({ pdfUrl, lessonTitle, on
   }, [pdfUrl, retryCount]);
 
   useEffect(() => {
-  let renderTask: pdfjsLib.PDFRenderTask | null = null;
+    let renderTask: pdfjsLib.PDFRenderTask | null = null;
 
-  const renderPage = async () => {
-    if (!pdf || !canvasRef.current) return;
+    const renderPage = async () => {
+      if (!pdf || !canvasRef.current) return;
 
-    try {
-      setPageLoading(true);
+      try {
+        setPageLoading(true);
 
-      const page = await pdf.getPage(currentPage);
-      const canvas = canvasRef.current;
-      const context = canvas.getContext('2d');
-      if (!context) return;
+        const page = await pdf.getPage(currentPage);
+        const canvas = canvasRef.current;
+        const context = canvas.getContext('2d');
+        if (!context) return;
 
-      // ALWAYS use the same scale factor (100%)
-      const baseViewport = page.getViewport({ scale: 1.0 });
+        // Cancel previous render task if it exists
+        if (renderTask) {
+          renderTask.cancel();
+        }
 
-      // Instead of progressively calculating, just clamp to container size once
-      const containerWidth = containerRef.current?.clientWidth || window.innerWidth;
-      const containerHeight = window.innerHeight - 200; // adjust for header/footer
-      const scaleFactor = Math.min(
-        containerWidth / baseViewport.width,
-        containerHeight / baseViewport.height,
-        1 // never upscale beyond 100%
-      ) * scale; // apply zoom factor
+        // Get the base viewport at scale 1.0
+        const viewport = page.getViewport({ scale: 1.0 });
+        
+        // Calculate container dimensions
+        const containerWidth = containerRef.current?.clientWidth || window.innerWidth - 100;
+        const containerHeight = window.innerHeight - 200; // Leave room for header/footer
+        
+        // Calculate base scale to fit container (fresh calculation each time)
+        const baseScale = Math.min(
+          (containerWidth - 40) / viewport.width,
+          containerHeight / viewport.height
+        );
+        
+        // Apply user zoom factor to base scale
+        const finalScale = baseScale * scale;
+        
+        // Get final viewport with calculated scale
+        const scaledViewport = page.getViewport({ scale: finalScale });
 
-      const viewport = page.getViewport({ scale: scaleFactor });
+        // Set canvas dimensions
+        canvas.height = scaledViewport.height;
+        canvas.width = scaledViewport.width;
 
-      // Cancel previous render
-      if (renderTask) {
-        renderTask.cancel();
-      }
+        // Clear canvas
+        context.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Set canvas size
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
+        // Create render task
+        renderTask = page.render({
+          canvasContext: context,
+          viewport: scaledViewport,
+        });
 
-      // Clear canvas
-      context.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Start render
-      renderTask = page.render({
-        canvasContext: context,
-        viewport: viewport,
-      });
-
-      await renderTask.promise;
-    } catch (err) {
-      if (err?.name !== "RenderingCancelledException") {
-        console.error("Error rendering page:", err);
-        setError("Failed to render page. Please try again.");
-      }
-    } finally {
-      setPageLoading(false);
-    }
-  };
-
-  renderPage();
-
-  return () => {
-    if (renderTask) {
-      renderTask.cancel();
-    }
-  };
-}, [pdf, currentPage, scale]);
-
-  // Handle keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      switch (event.key) {
-        case 'ArrowLeft':
-          event.preventDefault();
-          goToPreviousPage();
-          break;
-        case 'ArrowRight':
-          event.preventDefault();
-          goToNextPage();
-          break;
-        case 'Escape':
-          event.preventDefault();
-          onClose();
-          break;
+        await renderTask.promise;
+      } catch (err) {
+        if (err?.name !== 'RenderingCancelledException') {
+          console.error('Error rendering page:', err);
+          setError('Failed to render page. Please try again.');
+        }
+      } finally {
+        setPageLoading(false);
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [currentPage, totalPages]);
+    renderPage();
+
+    return () => {
+      if (renderTask) {
+        renderTask.cancel();
+      }
+    };
+  }, [pdf, currentPage, scale]);
+
+  // Handle responsive scale adjustment
+  useEffect(() => {
+    const handleResize = () => {
+      // Debounce resize events to avoid excessive re-renders
+      const timer = setTimeout(() => {
+        if (pdf && currentPage) {
+          // Force re-render by updating a state that triggers the render effect
+          setPageLoading(false); // This will trigger a re-render
+        }
+      }, 150);
+      
+      return () => clearTimeout(timer);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [pdf, currentPage]);
+
+  // Cleanup render task on unmount
+  useEffect(() => {
+    return () => {
+      if (renderTaskRef.current) {
+        renderTaskRef.current.cancel();
+        renderTaskRef.current = null;
+      }
+    };
+  }, []);
 
   // Navigation functions with debouncing
   const [navigationDisabled, setNavigationDisabled] = useState(false);
@@ -239,7 +249,31 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({ pdfUrl, lessonTitle, on
     
     // Re-enable navigation after a short delay
     setTimeout(() => setNavigationDisabled(false), 300);
-  };
+  };</parameter>
+
+  // Handle keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      switch (event.key) {
+        case 'ArrowLeft':
+          event.preventDefault();
+          goToPreviousPage();
+          break;
+        case 'ArrowRight':
+          event.preventDefault();
+          goToNextPage();
+          break;
+        case 'Escape':
+          event.preventDefault();
+          onClose();
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [currentPage, totalPages]);</parameter>
+
 
   // Zoom functions
   const zoomIn = () => {
@@ -259,23 +293,8 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({ pdfUrl, lessonTitle, on
     setRetryCount(prev => prev + 1);
   };
 
-  // Handle responsive scale adjustment
-  useEffect(() => {
-    const handleResize = () => {
-      // Trigger re-render on window resize
-      if (pdf && currentPage) {
-        const timer = setTimeout(() => {
-          setCurrentPage(prev => prev); // Trigger re-render
-        }, 100);
-        return () => clearTimeout(timer);
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [pdf, currentPage]);
-
   if (loading) {
+
     return (
       <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
         <div className="bg-white rounded-lg p-8 text-center max-w-md mx-4">
@@ -408,13 +427,16 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({ pdfUrl, lessonTitle, on
             )}
             <canvas
               ref={canvasRef}
-              className="block max-w-full max-h-full"
+              className="block"
               style={{
-                maxWidth: '100%',
+                width: '100%',
+                height: 'auto',
+                maxWidth: '100vw',
                 maxHeight: 'calc(100vh - 200px)',
               }}
             />
           </div>
+
         </div>
       </div>
 
