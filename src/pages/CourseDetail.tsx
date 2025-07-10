@@ -297,6 +297,20 @@ const CourseDetail: React.FC = () => {
 
         setCompletedModules(completedCount || 0);
 
+   // Get full progress records for this student/course
+const { data: progressData, error: progressError } = await supabase
+  .from('student_module_progress')
+  .select('*')
+  .eq('student_id', user.id)
+  .eq('course_id', courseId);
+
+if (progressError) {
+  console.error('Error fetching module progress records:', progressError);
+} else {
+  setModuleProgress(progressData || []);
+}
+     
+
         // Get exam metadata from courses_ats table
         const { data: examData, error: examError } = await supabase
           .from('courses_ats')
