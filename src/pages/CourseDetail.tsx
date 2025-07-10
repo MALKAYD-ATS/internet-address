@@ -119,13 +119,19 @@ const CourseDetail: React.FC = () => {
     isOpen: boolean;
     pdfUrl: string;
     lessonTitle: string;
+    lessonId: string;
+    moduleId: string;
   }>({
     isOpen: false,
     pdfUrl: '',
-    lessonTitle: ''
+    lessonTitle: '',
+    lessonId: '',
+    moduleId: ''
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [completingLesson, setCompletingLesson] = useState<string | null>(null);
+  const [completionMessage, setCompletionMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   // Fetch header logo
   useEffect(() => {
@@ -406,7 +412,9 @@ const CourseDetail: React.FC = () => {
         setPdfViewer({
           isOpen: true,
           pdfUrl: lesson.content,
-          lessonTitle: lesson.title
+          lessonTitle: lesson.title,
+          lessonId: lesson.id,
+          moduleId: lesson.module_id
         });
       } else {
         // Open in new tab for non-PDF files
@@ -422,8 +430,75 @@ const CourseDetail: React.FC = () => {
     setPdfViewer({
       isOpen: false,
       pdfUrl: '',
-      lessonTitle: ''
+      lessonTitle: '',
+      lessonId: '',
+      moduleId: ''
     });
+  };
+
+  // Handle marking lesson as complete
+  const handleMarkLessonComplete = async (lessonId: string, moduleId: string) => {
+    if (!user || !courseId) return;
+
+    setCompletingLesson(lessonId);
+    setCompletionMessage(null);
+
+    try {
+      const { error } = await supabase
+        .from('student_module_progress')
+        .upsert([
+          {
+            student_id: user.id,
+            course_id: courseId,
+            module_id: moduleId,
+            completed: true,
+            completed_at: new Date().toISOString(),
+          }
+        ], { 
+          onConflict: 'student_id,course_id,module_id'
+        });
+
+      if (error) {
+        console.error('Error marking lesson complete:', error);
+        setCompletionMessage({
+          type: 'error',
+          text: 'Failed to mark lesson as complete. Please try again.'
+        });
+      } else {
+        setCompletionMessage({
+          type: 'success',
+          text: 'Lesson marked as complete!'
+        });
+        
+        // Refresh module completion data
+        await fetchModuleCompletionData();
+      }
+    } catch (err) {
+      console.error('Completion error:', err);
+      setCompletionMessage({
+        type: 'error',
+        text: 'An unexpected error occurred. Please try again.'
+      });
+    } finally {
+      setCompletingLesson(null);
+    }
+  };
+
+  // Clear completion message after 5 seconds
+  useEffect(() => {
+    if (completionMessage) {
+      const timer = setTimeout(() => {
+        setCompletionMessage(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [completionMessage]);
+
+  // Check if a module is completed
+  const isModuleCompleted = (moduleId: string): boolean => {
+    return moduleProgress.some(progress => 
+      progress.module_id === moduleId && progress.completed
+    );
   };
 
   if (loading) {
@@ -515,6 +590,26 @@ const CourseDetail: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Completion Message */}
+      {completionMessage && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+          <div className={`p-4 rounded-lg border ${
+            completionMessage.type === 'success' 
+              ? 'bg-green-50 border-green-200 text-green-800' 
+              : 'bg-red-50 border-red-200 text-red-800'
+          }`}>
+            <div className="flex items-center">
+              {completionMessage.type === 'success' ? (
+                <CheckCircle className="h-5 w-5 mr-2 flex-shrink-0" />
+              ) : (
+                <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
+              )}
+              <span className="font-medium">{completionMessage.text}</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Navigation */}
@@ -628,10 +723,19 @@ const CourseDetail: React.FC = () => {
                           {/* Module Header */}
                           <button
                             onClick={() => toggleModuleExpansion(module.id)}
-                            className="w-full px-6 py-4 bg-gray-50 hover:bg-gray-100 transition-colors duration-200 flex items-center justify-between"
+                            className={`w-full px-6 py-4 transition-colors duration-200 flex items-center justify-between ${
+                              isModuleCompleted(module.id) 
+                                ? 'bg-green-50 hover:bg-green-100' 
+                                : 'bg-gray-50 hover:bg-gray-100'
+                            }`}
                           >
                             <div className="flex items-center">
-                              <Folder className="h-5 w-5 text-blue-600 mr-3" />
+                              <div className="flex items-center mr-3">
+                                <Folder className="h-5 w-5 text-blue-600 mr-2" />
+                                {isModuleCompleted(module.id) && (
+                                  <CheckCircle className="h-4 w-4 text-green-600" />
+                                )}
+                              </div>
                               <div className="text-left">
                                 <h4 className="font-semibold text-gray-900">{module.title}</h4>
                                 {module.description && (
@@ -640,6 +744,11 @@ const CourseDetail: React.FC = () => {
                                 <p className="text-xs text-gray-500 mt-1">
                                   {module.lessons.length} lesson{module.lessons.length !== 1 ? 's' : ''}
                                 </p>
+                                {isModuleCompleted(module.id) && (
+                                  <p className="text-xs text-green-600 font-medium mt-1">
+                                    ✓ Module Completed
+                                  </p>
+                                )}
                               </div>
                             </div>
                             {expandedModules.has(module.id) ? (
@@ -686,6 +795,31 @@ const CourseDetail: React.FC = () => {
                                           </button>
                                         ) : (
                                           <span className="text-sm text-gray-400 ml-4">Coming Soon</span>
+                                        )}
+                                        
+                                        {/* Mark as Complete Button */}
+                                        {lesson.content && !isModuleCompleted(module.id) && (
+                                          <button
+                                            onClick={() => handleMarkLessonComplete(lesson.id, module.id)}
+                                            disabled={completingLesson === lesson.id}
+                                            className={`flex items-center px-4 py-2 rounded-lg transition-colors duration-200 ml-2 ${
+                                              completingLesson === lesson.id
+                                                ? 'bg-gray-400 cursor-not-allowed text-white'
+                                                : 'bg-green-600 hover:bg-green-700 text-white'
+                                            }`}
+                                          >
+                                            {completingLesson === lesson.id ? (
+                                              <>
+                                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                                <span className="hidden sm:inline">Completing...</span>
+                                              </>
+                                            ) : (
+                                              <>
+                                                <CheckCircle className="h-4 w-4 mr-2" />
+                                                <span className="hidden sm:inline">Complete</span>
+                                              </>
+                                            )}
+                                          </button>
                                         )}
                                       </div>
                                     </div>
@@ -906,6 +1040,8 @@ const CourseDetail: React.FC = () => {
           pdfUrl={pdfViewer.pdfUrl}
           lessonTitle={pdfViewer.lessonTitle}
           onClose={closePdfViewer}
+          onComplete={() => handleMarkLessonComplete(pdfViewer.lessonId, pdfViewer.moduleId)}
+          showCompleteButton={!isModuleCompleted(pdfViewer.moduleId)}
         />
       )}
     </div>

@@ -10,9 +10,17 @@ interface PDFSlideViewerProps {
   pdfUrl: string;
   lessonTitle: string;
   onClose: () => void;
+  onComplete?: () => void;
+  showCompleteButton?: boolean;
 }
 
-const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({ pdfUrl, lessonTitle, onClose }) => {
+const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({ 
+  pdfUrl, 
+  lessonTitle, 
+  onClose, 
+  onComplete,
+  showCompleteButton = false 
+}) => {
   const [pdf, setPdf] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
@@ -20,6 +28,7 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({ pdfUrl, lessonTitle, on
   const [error, setError] = useState<string | null>(null);
   const [scale, setScale] = useState(1.0);
   const [pageLoading, setPageLoading] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
   
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -167,6 +176,23 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({ pdfUrl, lessonTitle, on
 
   const resetZoom = () => {
     setScale(1.0);
+  };
+
+  const handleComplete = async () => {
+    if (!onComplete) return;
+    
+    setIsCompleting(true);
+    try {
+      await onComplete();
+      // Close viewer after successful completion
+      setTimeout(() => {
+        onClose();
+      }, 1500);
+    } catch (error) {
+      console.error('Error completing lesson:', error);
+    } finally {
+      setIsCompleting(false);
+    }
   };
 
   // Handle responsive scale adjustment
@@ -348,8 +374,35 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({ pdfUrl, lessonTitle, on
             </button>
           </div>
 
-          <div className="text-sm text-gray-500">
-            Use arrow keys to navigate • ESC to close
+          <div className="flex items-center space-x-4">
+            {/* Mark as Complete Button in Footer */}
+            {showCompleteButton && currentPage === totalPages && (
+              <button
+                onClick={handleComplete}
+                disabled={isCompleting}
+                className={`flex items-center px-4 py-2 rounded-lg font-medium transition-colors duration-200 ${
+                  isCompleting
+                    ? 'bg-gray-400 cursor-not-allowed text-white'
+                    : 'bg-green-600 text-white hover:bg-green-700'
+                }`}
+              >
+                {isCompleting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Completing...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Mark Complete
+                  </>
+                )}
+              </button>
+            )}
+            
+            <div className="text-sm text-gray-500">
+              Use arrow keys to navigate • ESC to close
+            </div>
           </div>
         </div>
       </div>
@@ -371,6 +424,33 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({ pdfUrl, lessonTitle, on
           max-height: calc(100vh - 200px);
         }
       `}</style>
+      
+      {/* Mark as Complete Button */}
+      {showCompleteButton && (
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <button
+            onClick={handleComplete}
+            disabled={isCompleting}
+            className={`w-full py-3 px-4 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center ${
+              isCompleting
+                ? 'bg-gray-400 cursor-not-allowed text-white'
+                : 'bg-green-600 hover:bg-green-700 text-white transform hover:scale-105'
+            }`}
+          >
+            {isCompleting ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Marking Complete...
+              </>
+            ) : (
+              <>
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Mark Lesson as Complete
+              </>
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 };
