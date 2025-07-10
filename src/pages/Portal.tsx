@@ -23,21 +23,22 @@ import {
   Calendar, 
   BookOpen, 
   Award, 
-  FileText, 
   Settings,
   LogOut,
   Loader2,
   AlertCircle,
   Clock,
   GraduationCap,
-  Bell,
   Users,
   DollarSign,
   Star,
   ChevronLeft,
   ChevronRight,
   CheckCircle,
-  UserPlus
+  UserPlus,
+  Edit3,
+  Save,
+  X
 } from 'lucide-react';
 
 interface StudentProfile {
@@ -92,6 +93,14 @@ const Portal: React.FC = () => {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [enrollingCourseId, setEnrollingCourseId] = useState<number | null>(null);
   const [enrollmentMessage, setEnrollmentMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  
+  // Profile editing state
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [editProfileData, setEditProfileData] = useState({
+    full_name: '',
+    phone_number: ''
+  });
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
 
   // Fetch header logo
   useEffect(() => {
@@ -141,6 +150,10 @@ const Portal: React.FC = () => {
           console.error('Error fetching profile:', error);
         } else {
           setProfile(data);
+          setEditProfileData({
+            full_name: data.full_name,
+            phone_number: data.phone_number || ''
+          });
         }
       } catch (err) {
         setError('An unexpected error occurred.');
@@ -287,7 +300,58 @@ const Portal: React.FC = () => {
       }, 5000);
       return () => clearTimeout(timer);
     }
+  const handleEditProfile = () => {
+    setIsEditingProfile(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingProfile(false);
+    if (profile) {
+      setEditProfileData({
+        full_name: profile.full_name,
+        phone_number: profile.phone_number || ''
+      });
+    }
+  };
+
+  const handleProfileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setEditProfileData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user || !profile) return;
+
+    setIsUpdatingProfile(true);
+    try {
+      const { data, error } = await supabase
+        .from('students')
+        .update({
+          full_name: editProfileData.full_name,
+          phone_number: editProfileData.phone_number
+        })
+        .eq('id', user.id)
+        .select()
+        .single();
   }, [enrollmentMessage]);
+      if (error) {
+        console.error('Error updating profile:', error);
+        // Show error message but don't prevent UI update
+      } else {
+        setProfile(data);
+      }
+      
+      setIsEditingProfile(false);
+    } catch (err) {
+      console.error('Profile update error:', err);
+      setIsEditingProfile(false);
+    } finally {
+      setIsUpdatingProfile(false);
+    }
+  };
 
   const handleSignOut = async () => {
     try {
@@ -412,7 +476,20 @@ const Portal: React.FC = () => {
                     <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <User className="h-10 w-10 text-blue-600" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900">{profile.full_name}</h3>
+                    {isEditingProfile ? (
+                      <div className="space-y-2">
+                        <input
+                          type="text"
+                          name="full_name"
+                          value={editProfileData.full_name}
+                          onChange={handleProfileInputChange}
+                          className="text-lg font-semibold text-gray-900 bg-gray-50 border border-gray-300 rounded px-2 py-1 text-center"
+                          placeholder="Full Name"
+                        />
+                      </div>
+                    ) : (
+                      <h3 className="text-lg font-semibold text-gray-900">{profile.full_name}</h3>
+                    )}
                     <p className="text-gray-600 text-sm">Student ID: {profile.id.slice(0, 8)}</p>
                   </div>
 
@@ -429,7 +506,18 @@ const Portal: React.FC = () => {
                       <Phone className="h-5 w-5 text-gray-400 mr-3" />
                       <div>
                         <p className="text-sm font-medium text-gray-900">Phone</p>
-                        <p className="text-sm text-gray-600">{profile.phone_number || 'Not provided'}</p>
+                        {isEditingProfile ? (
+                          <input
+                            type="tel"
+                            name="phone_number"
+                            value={editProfileData.phone_number}
+                            onChange={handleProfileInputChange}
+                            className="text-sm text-gray-600 bg-white border border-gray-300 rounded px-2 py-1 w-full mt-1"
+                            placeholder="Phone number"
+                          />
+                        ) : (
+                          <p className="text-sm text-gray-600">{profile.phone_number || 'Not provided'}</p>
+                        )}
                       </div>
                     </div>
 
@@ -442,11 +530,40 @@ const Portal: React.FC = () => {
                     </div>
                   </div>
 
-                  <button className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center">
-                    <Settings className="h-4 w-4 mr-2" />
-                    Edit Profile
-                    <span className="ml-2 text-xs bg-blue-500 px-2 py-1 rounded">Coming Soon</span>
-                  </button>
+                  <div className="mt-6">
+                    {isEditingProfile ? (
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={handleSaveProfile}
+                          disabled={isUpdatingProfile}
+                          className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center"
+                        >
+                          {isUpdatingProfile ? (
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          ) : (
+                            <Save className="h-4 w-4 mr-2" />
+                          )}
+                          Save
+                        </button>
+                        <button
+                          onClick={handleCancelEdit}
+                          disabled={isUpdatingProfile}
+                          className="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center"
+                        >
+                          <X className="h-4 w-4 mr-2" />
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={handleEditProfile}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center"
+                      >
+                        <Edit3 className="h-4 w-4 mr-2" />
+                        Edit Profile
+                      </button>
+                    )}
+                  </div>
                 </div>
               ) : null}
             </div>
@@ -723,29 +840,6 @@ const Portal: React.FC = () => {
               )}
             </div>
 
-            {/* Practice Exams Section */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                <FileText className="h-6 w-6 mr-2 text-blue-600" />
-                Practice Exams
-              </h2>
-              <div className="text-center py-12">
-                <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Practice Exams</h3>
-                <p className="text-gray-600 mb-4">
-                  Prepare for your certification exams with our practice tests.
-                </p>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-center justify-center">
-                    <Clock className="h-5 w-5 text-blue-600 mr-2" />
-                    <span className="text-blue-800 font-medium">Coming Soon</span>
-                  </div>
-                  <p className="text-blue-700 text-sm mt-2">
-                    Interactive practice exams and study materials will be available here.
-                  </p>
-                </div>
-              </div>
-            </div>
 
             {/* Certificates Section */}
             <div className="bg-white rounded-xl shadow-lg p-6">
@@ -771,20 +865,6 @@ const Portal: React.FC = () => {
               </div>
             </div>
 
-            {/* Notifications Section */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                <Bell className="h-6 w-6 mr-2 text-blue-600" />
-                Notifications
-              </h2>
-              <div className="text-center py-8">
-                <Bell className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No New Notifications</h3>
-                <p className="text-gray-600">
-                  Course updates and important announcements will appear here.
-                </p>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -802,12 +882,12 @@ const Portal: React.FC = () => {
               <p className="text-gray-600 text-sm">Enroll, track progress, and access materials</p>
             </div>
             <div className="text-center">
-              <FileText className="h-8 w-8 text-blue-600 mx-auto mb-3" />
-              <h3 className="font-semibold text-gray-900 mb-2">Interactive Exams</h3>
+              <Award className="h-8 w-8 text-blue-600 mx-auto mb-3" />
+              <h3 className="font-semibold text-gray-900 mb-2">Practice Exams</h3>
               <p className="text-gray-600 text-sm">Practice tests and certification exams</p>
             </div>
             <div className="text-center">
-              <Award className="h-8 w-8 text-blue-600 mx-auto mb-3" />
+              <CheckCircle className="h-8 w-8 text-blue-600 mx-auto mb-3" />
               <h3 className="font-semibold text-gray-900 mb-2">Digital Certificates</h3>
               <p className="text-gray-600 text-sm">Downloadable and verifiable credentials</p>
             </div>
