@@ -75,8 +75,6 @@ export type Database = {
           whats_included: any
           is_active: boolean | null
           is_online: boolean | null
-          practice_exam_time_limit: number | null
-          practice_exam_question_count: number | null
         }
         Insert: {
           id?: string
@@ -98,8 +96,6 @@ export type Database = {
           whats_included?: any
           is_active?: boolean | null
           is_online?: boolean | null
-          practice_exam_time_limit?: number | null
-          practice_exam_question_count?: number | null
         }
         Update: {
           id?: string
@@ -121,8 +117,6 @@ export type Database = {
           whats_included?: any
           is_active?: boolean | null
           is_online?: boolean | null
-          practice_exam_time_limit?: number | null
-          practice_exam_question_count?: number | null
         }
       }
       enrollments: {
@@ -145,35 +139,6 @@ export type Database = {
           enrolled_at?: string
         }
       }
-    }
-  }
-  student_module_progress: {
-    Row: {
-      id: string
-      student_id: string
-      course_id: string
-      module_id: string
-      completed: boolean
-      completed_at: string
-      created_at: string
-    }
-    Insert: {
-      id?: string
-      student_id: string
-      course_id: string
-      module_id: string
-      completed?: boolean
-      completed_at?: string
-      created_at?: string
-    }
-    Update: {
-      id?: string
-      student_id?: string
-      course_id?: string
-      module_id?: string
-      completed?: boolean
-      completed_at?: string
-      created_at?: string
     }
   }
   ats_course_modules: {
