@@ -1036,38 +1036,33 @@ if (progressError) {
               </div>
             )}
 
-            {/* Support */}
-            <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
-              <h3 className="text-lg font-semibold text-blue-900 mb-3">Need Help?</h3>
-              <p className="text-blue-800 text-sm mb-4">
-                Our support team is here to help with any questions about your course.
-              </p>
-              <button className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200">
-                Contact Support
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+    {/* Support */}
+    <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
+      <h3 className="text-lg font-semibold text-blue-900 mb-3">Need Help?</h3>
+      <p className="text-blue-800 text-sm mb-4">
+        Our support team is here to help with any questions about your course.
+      </p>
+      <button className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200">
+        Contact Support
+      </button>
+    </div>
+  </div>
+</div>
 
-        return (
-  <>
-    {/* All other JSX content above remains unchanged */}
-
-    {pdfViewer.isOpen && pdfViewer.pdfUrl && (
-      <PDFSlideViewer
-        pdfUrl={pdfViewer.pdfUrl}
-        lessonTitle={pdfViewer.lessonTitle || "Untitled"}
-        onClose={closePdfViewer}
-        onComplete={
-          pdfViewer.lessonId && pdfViewer.moduleId
-            ? () => handleMarkLessonComplete(pdfViewer.lessonId, pdfViewer.moduleId)
-            : undefined
-        }
-        showCompleteButton={
-          pdfViewer.moduleId ? !isModuleCompleted(pdfViewer.moduleId) : false
-        }
-      />
-    )}
-  </>
+{pdfViewer.isOpen && pdfViewer.pdfUrl && (
+  <PDFSlideViewer
+    pdfUrl={pdfViewer.pdfUrl}
+    lessonTitle={pdfViewer.lessonTitle || "Untitled"}
+    onClose={closePdfViewer}
+    onComplete={
+      pdfViewer.lessonId && pdfViewer.moduleId
+        ? () => handleMarkLessonComplete(pdfViewer.lessonId, pdfViewer.moduleId)
+        : undefined
+    }
+    showCompleteButton={
+      pdfViewer.moduleId ? !isModuleCompleted(pdfViewer.moduleId) : false
+    }
+  />
+)}
+</>
 );
