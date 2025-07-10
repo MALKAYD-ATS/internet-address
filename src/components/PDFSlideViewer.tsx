@@ -157,12 +157,13 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({ pdfUrl, lessonTitle, on
         // Calculate scale based on container width
         const containerWidth = containerRef.current?.clientWidth || 800;
         const viewport = page.getViewport({ scale: 1.0 });
-        const calculatedScale = Math.min(
-          (containerWidth - 40) / viewport.width, // 40px for padding
-          scale * 1.5 // Allow for better zoom
-        );
+// Compute a base scale to fit the container
+const baseScale = (containerWidth - 40) / viewport.width;
 
-        const scaledViewport = page.getViewport({ scale: calculatedScale });
+// Final scale combines base scale + zoom factor
+const calculatedScale = baseScale * scale;
+
+const scaledViewport = page.getViewport({ scale: calculatedScale });
 
         // Set canvas dimensions
         canvas.height = scaledViewport.height;
