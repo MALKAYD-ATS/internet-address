@@ -576,7 +576,8 @@ if (progressError) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1050,20 +1051,23 @@ if (progressError) {
 
       </div>
 
-{pdfViewer.isOpen && pdfViewer.pdfUrl && (
-  <PDFSlideViewer
-    pdfUrl={pdfViewer.pdfUrl}
-    lessonTitle={pdfViewer.lessonTitle || "Untitled"}
-    onClose={closePdfViewer}
-    onComplete={
-      pdfViewer.lessonId && pdfViewer.moduleId
-        ? () => handleMarkLessonComplete(pdfViewer.lessonId, pdfViewer.moduleId)
-        : undefined
-    }
-    showCompleteButton={
-      pdfViewer.moduleId ? !isModuleCompleted(pdfViewer.moduleId) : false
-    }
-  />
-)}
+      {pdfViewer.isOpen && pdfViewer.pdfUrl && (
+        <PDFSlideViewer
+          pdfUrl={pdfViewer.pdfUrl}
+          lessonTitle={pdfViewer.lessonTitle || "Untitled"}
+          onClose={closePdfViewer}
+          onComplete={
+            pdfViewer.lessonId && pdfViewer.moduleId
+              ? () => handleMarkLessonComplete(pdfViewer.lessonId, pdfViewer.moduleId)
+              : undefined
+          }
+          showCompleteButton={
+            pdfViewer.moduleId ? !isModuleCompleted(pdfViewer.moduleId) : false
+          }
+        />
+      )}
+    </>
+  );
+};
 
 export default CourseDetail;
