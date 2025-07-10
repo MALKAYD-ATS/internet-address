@@ -96,6 +96,11 @@ interface StudentModuleProgress {
   completed_at: string | null;
 }
 
+interface ExamMetadata {
+  exam_time_limit_minutes: number | null;
+  exam_number_of_questions: number | null;
+}
+
 const CourseDetail: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
@@ -105,7 +110,9 @@ const CourseDetail: React.FC = () => {
   const [course, setCourse] = useState<Course | null>(null);
   const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
   const [modules, setModules] = useState<CourseModule[]>([]);
-  const [moduleProgress, setModuleProgress] = useState<StudentModuleProgress[]>([]);
+  const [totalModules, setTotalModules] = useState<number>(0);
+  const [completedModules, setCompletedModules] = useState<number>(0);
+  const [examMetadata, setExamMetadata] = useState<ExamMetadata | null>(null);
   const [loadingModules, setLoadingModules] = useState(false);
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
   const [pdfViewer, setPdfViewer] = useState<{
@@ -183,7 +190,7 @@ const CourseDetail: React.FC = () => {
         // If user is enrolled, fetch course materials
         if (enrollmentData) {
           await fetchCourseModules();
-          await fetchModuleProgress();
+          await fetchModuleCompletionData();
         }
 
       } catch (err) {
@@ -250,24 +257,53 @@ const CourseDetail: React.FC = () => {
       }
     };
 
-    const fetchModuleProgress = async () => {
+    const fetchModuleCompletionData = async () => {
       if (!user || !courseId) return;
 
       try {
-        const { data: progressData, error: progressError } = await supabase
-          .from('student_module_progress')
-          .select('*')
-          .eq('student_id', user.id)
+        // Get total number of modules for this course
+        const { count: totalCount, error: totalError } = await supabase
+          .from('ats_course_modules')
+          .select('*', { count: 'exact', head: true })
           .eq('course_id', courseId);
 
-        if (progressError) {
-          console.error('Error fetching module progress:', progressError);
+        if (totalError) {
+          console.error('Error fetching total modules:', totalError);
           return;
         }
 
-        setModuleProgress(progressData || []);
+        setTotalModules(totalCount || 0);
+
+        // Get number of completed modules for this student and course
+        const { count: completedCount, error: completedError } = await supabase
+          .from('student_module_progress')
+          .select('*', { count: 'exact', head: true })
+          .eq('student_id', user.id)
+          .eq('course_id', courseId)
+          .eq('completed', true);
+
+        if (completedError) {
+          console.error('Error fetching completed modules:', completedError);
+          return;
+        }
+
+        setCompletedModules(completedCount || 0);
+
+        // Get exam metadata from courses_ats table
+        const { data: examData, error: examError } = await supabase
+          .from('courses_ats')
+          .select('exam_time_limit_minutes, exam_number_of_questions')
+          .eq('id', courseId)
+          .single();
+
+        if (examError) {
+          console.error('Error fetching exam metadata:', examError);
+        } else {
+          setExamMetadata(examData);
+        }
+
       } catch (err) {
-        console.error('Error fetching module progress:', err);
+        console.error('Error fetching module completion data:', err);
       }
     };
 
@@ -355,14 +391,8 @@ const CourseDetail: React.FC = () => {
   };
 
   // Check if all modules are completed
-  const areAllModulesCompleted = () => {
-    if (modules.length === 0) return false;
-    
-    const completedModuleIds = moduleProgress
-      .filter(progress => progress.completed)
-      .map(progress => progress.module_id);
-    
-    return modules.every(module => completedModuleIds.includes(module.id));
+  const areAllModulesCompleted = (): boolean => {
+    return totalModules > 0 && completedModules === totalModules;
   };
 
   const handleViewLesson = (lesson: ModuleLesson) => {
@@ -788,18 +818,42 @@ const CourseDetail: React.FC = () => {
                     </Link>
                     
                     {/* Practice Exams - Only show when all modules are complete */}
-                    {areAllModulesCompleted() ? (
-                      <Link
-                        to={`/portal/practice-exams/${courseId}`}
-                        className="w-full flex items-center justify-center px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors duration-200"
-                      >
-                        <Award className="h-5 w-5 mr-2" />
-                        Practice Exams
-                      </Link>
-                    ) : (
-                      <div className="w-full flex items-center justify-center px-4 py-3 bg-gray-100 text-gray-500 font-medium rounded-lg cursor-not-allowed">
-                        <Award className="h-5 w-5 mr-2" />
-                        Complete all modules to unlock Practice Exams
+                    {enrollment && (
+                      <div className="space-y-2">
+                        {areAllModulesCompleted() ? (
+                          <Link
+                            to={`/portal/practice-exams/${courseId}`}
+                            className="w-full flex items-center justify-center px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors duration-200"
+                          >
+                            <Award className="h-5 w-5 mr-2" />
+                            Practice Exams
+                          </Link>
+                        ) : (
+                          <div className="w-full px-4 py-3 bg-gray-100 rounded-lg">
+                            <div className="flex items-center justify-center text-gray-500 font-medium mb-2">
+                              <Award className="h-5 w-5 mr-2" />
+                              Practice Exams Locked
+                            </div>
+                            <div className="text-center text-sm text-gray-600">
+                              Complete all modules to unlock
+                            </div>
+                            <div className="text-center text-xs text-gray-500 mt-1">
+                              Progress: {completedModules}/{totalModules} modules completed
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Show exam metadata when available */}
+                        {examMetadata && areAllModulesCompleted() && (
+                          <div className="text-xs text-gray-600 text-center space-y-1">
+                            {examMetadata.exam_number_of_questions && (
+                              <div>Questions: {examMetadata.exam_number_of_questions}</div>
+                            )}
+                            {examMetadata.exam_time_limit_minutes && (
+                              <div>Time Limit: {examMetadata.exam_time_limit_minutes} minutes</div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
                   </>
