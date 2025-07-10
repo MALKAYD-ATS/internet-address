@@ -11,6 +11,7 @@ import Login from './pages/Login';
 import Portal from './pages/Portal';
 import CourseDetail from './pages/CourseDetail';
 import PracticeQuestions from './pages/PracticeQuestions';
+import PracticeExam from './pages/PracticeExam';
 
 function App() {
   return (
@@ -48,6 +49,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <PracticeQuestions />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/portal/practice-exam/:courseId" 
+            element={
+              <ProtectedRoute>
+                <PracticeExam />
               </ProtectedRoute>
             } 
           />

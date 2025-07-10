@@ -69,6 +69,7 @@ const CourseDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [completingLesson, setCompletingLesson] = useState<string | null>(null);
+  const [courseProgress, setCourseProgress] = useState(0);
   const [pdfViewer, setPdfViewer] = useState<{
     isOpen: boolean;
     pdfUrl: string | null;
@@ -89,6 +90,35 @@ const CourseDetail: React.FC = () => {
       fetchModuleProgress();
     }
   }, [courseId, user]);
+
+  // Calculate course progress
+  useEffect(() => {
+    if (modules.length === 0) {
+      setCourseProgress(0);
+      return;
+    }
+
+    const completedModules = modules.filter(module => isModuleCompleted(module.id)).length;
+    const progress = Math.round((completedModules / modules.length) * 100);
+    setCourseProgress(progress);
+  }, [modules, moduleProgress]);
+
+  // Check for certificate eligibility when progress reaches 100%
+  useEffect(() => {
+    if (courseProgress === 100 && user && course) {
+      generateCertificate();
+    }
+  }, [courseProgress, user, course]);
+
+  const generateCertificate = async () => {
+    try {
+      // TODO: Implement certificate generation
+      console.log('Generating certificate for course completion');
+      // This would integrate with Supabase Storage for PDF template
+    } catch (error) {
+      console.error('Error generating certificate:', error);
+    }
+  };
 
   const fetchCourseData = async () => {
     try {
@@ -293,6 +323,30 @@ const CourseDetail: React.FC = () => {
     <>
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Course Progress Bar */}
+          {course && (
+            <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900">Course Progress</h2>
+                <span className="text-sm font-medium text-gray-600">{courseProgress}% Complete</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-3">
+                <div 
+                  className="bg-green-600 h-3 rounded-full transition-all duration-500"
+                  style={{ width: `${courseProgress}%` }}
+                ></div>
+              </div>
+              {courseProgress === 100 && (
+                <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center">
+                    <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
+                    <span className="text-green-800 font-medium">Course completed! Certificate available in your profile.</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Header */}
           <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
             <div className="flex items-start justify-between">
@@ -314,13 +368,6 @@ const CourseDetail: React.FC = () => {
                     <span>Max {course.max_students} students</span>
                   </div>
                 </div>
-              </div>
-              
-              <div className="text-right">
-                <div className="text-2xl font-bold text-blue-600">
-                  {course.currency} ${course.price}
-                </div>
-                <div className="text-sm text-gray-500">{course.level}</div>
               </div>
             </div>
           </div>
@@ -457,7 +504,7 @@ const CourseDetail: React.FC = () => {
                     className="w-full flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                   >
                     <BookOpen className="w-4 h-4" />
-                    Back to Training
+                    Back to Courses
                   </button>
                 </div>
               </div>
@@ -503,20 +550,6 @@ const CourseDetail: React.FC = () => {
               </div>
 
               {/* What's Included */}
-              {course.whats_included && course.whats_included.length > 0 && (
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">What's Included</h3>
-                  <ul className="space-y-2">
-                    {course.whats_included.map((item, index) => (
-                      <li key={index} className="flex items-center gap-2 text-sm text-gray-600">
-                        <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
           </div>
         </div>
       </div>

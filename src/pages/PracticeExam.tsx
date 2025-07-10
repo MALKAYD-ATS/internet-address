@@ -2,15 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-
-interface HeaderLogo {
-  id: string;
-  logo_url: string;
-  alt_text: string;
-  order_index: number;
-  is_active: boolean;
-}
-
 import { 
   ArrowLeft, 
   BookOpen, 
@@ -24,20 +15,31 @@ import {
   RefreshCw,
   Eye,
   EyeOff,
-  ChevronDown,
-  ChevronUp,
+  ChevronLeft,
+  ChevronRight,
   Target,
   Award,
-  Home
+  Home,
+  Send
 } from 'lucide-react';
+
+interface HeaderLogo {
+  id: string;
+  logo_url: string;
+  alt_text: string;
+  order_index: number;
+  is_active: boolean;
+}
 
 interface Course {
   id: number;
   title: string | null;
   description: string | null;
+  exam_number_of_questions: number | null;
+  exam_duration_minutes: number | null;
 }
 
-interface PracticeQuestion {
+interface ExamQuestion {
   id: number;
   question: string;
   option_a: string;
@@ -52,23 +54,29 @@ interface PracticeQuestion {
 
 interface QuestionState {
   selectedAnswer: 'A' | 'B' | 'C' | 'D' | null;
-  submitted: boolean;
-  showExplanation: boolean;
 }
 
-const PracticeQuestions: React.FC = () => {
+const PracticeExam: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const [headerLogo, setHeaderLogo] = useState<HeaderLogo | null>(null);
   
   const [course, setCourse] = useState<Course | null>(null);
-  const [questions, setQuestions] = useState<PracticeQuestion[]>([]);
+  const [questions, setQuestions] = useState<ExamQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [questionStates, setQuestionStates] = useState<QuestionState[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isCompleted, setIsCompleted] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [examResults, setExamResults] = useState<{
+    score: number;
+    percentage: number;
+    passed: boolean;
+    passingScore: number;
+  } | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+  const [examStartTime, setExamStartTime] = useState<Date | null>(null);
 
   // Fetch header logo
   useEffect(() => {
@@ -93,8 +101,6 @@ const PracticeQuestions: React.FC = () => {
     fetchHeaderLogo();
   }, []);
 
-  const DEFAULT_QUESTION_COUNT = 20;
-
   useEffect(() => {
     const fetchData = async () => {
       if (!courseId || !user) return;
@@ -106,7 +112,7 @@ const PracticeQuestions: React.FC = () => {
         // Fetch course details
         const { data: courseData, error: courseError } = await supabase
           .from('courses_ats')
-          .select('id, title, description')
+          .select('id, title, description, exam_number_of_questions, exam_duration_minutes')
           .eq('id', courseId)
           .single();
 
@@ -118,7 +124,7 @@ const PracticeQuestions: React.FC = () => {
 
         setCourse(courseData);
 
-        // Fetch practice questions for this course
+        // Fetch practice questions for this course (using same questions as practice)
         const { data: questionsData, error: questionsError } = await supabase
           .from('practice_questions')
           .select('*')
@@ -126,7 +132,7 @@ const PracticeQuestions: React.FC = () => {
 
         if (questionsError) {
           console.error('Error fetching questions:', questionsError);
-          setError('Failed to load practice questions.');
+          setError('Failed to load exam questions.');
           return;
         }
 
@@ -136,20 +142,26 @@ const PracticeQuestions: React.FC = () => {
           return;
         }
 
+        // Use course settings or defaults
+        const questionCount = courseData.exam_number_of_questions || 50;
+        const examDuration = courseData.exam_duration_minutes || 60;
+
         // Randomize and limit questions
         const shuffledQuestions = [...questionsData].sort(() => Math.random() - 0.5);
-        const selectedQuestions = shuffledQuestions.slice(0, Math.min(DEFAULT_QUESTION_COUNT, shuffledQuestions.length));
+        const selectedQuestions = shuffledQuestions.slice(0, Math.min(questionCount, shuffledQuestions.length));
         
         setQuestions(selectedQuestions);
         setQuestionStates(selectedQuestions.map(() => ({
-          selectedAnswer: null,
-          submitted: false,
-          showExplanation: false
+          selectedAnswer: null
         })));
+
+        // Set timer
+        setTimeRemaining(examDuration * 60); // Convert to seconds
+        setExamStartTime(new Date());
 
       } catch (err) {
         setError('An unexpected error occurred.');
-        console.error('Practice questions fetch error:', err);
+        console.error('Practice exam fetch error:', err);
       } finally {
         setLoading(false);
       }
@@ -157,6 +169,34 @@ const PracticeQuestions: React.FC = () => {
 
     fetchData();
   }, [courseId, user]);
+
+  // Timer countdown
+  useEffect(() => {
+    if (timeRemaining === null || timeRemaining <= 0 || isSubmitted) return;
+
+    const timer = setInterval(() => {
+      setTimeRemaining(prev => {
+        if (prev === null || prev <= 1) {
+          handleSubmitExam(); // Auto-submit when time runs out
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeRemaining, isSubmitted]);
+
+  const formatTime = (seconds: number): string => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${minutes}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const handleSignOut = async () => {
     try {
@@ -168,54 +208,76 @@ const PracticeQuestions: React.FC = () => {
   };
 
   const handleAnswerSelect = (answer: 'A' | 'B' | 'C' | 'D') => {
-    if (questionStates[currentQuestionIndex].submitted) return;
+    if (isSubmitted) return;
 
     const newStates = [...questionStates];
     newStates[currentQuestionIndex].selectedAnswer = answer;
     setQuestionStates(newStates);
   };
 
-  const handleSubmitAnswer = () => {
-    const newStates = [...questionStates];
-    newStates[currentQuestionIndex].submitted = true;
-    newStates[currentQuestionIndex].showExplanation = true;
-    setQuestionStates(newStates);
+  const handlePreviousQuestion = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
+    }
   };
 
   const handleNextQuestion = () => {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
-    } else {
-      setIsCompleted(true);
     }
   };
 
-  const handleRetry = () => {
-    // Reshuffle questions and reset states
-    const shuffledQuestions = [...questions].sort(() => Math.random() - 0.5);
-    setQuestions(shuffledQuestions);
-    setQuestionStates(shuffledQuestions.map(() => ({
-      selectedAnswer: null,
-      submitted: false,
-      showExplanation: false
-    })));
-    setCurrentQuestionIndex(0);
-    setIsCompleted(false);
-  };
+  const handleSubmitExam = async () => {
+    if (!user || !course) return;
 
-  const toggleExplanation = () => {
-    const newStates = [...questionStates];
-    newStates[currentQuestionIndex].showExplanation = !newStates[currentQuestionIndex].showExplanation;
-    setQuestionStates(newStates);
-  };
+    try {
+      // Calculate score
+      let correctAnswers = 0;
+      questions.forEach((question, index) => {
+        if (questionStates[index].selectedAnswer === question.correct_answer) {
+          correctAnswers++;
+        }
+      });
 
-  const getOptionLetter = (option: string): 'A' | 'B' | 'C' | 'D' => {
-    switch (option) {
-      case 'option_a': return 'A';
-      case 'option_b': return 'B';
-      case 'option_c': return 'C';
-      case 'option_d': return 'D';
-      default: return 'A';
+      const percentage = Math.round((correctAnswers / questions.length) * 100);
+      const passingScore = 70; // Default passing score
+      const passed = percentage >= passingScore;
+
+      setExamResults({
+        score: correctAnswers,
+        percentage,
+        passed,
+        passingScore
+      });
+
+      // Save exam attempt to database
+      const { error } = await supabase
+        .from('student_exam_attempts')
+        .insert([
+          {
+            student_id: user.id,
+            course_id: courseId,
+            started_at: examStartTime?.toISOString(),
+            completed_at: new Date().toISOString(),
+            answers: questionStates.map((state, index) => ({
+              question_id: questions[index].id,
+              selected_answer: state.selectedAnswer,
+              correct_answer: questions[index].correct_answer,
+              is_correct: state.selectedAnswer === questions[index].correct_answer
+            })),
+            score: percentage,
+            duration_minutes: course.exam_duration_minutes || 60,
+            is_submitted: true
+          }
+        ]);
+
+      if (error) {
+        console.error('Error saving exam attempt:', error);
+      }
+
+      setIsSubmitted(true);
+    } catch (error) {
+      console.error('Error submitting exam:', error);
     }
   };
 
@@ -223,13 +285,13 @@ const PracticeQuestions: React.FC = () => {
     const currentState = questionStates[currentQuestionIndex];
     const currentQuestion = questions[currentQuestionIndex];
     
-    if (!currentState.submitted) {
+    if (!isSubmitted) {
       return currentState.selectedAnswer === optionLetter
         ? 'bg-blue-100 border-blue-500 text-blue-900'
         : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50';
     }
 
-    // After submission
+    // After submission - show correct/incorrect
     if (optionLetter === currentQuestion.correct_answer) {
       return 'bg-green-100 border-green-500 text-green-900';
     }
@@ -245,7 +307,7 @@ const PracticeQuestions: React.FC = () => {
     const currentState = questionStates[currentQuestionIndex];
     const currentQuestion = questions[currentQuestionIndex];
     
-    if (!currentState.submitted) return null;
+    if (!isSubmitted) return null;
 
     if (optionLetter === currentQuestion.correct_answer) {
       return <CheckCircle className="h-5 w-5 text-green-600" />;
@@ -263,7 +325,7 @@ const PracticeQuestions: React.FC = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading practice questions...</p>
+          <p className="text-gray-600">Loading practice exam...</p>
         </div>
       </div>
     );
@@ -284,7 +346,7 @@ const PracticeQuestions: React.FC = () => {
                 />
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">Student Portal</h1>
-                  <p className="text-gray-600">Practice Questions</p>
+                  <p className="text-gray-600">Practice Exam</p>
                 </div>
               </div>
               <button
@@ -301,7 +363,7 @@ const PracticeQuestions: React.FC = () => {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
             <AlertCircle className="h-16 w-16 text-red-400 mx-auto mb-6" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Error Loading Practice Questions</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Error Loading Practice Exam</h2>
             <p className="text-gray-600 mb-8">{error || 'The requested course could not be found.'}</p>
             <Link
               to="/portal"
@@ -334,7 +396,7 @@ const PracticeQuestions: React.FC = () => {
               />
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Student Portal</h1>
-                <p className="text-gray-600">Practice Questions</p>
+                <p className="text-gray-600">Practice Exam</p>
               </div>
             </div>
             <button
@@ -364,7 +426,7 @@ const PracticeQuestions: React.FC = () => {
               {course.title || 'Course'}
             </Link>
             <span>/</span>
-            <span className="text-gray-900 font-medium">Practice Questions</span>
+            <span className="text-gray-900 font-medium">Practice Exam</span>
           </nav>
         </div>
 
@@ -373,9 +435,9 @@ const PracticeQuestions: React.FC = () => {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                {course.title || 'Course Practice Questions'}
+                {course.title || 'Course Practice Exam'}
               </h1>
-              <p className="text-gray-600">Test your knowledge with practice questions</p>
+              <p className="text-gray-600">Final assessment for course completion</p>
             </div>
             <Link
               to={`/student/courses/${courseId}`}
@@ -385,15 +447,25 @@ const PracticeQuestions: React.FC = () => {
               Back to Course
             </Link>
           </div>
+          
+          {/* Timer */}
+          {timeRemaining !== null && !isSubmitted && (
+            <div className="flex items-center justify-center p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <Clock className="h-5 w-5 text-yellow-600 mr-2" />
+              <span className="font-semibold text-yellow-800">
+                Time Remaining: {formatTime(timeRemaining)}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Main Content */}
         {questions.length === 0 ? (
           <div className="bg-white rounded-xl shadow-lg p-8 text-center">
             <Target className="h-16 w-16 text-gray-300 mx-auto mb-6" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">No Practice Questions Available</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">No Exam Questions Available</h2>
             <p className="text-gray-600 mb-8">
-              Practice questions for this course are currently being updated. Please check back later.
+              Exam questions for this course are currently being updated. Please check back later.
             </p>
             <Link
               to={`/student/courses/${courseId}`}
@@ -403,22 +475,31 @@ const PracticeQuestions: React.FC = () => {
               Back to Course
             </Link>
           </div>
-        ) : isCompleted ? (
+        ) : examResults ? (
           <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-            <Award className="h-16 w-16 text-green-600 mx-auto mb-6" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Practice Completed!</h2>
-            <p className="text-gray-600 mb-8">
-              Great job! You've completed all {questions.length} practice questions. 
-              Keep practicing to reinforce your learning.
-            </p>
+            <Award className={`h-16 w-16 mx-auto mb-6 ${examResults.passed ? 'text-green-600' : 'text-red-600'}`} />
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Exam Completed!</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-gray-900">{examResults.score}</div>
+                <div className="text-gray-600">Correct Answers</div>
+              </div>
+              <div className="text-center">
+                <div className={`text-3xl font-bold ${examResults.passed ? 'text-green-600' : 'text-red-600'}`}>
+                  {examResults.percentage}%
+                </div>
+                <div className="text-gray-600">Final Score</div>
+              </div>
+              <div className="text-center">
+                <div className={`text-lg font-bold ${examResults.passed ? 'text-green-600' : 'text-red-600'}`}>
+                  {examResults.passed ? 'PASSED' : 'FAILED'}
+                </div>
+                <div className="text-gray-600">Passing: {examResults.passingScore}%</div>
+              </div>
+            </div>
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button
-                onClick={handleRetry}
-                className="inline-flex items-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors duration-200"
-              >
-                <RefreshCw className="h-5 w-5 mr-2" />
-                Try New Questions
-              </button>
               <Link
                 to={`/student/courses/${courseId}`}
                 className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200"
@@ -442,7 +523,7 @@ const PracticeQuestions: React.FC = () => {
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div 
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  className="bg-purple-600 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}
                 ></div>
               </div>
@@ -472,16 +553,16 @@ const PracticeQuestions: React.FC = () => {
               {/* Answer Options */}
               <div className="space-y-3 mb-6">
                 {(['option_a', 'option_b', 'option_c', 'option_d'] as const).map((optionKey) => {
-                  const optionLetter = getOptionLetter(optionKey);
+                  const optionLetter = optionKey.split('_')[1].toUpperCase() as 'A' | 'B' | 'C' | 'D';
                   const optionText = questions[currentQuestionIndex][optionKey];
                   
                   return (
                     <button
                       key={optionKey}
                       onClick={() => handleAnswerSelect(optionLetter)}
-                      disabled={questionStates[currentQuestionIndex].submitted}
+                      disabled={isSubmitted}
                       className={`w-full p-4 border-2 rounded-lg text-left transition-all duration-200 flex items-center justify-between ${getOptionClass(optionLetter)} ${
-                        questionStates[currentQuestionIndex].submitted ? 'cursor-not-allowed' : 'cursor-pointer'
+                        isSubmitted ? 'cursor-not-allowed' : 'cursor-pointer'
                       }`}
                     >
                       <div className="flex items-center">
@@ -494,50 +575,44 @@ const PracticeQuestions: React.FC = () => {
                 })}
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4">
-                {!questionStates[currentQuestionIndex].submitted ? (
-                  <button
-                    onClick={handleSubmitAnswer}
-                    disabled={!questionStates[currentQuestionIndex].selectedAnswer}
-                    className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${
-                      questionStates[currentQuestionIndex].selectedAnswer
-                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    }`}
-                  >
-                    Submit Answer
-                  </button>
-                ) : (
-                  <>
+              {/* Navigation Buttons */}
+              <div className="flex justify-between items-center">
+                <button
+                  onClick={handlePreviousQuestion}
+                  disabled={currentQuestionIndex === 0}
+                  className={`flex items-center px-4 py-2 rounded-lg font-medium transition-colors duration-200 ${
+                    currentQuestionIndex === 0
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  <ChevronLeft className="h-4 w-4 mr-2" />
+                  Previous
+                </button>
+
+                <div className="flex gap-4">
+                  {currentQuestionIndex === questions.length - 1 ? (
+                    <button
+                      onClick={handleSubmitExam}
+                      className="flex items-center px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors duration-200"
+                    >
+                      <Send className="h-4 w-4 mr-2" />
+                      Submit Exam
+                    </button>
+                  ) : (
                     <button
                       onClick={handleNextQuestion}
-                      className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors duration-200"
+                      className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors duration-200"
                     >
-                      {currentQuestionIndex < questions.length - 1 ? 'Next Question' : 'Complete Practice'}
+                      Next
+                      <ChevronRight className="h-4 w-4 ml-2" />
                     </button>
-                    <button
-                      onClick={toggleExplanation}
-                      className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-semibold transition-colors duration-200 flex items-center"
-                    >
-                      {questionStates[currentQuestionIndex].showExplanation ? (
-                        <>
-                          <EyeOff className="h-4 w-4 mr-2" />
-                          Hide Explanation
-                        </>
-                      ) : (
-                        <>
-                          <Eye className="h-4 w-4 mr-2" />
-                          Show Explanation
-                        </>
-                      )}
-                    </button>
-                  </>
-                )}
+                  )}
+                </div>
               </div>
 
-              {/* Explanation */}
-              {questionStates[currentQuestionIndex].submitted && questionStates[currentQuestionIndex].showExplanation && (
+              {/* Show explanation after submission */}
+              {isSubmitted && (
                 <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <h4 className="font-semibold text-blue-900 mb-2 flex items-center">
                     <CheckCircle className="h-5 w-5 mr-2" />
@@ -556,4 +631,4 @@ const PracticeQuestions: React.FC = () => {
   );
 };
 
-export default PracticeQuestions;
+export default PracticeExam;

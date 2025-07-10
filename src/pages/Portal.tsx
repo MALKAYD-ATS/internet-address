@@ -351,7 +351,7 @@ const Portal: React.FC = () => {
               />
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Student Portal</h1>
-                <p className="text-gray-600">Welcome back!</p>
+                <p className="text-gray-600 text-sm sm:text-base">Welcome back!</p>
               </div>
             </div>
             <button
@@ -764,36 +764,6 @@ const Portal: React.FC = () => {
           </div>
         </div>
 
-        {/* Future Development Notice */}
-        <div className="mt-12 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-8 text-center border border-blue-200">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Enhanced Portal Features Coming Soon</h2>
-          <p className="text-lg text-gray-600 mb-6 max-w-3xl mx-auto">
-            This student portal will be continuously enhanced with new features to provide 
-            a comprehensive learning management experience.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="text-center">
-              <BookOpen className="h-8 w-8 text-blue-600 mx-auto mb-3" />
-              <h3 className="font-semibold text-gray-900 mb-2">Course Management</h3>
-              <p className="text-gray-600 text-sm">Enroll, track progress, and access materials</p>
-            </div>
-            <div className="text-center">
-              <FileText className="h-8 w-8 text-blue-600 mx-auto mb-3" />
-              <h3 className="font-semibold text-gray-900 mb-2">Interactive Exams</h3>
-              <p className="text-gray-600 text-sm">Practice tests and certification exams</p>
-            </div>
-            <div className="text-center">
-              <Award className="h-8 w-8 text-blue-600 mx-auto mb-3" />
-              <h3 className="font-semibold text-gray-900 mb-2">Digital Certificates</h3>
-              <p className="text-gray-600 text-sm">Downloadable and verifiable credentials</p>
-            </div>
-            <div className="text-center">
-              <Settings className="h-8 w-8 text-blue-600 mx-auto mb-3" />
-              <h3 className="font-semibold text-gray-900 mb-2">Profile Management</h3>
-              <p className="text-gray-600 text-sm">Update information and preferences</p>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Custom Styles for Swiper */}
