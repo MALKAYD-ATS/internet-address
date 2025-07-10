@@ -1050,18 +1050,20 @@ if (progressError) {
 
       </div>
 
-      {/* PDF Slide Viewer */}
-      {pdfViewer.isOpen && (
-        <PDFSlideViewer
-          pdfUrl={pdfViewer.pdfUrl}
-          lessonTitle={pdfViewer.lessonTitle}
-          onClose={closePdfViewer}
-          onComplete={() => handleMarkLessonComplete(pdfViewer.lessonId, pdfViewer.moduleId)}
-          showCompleteButton={!isModuleCompleted(pdfViewer.moduleId)}
-        />
-      )}
-    </div>
-  );
-};
+{pdfViewer.isOpen && pdfViewer.pdfUrl && (
+  <PDFSlideViewer
+    pdfUrl={pdfViewer.pdfUrl}
+    lessonTitle={pdfViewer.lessonTitle || "Untitled"}
+    onClose={closePdfViewer}
+    onComplete={
+      pdfViewer.lessonId && pdfViewer.moduleId
+        ? () => handleMarkLessonComplete(pdfViewer.lessonId, pdfViewer.moduleId)
+        : undefined
+    }
+    showCompleteButton={
+      pdfViewer.moduleId ? !isModuleCompleted(pdfViewer.moduleId) : false
+    }
+  />
+)}
 
 export default CourseDetail;
