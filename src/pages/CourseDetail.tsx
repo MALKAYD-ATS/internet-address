@@ -1048,6 +1048,8 @@ if (progressError) {
             </div>
           </div>
         </div>
+      </div>
+
         return (
   <>
     {/* All other JSX content above remains unchanged */}
@@ -1069,7 +1071,3 @@ if (progressError) {
     )}
   </>
 );
-
-
-      </div>
-
