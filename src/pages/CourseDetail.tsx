@@ -986,85 +986,21 @@ if (progressError) {
                   {/* Exam Metadata */}
                   {examMetadata && (
                     <div className="bg-gray-50 rounded-lg p-4">
-                      <h4 className="font-medium text-gray-900 mb-2">Exam Details:</h4>
-                      <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
-                        {examMetadata.exam_number_of_questions && (
-                          <div className="flex items-center">
-                            <FileText className="h-4 w-4 mr-2" />
-                            <span>{examMetadata.exam_number_of_questions} Questions</span>
-                          </div>
-                        )}
-                        {examMetadata.exam_time_limit_minutes && (
-                          <div className="flex items-center">
-                            <Clock className="h-4 w-4 mr-2" />
-                            <span>{examMetadata.exam_time_limit_minutes} Minutes</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Progress and Button */}
-                  <div className="space-y-3">
-                    <div className="text-sm text-gray-600">
-                      <span className="font-medium">Module Progress: </span>
-                      <span className={`${areAllModulesCompleted() ? 'text-green-600' : 'text-orange-600'}`}>
-                        {completedModules}/{totalModules} completed
-                      </span>
-                    </div>
-                    
-                    {areAllModulesCompleted() ? (
-                      <Link
-                        to={`/portal/practice-exams/${courseId}`}
-                        className="w-full flex items-center justify-center px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors duration-200"
-                      >
-                        <Award className="h-5 w-5 mr-2" />
-                        Start Practice Exam
-                      </Link>
-                    ) : (
-                      <button
-                        disabled
-                        className="w-full flex items-center justify-center px-4 py-3 bg-gray-300 text-gray-500 font-medium rounded-lg cursor-not-allowed"
-                        title="Complete all modules to unlock the exam"
-                      >
-                        <Lock className="h-5 w-5 mr-2" />
-                        Complete All Modules to Unlock
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-    {/* Support */}
-    <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
-      <h3 className="text-lg font-semibold text-blue-900 mb-3">Need Help?</h3>
-      <p className="text-blue-800 text-sm mb-4">
-        Our support team is here to help with any questions about your course.
-      </p>
-      <button className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200">
-        Contact Support
-      </button>
-    </div>
-  </div>
-</div>
-</div> 
-        
-{pdfViewer.isOpen && pdfViewer.pdfUrl && (
-  <PDFSlideViewer
-    pdfUrl={pdfViewer.pdfUrl}
-    lessonTitle={pdfViewer.lessonTitle || "Untitled"}
-    onClose={closePdfViewer}
-    onComplete={
-      pdfViewer.lessonId && pdfViewer.moduleId
-        ? () => handleMarkLessonComplete(pdfViewer.lessonId, pdfViewer.moduleId)
-        : undefined
-    }
-    showCompleteButton={
-      pdfViewer.moduleId ? !isModuleCompleted(pdfViewer.moduleId) : false
-    }
-  />
-)}
-
-</>
-);
+      {pdfViewer.isOpen && pdfViewer.pdfUrl && (
+        <PDFSlideViewer
+          pdfUrl={pdfViewer.pdfUrl}
+          lessonTitle={pdfViewer.lessonTitle || "Untitled"}
+          onClose={closePdfViewer}
+          onComplete={
+            pdfViewer.lessonId && pdfViewer.moduleId
+              ? () => handleMarkLessonComplete(pdfViewer.lessonId, pdfViewer.moduleId)
+              : undefined
+          }
+          showCompleteButton={
+            pdfViewer.moduleId ? !isModuleCompleted(pdfViewer.moduleId) : false
+          }
+        />
+      )}
+    </>
+  );
+};
