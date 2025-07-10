@@ -1051,23 +1051,24 @@ if (progressError) {
 
       </div>
 
-      {pdfViewer.isOpen && pdfViewer.pdfUrl && (
-        <PDFSlideViewer
-          pdfUrl={pdfViewer.pdfUrl}
-          lessonTitle={pdfViewer.lessonTitle || "Untitled"}
-          onClose={closePdfViewer}
-          onComplete={
-            pdfViewer.lessonId && pdfViewer.moduleId
-              ? () => handleMarkLessonComplete(pdfViewer.lessonId, pdfViewer.moduleId)
-              : undefined
-          }
-          showCompleteButton={
-            pdfViewer.moduleId ? !isModuleCompleted(pdfViewer.moduleId) : false
-          }
-        />
-      )}
-    </>
-  );
-};
+return (
+  <>
+    {/* All other JSX content above remains unchanged */}
 
-export default CourseDetail;
+    {pdfViewer.isOpen && pdfViewer.pdfUrl && (
+      <PDFSlideViewer
+        pdfUrl={pdfViewer.pdfUrl}
+        lessonTitle={pdfViewer.lessonTitle || "Untitled"}
+        onClose={closePdfViewer}
+        onComplete={
+          pdfViewer.lessonId && pdfViewer.moduleId
+            ? () => handleMarkLessonComplete(pdfViewer.lessonId, pdfViewer.moduleId)
+            : undefined
+        }
+        showCompleteButton={
+          pdfViewer.moduleId ? !isModuleCompleted(pdfViewer.moduleId) : false
+        }
+      />
+    )}
+  </>
+);
