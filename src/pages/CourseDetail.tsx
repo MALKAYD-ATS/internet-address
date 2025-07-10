@@ -37,7 +37,10 @@ import {
   ExternalLink,
   Folder,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Timer,
+  Trophy,
+  BarChart3
 } from 'lucide-react';
 
 interface Course {
@@ -58,6 +61,8 @@ interface Course {
   currency: string | null;
   whats_included: any;
   is_active: boolean | null;
+  practice_exam_time_limit: number | null;
+  practice_exam_question_count: number | null;
 }
 
 interface Enrollment {
@@ -87,6 +92,15 @@ interface ModuleLesson {
   created_at: string;
 }
 
+interface ModuleProgress {
+  id: string;
+  student_id: string;
+  course_id: string;
+  module_id: string;
+  completed: boolean;
+  completed_at: string;
+}
+
 const CourseDetail: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
@@ -98,6 +112,8 @@ const CourseDetail: React.FC = () => {
   const [modules, setModules] = useState<CourseModule[]>([]);
   const [loadingModules, setLoadingModules] = useState(false);
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
+  const [moduleProgress, setModuleProgress] = useState<ModuleProgress[]>([]);
+  const [completingModule, setCompletingModule] = useState<string | null>(null);
   const [pdfViewer, setPdfViewer] = useState<{
     isOpen: boolean;
     pdfUrl: string;
@@ -173,6 +189,7 @@ const CourseDetail: React.FC = () => {
         // If user is enrolled, fetch course materials
         if (enrollmentData) {
           await fetchCourseModules();
+          await fetchModuleProgress();
         }
 
       } catch (err) {
@@ -180,6 +197,24 @@ const CourseDetail: React.FC = () => {
         console.error('Course detail fetch error:', err);
       } finally {
         setLoading(false);
+      }
+    };
+
+    const fetchModuleProgress = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('student_module_progress')
+          .select('*')
+          .eq('student_id', user.id)
+          .eq('course_id', courseId);
+
+        if (error) {
+          console.error('Error fetching module progress:', error);
+        } else {
+          setModuleProgress(data || []);
+        }
+      } catch (err) {
+        console.error('Module progress fetch error:', err);
       }
     };
 
@@ -241,6 +276,69 @@ const CourseDetail: React.FC = () => {
 
     fetchCourseData();
   }, [courseId, user]);
+
+  // Check if a module is completed
+  const isModuleCompleted = (moduleId: string) => {
+    return moduleProgress.some(progress => progress.module_id === moduleId && progress.completed);
+  };
+
+  // Check if a module is unlocked (first module or previous module completed)
+  const isModuleUnlocked = (moduleIndex: number) => {
+    if (moduleIndex === 0) return true; // First module is always unlocked
+    
+    const previousModule = modules[moduleIndex - 1];
+    return previousModule ? isModuleCompleted(previousModule.id) : false;
+  };
+
+  // Calculate course progress
+  const getCourseProgress = () => {
+    if (modules.length === 0) return 0;
+    const completedCount = modules.filter(module => isModuleCompleted(module.id)).length;
+    return Math.round((completedCount / modules.length) * 100);
+  };
+
+  // Check if all modules are completed
+  const areAllModulesCompleted = () => {
+    return modules.length > 0 && modules.every(module => isModuleCompleted(module.id));
+  };
+
+  // Handle marking module as complete
+  const handleMarkModuleComplete = async (moduleId: string) => {
+    if (!user || !courseId) return;
+
+    setCompletingModule(moduleId);
+    try {
+      const { data, error } = await supabase
+        .from('student_module_progress')
+        .upsert({
+          student_id: user.id,
+          course_id: courseId,
+          module_id: moduleId,
+          completed: true,
+          completed_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error marking module complete:', error);
+      } else {
+        // Update local state
+        setModuleProgress(prev => {
+          const existing = prev.find(p => p.module_id === moduleId);
+          if (existing) {
+            return prev.map(p => p.module_id === moduleId ? { ...p, completed: true, completed_at: data.completed_at } : p);
+          } else {
+            return [...prev, data];
+          }
+        });
+      }
+    } catch (err) {
+      console.error('Module completion error:', err);
+    } finally {
+      setCompletingModule(null);
+    }
+  };
 
   const handleSignOut = async () => {
     try {
@@ -521,6 +619,51 @@ const CourseDetail: React.FC = () => {
               </div>
             </div>
 
+            {/* Course Progress Section - Only show if enrolled */}
+            {enrollment && (
+              <div className="bg-white rounded-xl shadow-lg p-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                  <BarChart3 className="h-6 w-6 mr-3 text-blue-600" />
+                  Course Progress
+                </h2>
+                
+                <div className="mb-6">
+                  <div className="flex justify-between text-sm text-gray-600 mb-2">
+                    <span>Overall Progress</span>
+                    <span>{getCourseProgress()}% Complete</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div 
+                      className="bg-blue-600 h-3 rounded-full transition-all duration-500"
+                      style={{ width: `${getCourseProgress()}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center p-4 bg-blue-50 rounded-lg">
+                    <BookOpen className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                    <p className="text-2xl font-bold text-gray-900">{modules.length}</p>
+                    <p className="text-sm text-gray-600">Total Modules</p>
+                  </div>
+                  <div className="text-center p-4 bg-green-50 rounded-lg">
+                    <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
+                    <p className="text-2xl font-bold text-gray-900">
+                      {modules.filter(module => isModuleCompleted(module.id)).length}
+                    </p>
+                    <p className="text-sm text-gray-600">Completed</p>
+                  </div>
+                  <div className="text-center p-4 bg-orange-50 rounded-lg">
+                    <Clock className="h-8 w-8 text-orange-600 mx-auto mb-2" />
+                    <p className="text-2xl font-bold text-gray-900">
+                      {modules.length - modules.filter(module => isModuleCompleted(module.id)).length}
+                    </p>
+                    <p className="text-sm text-gray-600">Remaining</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Course Content Placeholder */}
             <div className="bg-white rounded-xl shadow-lg p-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
@@ -550,12 +693,47 @@ const CourseDetail: React.FC = () => {
                         <span className="text-sm text-gray-600">{modules.length} modules available</span>
                       </div>
                       
-                      {modules.map((module) => (
+                      {modules.map((module, index) => (
                         <div key={module.id} className="border border-gray-200 rounded-lg overflow-hidden">
+                          {/* Module Status Indicator */}
+                          <div className="flex items-center justify-between p-4 bg-gray-50">
+                            <div className="flex items-center">
+                              {isModuleCompleted(module.id) ? (
+                                <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
+                              ) : isModuleUnlocked(index) ? (
+                                <BookOpen className="h-5 w-5 text-blue-600 mr-2" />
+                              ) : (
+                                <Lock className="h-5 w-5 text-gray-400 mr-2" />
+                              )}
+                              <span className="text-sm font-medium">
+                                Module {index + 1} - {isModuleCompleted(module.id) ? 'Completed' : isModuleUnlocked(index) ? 'Available' : 'Locked'}
+                              </span>
+                            </div>
+                            {isModuleUnlocked(index) && !isModuleCompleted(module.id) && (
+                              <button
+                                onClick={() => handleMarkModuleComplete(module.id)}
+                                disabled={completingModule === module.id}
+                                className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm font-medium transition-colors duration-200 flex items-center"
+                              >
+                                {completingModule === module.id ? (
+                                  <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                                ) : (
+                                  <CheckCircle className="h-4 w-4 mr-1" />
+                                )}
+                                Mark Complete
+                              </button>
+                            )}
+                          </div>
+                          
                           {/* Module Header */}
                           <button
                             onClick={() => toggleModuleExpansion(module.id)}
-                            className="w-full px-6 py-4 bg-gray-50 hover:bg-gray-100 transition-colors duration-200 flex items-center justify-between"
+                            disabled={!isModuleUnlocked(index)}
+                            className={`w-full px-6 py-4 transition-colors duration-200 flex items-center justify-between ${
+                              isModuleUnlocked(index) 
+                                ? 'bg-white hover:bg-gray-50 cursor-pointer' 
+                                : 'bg-gray-100 cursor-not-allowed opacity-60'
+                            }`}
                           >
                             <div className="flex items-center">
                               <Folder className="h-5 w-5 text-blue-600 mr-3" />
@@ -569,15 +747,17 @@ const CourseDetail: React.FC = () => {
                                 </p>
                               </div>
                             </div>
-                            {expandedModules.has(module.id) ? (
-                              <ChevronUp className="h-5 w-5 text-gray-400" />
-                            ) : (
-                              <ChevronDown className="h-5 w-5 text-gray-400" />
+                            {isModuleUnlocked(index) && (
+                              expandedModules.has(module.id) ? (
+                                <ChevronUp className="h-5 w-5 text-gray-400" />
+                              ) : (
+                                <ChevronDown className="h-5 w-5 text-gray-400" />
+                              )
                             )}
                           </button>
 
                           {/* Module Content */}
-                          {expandedModules.has(module.id) && (
+                          {expandedModules.has(module.id) && isModuleUnlocked(index) && (
                             <div className="bg-white">
                               {module.lessons.length === 0 ? (
                                 <div className="px-6 py-8 text-center">
@@ -643,6 +823,76 @@ const CourseDetail: React.FC = () => {
                 </div>
               )}
             </div>
+
+            {/* Practice Exams Section - Only show if enrolled and all modules completed */}
+            {enrollment && areAllModulesCompleted() && (
+              <div className="bg-white rounded-xl shadow-lg p-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                  <Trophy className="h-6 w-6 mr-3 text-blue-600" />
+                  Practice Exams
+                </h2>
+                
+                <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-6 border border-blue-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        {course.title} Practice Exam
+                      </h3>
+                      <p className="text-gray-600">
+                        Test your knowledge with a comprehensive practice exam.
+                      </p>
+                    </div>
+                    <Trophy className="h-12 w-12 text-yellow-500" />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div className="flex items-center">
+                      <Timer className="h-5 w-5 text-blue-600 mr-2" />
+                      <span className="text-sm text-gray-700">
+                        Time Limit: {course.practice_exam_time_limit || 60} minutes
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <Target className="h-5 w-5 text-green-600 mr-2" />
+                      <span className="text-sm text-gray-700">
+                        Questions: {course.practice_exam_question_count || 20}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <Link
+                    to={`/portal/practice-exam/${courseId}`}
+                    className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200"
+                  >
+                    <Trophy className="h-5 w-5 mr-2" />
+                    Start Practice Exam
+                  </Link>
+                </div>
+              </div>
+            )}
+
+            {/* Practice Exams Locked Message */}
+            {enrollment && !areAllModulesCompleted() && (
+              <div className="bg-white rounded-xl shadow-lg p-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                  <Trophy className="h-6 w-6 mr-3 text-gray-400" />
+                  Practice Exams
+                </h2>
+                
+                <div className="bg-gray-50 rounded-lg p-6 border border-gray-200 text-center">
+                  <Lock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    Complete All Modules to Unlock
+                  </h3>
+                  <p className="text-gray-600 mb-4">
+                    Practice exams will be available once you complete all course modules.
+                  </p>
+                  <div className="text-sm text-gray-500">
+                    Progress: {modules.filter(module => isModuleCompleted(module.id)).length} of {modules.length} modules completed
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Sidebar */}
@@ -743,6 +993,15 @@ const CourseDetail: React.FC = () => {
                       <Target className="h-5 w-5 mr-2" />
                       Practice Questions
                     </Link>
+                    {areAllModulesCompleted() && (
+                      <Link
+                        to={`/portal/practice-exam/${courseId}`}
+                        className="w-full flex items-center justify-center px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors duration-200"
+                      >
+                        <Trophy className="h-5 w-5 mr-2" />
+                        Practice Exam
+                      </Link>
+                    )}
                   </>
                 ) : (
                   <Link
