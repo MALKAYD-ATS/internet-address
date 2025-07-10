@@ -550,6 +550,7 @@ const CourseDetail: React.FC = () => {
               </div>
 
               {/* What's Included */}
+            </div>
           </div>
         </div>
       </div>
