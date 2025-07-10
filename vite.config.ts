@@ -14,5 +14,4 @@ export default defineConfig({
   worker: {
     format: 'es'
   },
-  assetsInclude: ['**/*.worker.js']
 });

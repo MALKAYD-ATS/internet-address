@@ -2,11 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, X, Loader2, AlertCircle, ZoomIn, ZoomOut } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Configure PDF.js worker using Web Worker
-import pdfjsWorker from 'pdfjs-dist/build/pdf.worker?worker';
-
-// Set up the worker
-pdfjsLib.GlobalWorkerOptions.workerPort = new pdfjsWorker();
+// Configure PDF.js worker to use static file from public directory
+pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
 
 interface PDFSlideViewerProps {
   pdfUrl: string;
