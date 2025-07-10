@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, X, Loader2, AlertCircle, ZoomIn, ZoomOut } from 'lucide-react';
-import * as pdfjsLib from 'pdfjs-dist';
+import { pdfjs } from 'pdfjs-dist';
+import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist';
 
-// Configure PDF.js worker to use local build instead of CDN
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+// Configure PDF.js worker to use local build
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   'pdfjs-dist/build/pdf.worker.js',
   import.meta.url
 ).toString();
@@ -15,13 +16,14 @@ interface PDFSlideViewerProps {
 }
 
 const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({ pdfUrl, lessonTitle, onClose }) => {
-  const [pdf, setPdf] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
+  const [pdf, setPdf] = useState<PDFDocumentProxy | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [scale, setScale] = useState(1.0);
   const [pageLoading, setPageLoading] = useState(false);
+  const [loadingTimeout, setLoadingTimeout] = useState<NodeJS.Timeout | null>(null);
   
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -32,22 +34,75 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({ pdfUrl, lessonTitle, on
       try {
         setLoading(true);
         setError(null);
+        
+        // Set a timeout to prevent infinite loading
+        const timeout = setTimeout(() => {
+          setError('PDF loading timed out. Please try again or contact support.');
+          setLoading(false);
+        }, 15000); // 15 second timeout
+        
+        setLoadingTimeout(timeout);
 
-        const loadingTask = pdfjsLib.getDocument(pdfUrl);
+        console.log('Loading PDF from URL:', pdfUrl);
+        
+        const loadingTask = pdfjs.getDocument({
+          url: pdfUrl,
+          cMapUrl: new URL('pdfjs-dist/cmaps/', import.meta.url).toString(),
+          cMapPacked: true,
+        });
+        
         const pdfDocument = await loadingTask.promise;
+        
+        // Clear timeout on successful load
+        clearTimeout(timeout);
+        setLoadingTimeout(null);
         
         setPdf(pdfDocument);
         setTotalPages(pdfDocument.numPages);
         setCurrentPage(1);
+        
+        console.log('PDF loaded successfully. Total pages:', pdfDocument.numPages);
       } catch (err) {
         console.error('Error loading PDF:', err);
-        setError('This material could not be loaded. Please contact support.');
+        
+        // Clear timeout on error
+        if (loadingTimeout) {
+          clearTimeout(loadingTimeout);
+          setLoadingTimeout(null);
+        }
+        
+        // Provide specific error messages based on error type
+        if (err instanceof Error) {
+          if (err.message.includes('404') || err.message.includes('Not Found')) {
+            setError('PDF file not found. Please contact support.');
+          } else if (err.message.includes('network') || err.message.includes('fetch')) {
+            setError('Network error loading PDF. Please check your connection and try again.');
+          } else if (err.message.includes('InvalidPDFException')) {
+            setError('Invalid PDF file. Please contact support.');
+          } else {
+            setError(`Failed to load PDF: ${err.message}`);
+          }
+        } else {
+          setError('This material could not be loaded. Please contact support.');
+        }
       } finally {
         setLoading(false);
       }
     };
 
-    loadPDF();
+    if (pdfUrl) {
+      loadPDF();
+    } else {
+      setError('No PDF URL provided.');
+      setLoading(false);
+    }
+    
+    // Cleanup timeout on unmount
+    return () => {
+      if (loadingTimeout) {
+        clearTimeout(loadingTimeout);
+      }
+    };
   }, [pdfUrl]);
 
   // Render current page
@@ -57,6 +112,8 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({ pdfUrl, lessonTitle, on
 
       try {
         setPageLoading(true);
+        console.log('Rendering page:', currentPage);
+        
         const page = await pdf.getPage(currentPage);
         const canvas = canvasRef.current;
         const context = canvas.getContext('2d');
@@ -87,6 +144,7 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({ pdfUrl, lessonTitle, on
         };
 
         await page.render(renderContext).promise;
+        console.log('Page rendered successfully:', currentPage);
       } catch (err) {
         console.error('Error rendering page:', err);
         setError('Failed to render page. Please try again.');
@@ -170,6 +228,9 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({ pdfUrl, lessonTitle, on
           <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Loading PDF</h3>
           <p className="text-gray-600">Please wait while we load your lesson materials...</p>
+          <div className="mt-4 text-sm text-gray-500">
+            This should complete within 15 seconds
+          </div>
         </div>
       </div>
     );
@@ -182,12 +243,20 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({ pdfUrl, lessonTitle, on
           <AlertCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Material</h3>
           <p className="text-gray-600 mb-6">{error}</p>
-          <button
-            onClick={onClose}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
-          >
-            Close
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
+            >
+              Try Again
+            </button>
+            <button
+              onClick={onClose}
+              className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-6 py-3 rounded-lg font-medium transition-colors duration-200"
+            >
+              Close
+            </button>
+          </div>
         </div>
       </div>
     );
