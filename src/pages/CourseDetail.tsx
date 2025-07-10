@@ -345,6 +345,8 @@ const CourseDetail: React.FC = () => {
       }
     } else {
       console.warn('No content URL available for lesson:', lesson.title);
+      // Show user-friendly message for missing content
+      alert('This lesson content is not yet available. Please contact support if you believe this is an error.');
     }
   };
 

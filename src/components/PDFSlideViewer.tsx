@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, X, Loader2, AlertCircle, ZoomIn, ZoomOut } from 'lucide-react';
-import { pdfjs } from 'pdfjs-dist';
-import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist';
+import * as pdfjsLib from 'pdfjs-dist';
 
-// Configure PDF.js worker to use local build
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+// Configure PDF.js worker to use local build instead of CDN
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   'pdfjs-dist/build/pdf.worker.js',
   import.meta.url
 ).toString();
@@ -16,7 +15,7 @@ interface PDFSlideViewerProps {
 }
 
 const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({ pdfUrl, lessonTitle, onClose }) => {
-  const [pdf, setPdf] = useState<PDFDocumentProxy | null>(null);
+  const [pdf, setPdf] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -45,10 +44,9 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({ pdfUrl, lessonTitle, on
 
         console.log('Loading PDF from URL:', pdfUrl);
         
-        const loadingTask = pdfjs.getDocument({
+        const loadingTask = pdfjsLib.getDocument({
           url: pdfUrl,
-          cMapUrl: new URL('pdfjs-dist/cmaps/', import.meta.url).toString(),
-          cMapPacked: true,
+          // Use default settings for better compatibility
         });
         
         const pdfDocument = await loadingTask.promise;
