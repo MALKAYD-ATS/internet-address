@@ -70,7 +70,6 @@ const CourseDetail: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [completingLesson, setCompletingLesson] = useState<string | null>(null);
   const [courseProgress, setCourseProgress] = useState(0);
-  const [certificateGenerated, setCertificateGenerated] = useState(false);
   const [pdfViewer, setPdfViewer] = useState<{
     isOpen: boolean;
     pdfUrl: string | null;
@@ -106,70 +105,16 @@ const CourseDetail: React.FC = () => {
 
   // Check for certificate eligibility when progress reaches 100%
   useEffect(() => {
-    if (courseProgress === 100 && user && course && !certificateGenerated) {
+    if (courseProgress === 100 && user && course) {
       generateCertificate();
     }
-  }, [courseProgress, user, course, certificateGenerated]);
+  }, [courseProgress, user, course]);
 
   const generateCertificate = async () => {
-    if (!user || !course) return;
-
     try {
+      // TODO: Implement certificate generation
       console.log('Generating certificate for course completion');
-      
-      // Check if certificate already exists
-      const { data: existingCert } = await supabase
-        .from('student_certificates')
-        .select('id')
-        .eq('student_id', user.id)
-        .eq('course_id', courseId)
-        .single();
-
-      if (existingCert) {
-        setCertificateGenerated(true);
-        return;
-      }
-
-      // Get student profile for name
-      const { data: studentData } = await supabase
-        .from('students')
-        .select('full_name')
-        .eq('id', user.id)
-        .single();
-
-      if (!studentData) return;
-
-      // For now, use the template URL directly
-      // In a full implementation, you would:
-      // 1. Download the template PDF
-      // 2. Use a PDF library to overlay the student name and date
-      // 3. Upload the customized PDF to storage
-      // 4. Get the new URL
-      
-      const templateUrl = 'https://nnhgbtrkxepkeotpdnxw.supabase.co/storage/v1/object/public/media-assets/certificates/certificate-of-completion.pdf';
-      
-      // Insert certificate record
-      const { error: insertError } = await supabase
-        .from('student_certificates')
-        .insert([
-          {
-            student_id: user.id,
-            course_id: courseId,
-            certificate_url: templateUrl,
-            student_name: studentData.full_name,
-            course_title: course.title,
-            issued_at: new Date().toISOString()
-          }
-        ]);
-
-      if (insertError) {
-        console.error('Error inserting certificate:', insertError);
-        return;
-      }
-
-      setCertificateGenerated(true);
-      console.log('Certificate generated successfully');
-      
+      // This would integrate with Supabase Storage for PDF template
     } catch (error) {
       console.error('Error generating certificate:', error);
     }
@@ -319,14 +264,9 @@ const CourseDetail: React.FC = () => {
       return;
     }
 
-    // Handle different URL formats
-    if (!pdfUrl.startsWith('http')) {
-      // If it's a relative path, make it absolute
-      if (pdfUrl.startsWith('/')) {
-        pdfUrl = `${window.location.origin}${pdfUrl}`;
-      } else {
-        pdfUrl = `${window.location.origin}/${pdfUrl}`;
-      }
+    // Handle relative paths
+    if (pdfUrl.startsWith('/') || !pdfUrl.startsWith('http')) {
+      pdfUrl = `${window.location.origin}${pdfUrl.startsWith('/') ? '' : '/'}${pdfUrl}`;
     }
 
     console.log('Final PDF URL:', pdfUrl);
@@ -576,11 +516,11 @@ const CourseDetail: React.FC = () => {
                   Test your knowledge with practice questions for this course.
                 </p>
                 <button
-                  onClick={() => navigate('/portal')}
+                  onClick={() => navigate(`/portal/practice-questions/${courseId}`)}
                   className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                 >
                   <FileText className="w-4 h-4" />
-                  Back to Portal
+                  Practice Questions
                 </button>
               </div>
 

@@ -40,21 +40,18 @@ export type Database = {
           full_name: string
           phone_number: string
           created_at: string
-          profile_image: string | null
         }
         Insert: {
           id: string
           full_name: string
           phone_number?: string
           created_at?: string
-          profile_image?: string | null
         }
         Update: {
           id?: string
           full_name?: string
           phone_number?: string
           created_at?: string
-          profile_image?: string | null
         }
       }
       courses_ats: {

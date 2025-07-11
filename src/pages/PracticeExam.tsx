@@ -35,9 +35,8 @@ interface Course {
   id: number;
   title: string | null;
   description: string | null;
-  number_of_questions: number | null;
-  passing_percentage: number | null;
-  duration_minutes: number | null;
+  exam_number_of_questions: number | null;
+  exam_duration_minutes: number | null;
 }
 
 interface ExamQuestion {
@@ -113,7 +112,7 @@ const PracticeExam: React.FC = () => {
         // Fetch course details
         const { data: courseData, error: courseError } = await supabase
           .from('courses_ats')
-          .select('id, title, description, number_of_questions, passing_percentage, duration_minutes')
+          .select('id, title, description, exam_number_of_questions, exam_duration_minutes')
           .eq('id', courseId)
           .single();
 
@@ -144,8 +143,8 @@ const PracticeExam: React.FC = () => {
         }
 
         // Use course settings or defaults
-        const questionCount = courseData.number_of_questions || 50;
-        const examDuration = courseData.duration_minutes || 60;
+        const questionCount = courseData.exam_number_of_questions || 50;
+        const examDuration = courseData.exam_duration_minutes || 60;
 
         // Randomize and limit questions
         const shuffledQuestions = [...questionsData].sort(() => Math.random() - 0.5);
