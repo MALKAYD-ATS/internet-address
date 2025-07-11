@@ -37,7 +37,8 @@ import {
   ChevronLeft,
   ChevronRight,
   CheckCircle,
-  UserPlus
+  UserPlus,
+  Eye
 } from 'lucide-react';
 
 interface StudentProfile {
@@ -75,6 +76,18 @@ interface Enrollment {
   enrolled_at: string;
 }
 
+interface StudentCertificate {
+  id: string;
+  student_id: string;
+  course_id: string;
+  certificate_url: string | null;
+  issued_at: string;
+  course?: {
+    title: string;
+    type: string;
+  };
+}
+
 const Portal: React.FC = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -92,6 +105,11 @@ const Portal: React.FC = () => {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [enrollingCourseId, setEnrollingCourseId] = useState<number | null>(null);
   const [enrollmentMessage, setEnrollmentMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+
+  // Certificates state
+  const [certificates, setCertificates] = useState<StudentCertificate[]>([]);
+  const [loadingCertificates, setLoadingCertificates] = useState(true);
+  const [errorCertificates, setErrorCertificates] = useState<string | null>(null);
 
   // Profile editing state
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -225,6 +243,41 @@ const Portal: React.FC = () => {
     };
 
     fetchEnrollments();
+  }, [user]);
+
+  // Fetch user certificates
+  useEffect(() => {
+    const fetchCertificates = async () => {
+      if (!user) return;
+
+      try {
+        setLoadingCertificates(true);
+        setErrorCertificates(null);
+
+        const { data, error } = await supabase
+          .from('student_certificates')
+          .select(`
+            *,
+            course:courses_ats(title, type)
+          `)
+          .eq('student_id', user.id)
+          .order('issued_at', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching certificates:', error);
+          setErrorCertificates('Failed to load certificates');
+        } else {
+          setCertificates(data || []);
+        }
+      } catch (err) {
+        console.error('Certificates fetch error:', err);
+        setErrorCertificates('An unexpected error occurred');
+      } finally {
+        setLoadingCertificates(false);
+      }
+    };
+
+    fetchCertificates();
   }, [user]);
 
   // Check if user is enrolled in a course
@@ -482,6 +535,24 @@ const Portal: React.FC = () => {
     return text.substring(0, maxLength) + '...';
   };
 
+  const formatCertificateDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const handleDownloadCertificate = (certificateUrl: string, courseTitle: string) => {
+    if (!certificateUrl) {
+      alert('Certificate file not available');
+      return;
+    }
+
+    // Open certificate in new tab for download
+    window.open(certificateUrl, '_blank');
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -730,13 +801,17 @@ const Portal: React.FC = () => {
                 <h3 className="text-2xl font-bold text-gray-900">{enrollments.length}</h3>
                 <p className="text-gray-600">Enrolled Courses</p>
               </div>
-              <div className="bg-white rounded-xl shadow-lg p-6 text-center">
-                <Award className="h-8 w-8 text-green-600 mx-auto mb-3" />
-                <h3 className="text-2xl font-bold text-gray-900">0</h3>
+              <div className="bg-white rounded-xl shadow-lg p-6 text-center transform transition-all duration-500 hover:scale-105 hover:shadow-xl">
+                <div className="bg-blue-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <Award className="h-8 w-8 text-green-600" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900">{certificates.length}</h3>
                 <p className="text-gray-600">Certificates</p>
               </div>
-              <div className="bg-white rounded-xl shadow-lg p-6 text-center">
-                <Clock className="h-8 w-8 text-orange-600 mx-auto mb-3" />
+              <div className="bg-white rounded-xl shadow-lg p-6 text-center transform transition-all duration-500 hover:scale-105 hover:shadow-xl">
+                <div className="bg-blue-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <Clock className="h-8 w-8 text-orange-600" />
+                </div>
                 <h3 className="text-2xl font-bold text-gray-900">0</h3>
                 <p className="text-gray-600">Hours Completed</p>
               </div>
@@ -998,22 +1073,98 @@ const Portal: React.FC = () => {
                 <Award className="h-6 w-6 mr-2 text-blue-600" />
                 My Certificates
               </h2>
-              <div className="text-center py-12">
-                <Award className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No Certificates Yet</h3>
-                <p className="text-gray-600 mb-4">
-                  Complete courses to earn your professional drone certifications.
-                </p>
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <div className="flex items-center justify-center">
-                    <Award className="h-5 w-5 text-green-600 mr-2" />
-                    <span className="text-green-800 font-medium">Coming Soon</span>
-                  </div>
-                  <p className="text-green-700 text-sm mt-2">
-                    Digital certificates and verification system will be available here.
-                  </p>
+              
+              {loadingCertificates ? (
+                <div className="text-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
+                  <p className="text-gray-600">Loading certificates...</p>
                 </div>
-              </div>
+              ) : errorCertificates ? (
+                <div className="text-center py-12">
+                  <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Error Loading Certificates</h3>
+                  <p className="text-gray-600">{errorCertificates}</p>
+                </div>
+              ) : certificates.length === 0 ? (
+                <div className="text-center py-12">
+                  <Award className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Certificates Yet</h3>
+                  <p className="text-gray-600 mb-4">
+                    Complete courses to earn your professional drone certifications.
+                  </p>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-center justify-center">
+                      <Award className="h-5 w-5 text-blue-600 mr-2" />
+                      <span className="text-blue-800 font-medium">Certificates will appear here once earned</span>
+                    </div>
+                    <p className="text-blue-700 text-sm mt-2">
+                      Complete all course modules and pass the final exam to receive your certificate.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {certificates.map((certificate) => (
+                    <div key={certificate.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow duration-200">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                            {certificate.course?.title || 'Course Certificate'}
+                          </h3>
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Completed
+                            </span>
+                            {certificate.course?.type && (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {certificate.course.type}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-600">
+                            Issued: {formatCertificateDate(certificate.issued_at)}
+                          </p>
+                        </div>
+                        <Award className="h-8 w-8 text-yellow-500 flex-shrink-0" />
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="bg-gray-50 rounded-lg p-3">
+                          <p className="text-xs text-gray-600 mb-1">Certificate ID</p>
+                          <p className="text-sm font-mono text-gray-900">{certificate.id.slice(0, 8).toUpperCase()}</p>
+                        </div>
+                        
+                        <button
+                          onClick={() => handleDownloadCertificate(
+                            certificate.certificate_url || '', 
+                            certificate.course?.title || 'Certificate'
+                          )}
+                          disabled={!certificate.certificate_url}
+                          className={`w-full py-2 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center ${
+                            certificate.certificate_url
+                              ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          }`}
+                        >
+                          <FileText className="h-4 w-4 mr-2" />
+                          {certificate.certificate_url ? 'Download Certificate' : 'Certificate Unavailable'}
+                        </button>
+                        
+                        {certificate.certificate_url && (
+                          <button
+                            onClick={() => window.open(certificate.certificate_url!, '_blank')}
+                            className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center"
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Certificate
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Notifications Section */}
