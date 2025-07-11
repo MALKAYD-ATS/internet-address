@@ -524,7 +524,7 @@ const Portal: React.FC = () => {
     if (!type) return 'bg-gray-100 text-gray-800';
     
     switch (type.toLowerCase()) {
-      case 'regulatory': return 'bg-blue-100 text-blue-800';
+      case 'regulation': return 'bg-blue-100 text-blue-800';
       case 'application': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
     }
