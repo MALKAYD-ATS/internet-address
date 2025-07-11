@@ -159,7 +159,7 @@ export const regulationCourses: CourseData[] = [
     level: "Advanced",
     duration: "3 Days",
     capacity: "12 students",
-    description: "In-person advanced regulatory training for VLOS operations with expert instruction and interactive learning.",
+    description: "In-person advanced regulation training for VLOS operations with expert instruction and interactive learning.",
     features: [
       "Transport Canada RPAS Advanced Certificate preparation",
       "Complex airspace operations and controlled airspace procedures",
