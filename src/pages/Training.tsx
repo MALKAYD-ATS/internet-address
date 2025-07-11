@@ -312,7 +312,7 @@ const Training: React.FC = () => {
             <section className="mb-12 sm:mb-16">
               <div className="text-center mb-8 sm:mb-12">
                 <div className="flex items-center justify-center mb-4">
-                  {selectedType === 'Regulatory' ? (
+                  {selectedType === 'Regulation' ? (
                     <BookOpen className="h-8 w-8 text-blue-600 mr-3" />
                   ) : (
                     <Plane className="h-8 w-8 text-blue-600 mr-3" />
@@ -322,7 +322,7 @@ const Training: React.FC = () => {
                   </h2>
                 </div>
                 <p className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
-                  {selectedType === 'Regulatory' 
+                  {selectedType === 'Regulation' 
                     ? 'Essential certification courses covering Transport Canada regulations, safety protocols, and compliance requirements for professional drone operations.'
                     : 'Specialized hands-on training for commercial drone applications including mapping, surveying, inspection, and industry-specific operations.'
                   }
