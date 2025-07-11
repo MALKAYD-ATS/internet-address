@@ -35,8 +35,16 @@ interface Course {
   id: number;
   title: string | null;
   description: string | null;
-  exam_number_of_questions: number | null;
-  exam_duration_minutes: number | null;
+}
+
+interface ExamConfig {
+  id: string;
+  title: string;
+  description: string | null;
+  number_of_questions: number | null;
+  passing_percentage: number | null;
+  is_active: boolean;
+  course_id: string;
 }
 
 interface ExamQuestion {
@@ -63,6 +71,7 @@ const PracticeExam: React.FC = () => {
   const [headerLogo, setHeaderLogo] = useState<HeaderLogo | null>(null);
   
   const [course, setCourse] = useState<Course | null>(null);
+  const [examConfig, setExamConfig] = useState<ExamConfig | null>(null);
   const [questions, setQuestions] = useState<ExamQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [questionStates, setQuestionStates] = useState<QuestionState[]>([]);
@@ -112,7 +121,7 @@ const PracticeExam: React.FC = () => {
         // Fetch course details
         const { data: courseData, error: courseError } = await supabase
           .from('courses_ats')
-          .select('id, title, description, exam_number_of_questions, exam_duration_minutes')
+          .select('id, title, description')
           .eq('id', courseId)
           .single();
 
@@ -123,6 +132,23 @@ const PracticeExam: React.FC = () => {
         }
 
         setCourse(courseData);
+
+        // Fetch exam configuration for this course
+        const { data: examData, error: examError } = await supabase
+          .from('exams')
+          .select('*')
+          .eq('course_id', courseId)
+          .eq('is_active', true)
+          .single();
+
+        if (examError) {
+          console.error('Error fetching exam config:', examError);
+          setError('No exam configuration found for this course.');
+          return;
+        }
+
+        setExamConfig(examData);
+        console.log('Exam config loaded:', examData);
 
         // Fetch practice questions for this course (using same questions as practice)
         const { data: questionsData, error: questionsError } = await supabase
@@ -137,18 +163,21 @@ const PracticeExam: React.FC = () => {
         }
 
         if (!questionsData || questionsData.length === 0) {
+          setError('No practice questions available for this course.');
           setQuestions([]);
           setQuestionStates([]);
           return;
         }
 
-        // Use course settings or defaults
-        const questionCount = courseData.exam_number_of_questions || 50;
-        const examDuration = courseData.exam_duration_minutes || 60;
+        // Use exam configuration or defaults
+        const questionCount = examData.number_of_questions || 50;
+        const examDurationMinutes = 60; // Default exam duration
 
         // Randomize and limit questions
         const shuffledQuestions = [...questionsData].sort(() => Math.random() - 0.5);
         const selectedQuestions = shuffledQuestions.slice(0, Math.min(questionCount, shuffledQuestions.length));
+        
+        console.log(`Selected ${selectedQuestions.length} questions out of ${questionsData.length} available`);
         
         setQuestions(selectedQuestions);
         setQuestionStates(selectedQuestions.map(() => ({
@@ -156,7 +185,7 @@ const PracticeExam: React.FC = () => {
         })));
 
         // Set timer
-        setTimeRemaining(examDuration * 60); // Convert to seconds
+        setTimeRemaining(examDurationMinutes * 60); // Convert to seconds
         setExamStartTime(new Date());
 
       } catch (err) {
@@ -228,7 +257,7 @@ const PracticeExam: React.FC = () => {
   };
 
   const handleSubmitExam = async () => {
-    if (!user || !course) return;
+    if (!user || !course || !examConfig) return;
 
     try {
       // Calculate score
@@ -240,7 +269,7 @@ const PracticeExam: React.FC = () => {
       });
 
       const percentage = Math.round((correctAnswers / questions.length) * 100);
-      const passingScore = 70; // Default passing score
+      const passingScore = examConfig.passing_percentage || 70;
       const passed = percentage >= passingScore;
 
       setExamResults({
@@ -266,7 +295,7 @@ const PracticeExam: React.FC = () => {
               is_correct: state.selectedAnswer === questions[index].correct_answer
             })),
             score: percentage,
-            duration_minutes: course.exam_duration_minutes || 60,
+            duration_minutes: 60, // Default duration
             is_submitted: true
           }
         ]);
@@ -437,7 +466,13 @@ const PracticeExam: React.FC = () => {
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
                 {course.title || 'Course Practice Exam'}
               </h1>
-              <p className="text-gray-600">Final assessment for course completion</p>
+              <p className="text-gray-600">
+                {examConfig ? (
+                  `${examConfig.number_of_questions || 50} questions • ${examConfig.passing_percentage || 70}% to pass • 60 minutes`
+                ) : (
+                  'Final assessment for course completion'
+                )}
+              </p>
             </div>
             <Link
               to={`/student/courses/${courseId}`}
@@ -455,6 +490,24 @@ const PracticeExam: React.FC = () => {
               <span className="font-semibold text-yellow-800">
                 Time Remaining: {formatTime(timeRemaining)}
               </span>
+            </div>
+          )}
+          
+          {/* Exam Info */}
+          {examConfig && !isSubmitted && (
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-blue-900">{questions.length}</div>
+                <div className="text-blue-700 text-sm">Total Questions</div>
+              </div>
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-green-900">{examConfig.passing_percentage || 70}%</div>
+                <div className="text-green-700 text-sm">Passing Score</div>
+              </div>
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-orange-900">60</div>
+                <div className="text-orange-700 text-sm">Minutes</div>
+              </div>
             </div>
           )}
         </div>
