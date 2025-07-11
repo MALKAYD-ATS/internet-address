@@ -1167,20 +1167,6 @@ const Portal: React.FC = () => {
               )}
             </div>
 
-            {/* Notifications Section */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                <Bell className="h-6 w-6 mr-2 text-blue-600" />
-                Notifications
-              </h2>
-              <div className="text-center py-8">
-                <Bell className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No New Notifications</h3>
-                <p className="text-gray-600">
-                  Course updates and important announcements will appear here.
-                </p>
-              </div>
-            </div>
           </div>
         </div>
 
