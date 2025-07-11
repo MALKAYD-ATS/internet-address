@@ -224,7 +224,7 @@ const Training: React.FC = () => {
           <div className="bg-white rounded-xl shadow-lg p-1 sm:p-2 transform transition-all duration-500 hover:shadow-xl">
             <div className="flex space-x-1 sm:space-x-2">
               <button
-                onClick={() => setSelectedType('Regulatory')}
+                onClick={() => setSelectedType('Regulation')}
                 className={`px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 text-sm sm:text-base flex items-center ${
                   selectedType === 'Regulatory'
                     ? 'bg-blue-700 text-white shadow-lg'
