@@ -426,6 +426,7 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({
                 )}
               </button>
             )}
+            
             <div className="text-sm text-gray-500">
               Use arrow keys to navigate • ESC to close
             </div>
@@ -441,13 +442,20 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({
           display: flex;
           align-items: center;
           justify-content: center;
+          overflow: auto;
         }
         
         .pdf-canvas {
-          width: 100% !important;
-          height: auto !important;
-          max-width: 100vw;
-          max-height: calc(100vh - 200px);
+          display: block;
+          margin: 0 auto;
+        }
+        
+        /* Responsive canvas sizing */
+        @media (max-width: 768px) {
+          .pdf-container {
+            height: calc(100vh - 180px);
+            padding: 10px;
+          }
         }
       `}</style>
     </div>
