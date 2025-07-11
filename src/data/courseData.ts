@@ -65,7 +65,7 @@ export const regulationCourses: CourseData[] = [
     level: "Beginner",
     duration: "Self-paced",
     capacity: "20 students",
-    description: "Essential online regulatory training covering professional RPAS regulations, safety protocols, and basic compliance requirements.",
+    description: "Essential online regulation training covering professional RPAS regulations, safety protocols, and basic compliance requirements.",
     features: [
       "Transport Canada RPAS Basic Certificate preparation",
       "Comprehensive online learning modules",
