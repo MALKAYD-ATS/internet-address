@@ -42,13 +42,24 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({
         
         console.log('Loading PDF from URL:', pdfUrl);
 
-        // Create loading task with proper configuration
-        const loadingTask = pdfjsLib.getDocument({
+        // Add CORS headers for Supabase Storage
+        const loadingTaskOptions: any = {
           url: pdfUrl,
           cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',
           cMapPacked: true,
           enableXfa: true,
-        });
+        };
+        
+        // Add credentials for Supabase Storage if needed
+        if (pdfUrl.includes('supabase.co')) {
+          loadingTaskOptions.withCredentials = false;
+          loadingTaskOptions.httpHeaders = {
+            'Access-Control-Allow-Origin': '*',
+          };
+        }
+
+        // Create loading task with proper configuration
+        const loadingTask = pdfjsLib.getDocument(loadingTaskOptions);
         
         const pdfDocument = await loadingTask.promise;
         
@@ -63,14 +74,16 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({
         // Provide more specific error messages
         if (err instanceof Error) {
           if (err.message.includes('404') || err.message.includes('Not Found')) {
-            setError('PDF file not found. Please check if the file exists.');
+            setError('PDF file not found. Please check if the file exists in Supabase Storage.');
           } else if (err.message.includes('CORS')) {
-            setError('Unable to load PDF due to security restrictions. Please contact support.');
+            setError('Unable to load PDF due to CORS restrictions. Please check Supabase Storage permissions.');
+          } else if (err.message.includes('Unauthorized') || err.message.includes('403')) {
+            setError('Access denied to PDF file. Please check file permissions in Supabase Storage.');
           } else {
             setError(`Failed to load PDF: ${err.message}`);
           }
         } else {
-          setError('This material could not be loaded. Please contact support.');
+          setError('PDF material could not be loaded. Please check the file path and permissions.');
         }
       } finally {
         setLoading(false);

@@ -256,19 +256,27 @@ const CourseDetail: React.FC = () => {
   const openPdfViewer = (resource: Resource, lessonTitle: string, lessonId: string, moduleId: string) => {
     console.log('Opening PDF viewer with resource:', resource);
     
-    // Get PDF URL from resource
-    let pdfUrl = resource.url || resource.file_path || '';
+    // Get PDF URL from resource - prioritize Supabase Storage URLs
+    let pdfUrl = '';
+    
+    if (resource.url) {
+      pdfUrl = resource.url;
+    } else if (resource.file_path) {
+      // If file_path is provided, construct Supabase Storage URL
+      if (resource.file_path.startsWith('http')) {
+        pdfUrl = resource.file_path;
+      } else {
+        // Construct Supabase Storage URL
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const bucketName = 'media-assets';
+        pdfUrl = `${supabaseUrl}/storage/v1/object/public/${bucketName}/${resource.file_path}`;
+      }
+    }
     
     if (!pdfUrl) {
       console.error('No PDF URL found for resource:', resource);
       alert('PDF file not found');
       return;
-    }
-
-    // Handle relative paths and ensure proper URL format
-    if (!pdfUrl.startsWith('http')) {
-      // If it's a relative path, make it absolute
-      pdfUrl = `${window.location.origin}${pdfUrl.startsWith('/') ? '' : '/'}${pdfUrl}`;
     }
 
     console.log('Final PDF URL:', pdfUrl);
@@ -289,6 +297,41 @@ const CourseDetail: React.FC = () => {
       lessonId,
       moduleId,
     });
+  };
+
+  // Helper function to get PDF URL for lesson resources
+  const getPdfUrlForLesson = (lesson: Lesson): string | null => {
+    const pdfResource = lesson.resources.find(resource => 
+      resource.resource_type === 'file' && 
+      (resource.url?.toLowerCase().includes('.pdf') || 
+       resource.file_path?.toLowerCase().includes('.pdf'))
+    );
+    
+    if (!pdfResource) return null;
+    
+    let pdfUrl = '';
+    
+    if (pdfResource.url) {
+      pdfUrl = pdfResource.url;
+    } else if (pdfResource.file_path) {
+      if (pdfResource.file_path.startsWith('http')) {
+        pdfUrl = pdfResource.file_path;
+      } else {
+        // Construct Supabase Storage URL
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const bucketName = 'media-assets';
+        pdfUrl = `${supabaseUrl}/storage/v1/object/public/${bucketName}/${pdfResource.file_path}`;
+      }
+    }
+    
+    // Validate URL
+    try {
+      new URL(pdfUrl);
+      return pdfUrl;
+    } catch (error) {
+      console.error('Invalid PDF URL:', pdfUrl);
+      return null;
+    }
   };
 
   const closePdfViewer = () => {
@@ -443,15 +486,19 @@ const CourseDetail: React.FC = () => {
                                 }`}
                                 onClick={() => {
                                   if (isAccessible) {
-                                    // Find the first PDF resource for this lesson
-                                    const pdfResource = lesson.resources.find(resource => 
-                                      resource.resource_type === 'file' && 
-                                      (resource.url?.includes('.pdf') || resource.file_path?.includes('.pdf'))
-                                    );
+                                    const pdfUrl = getPdfUrlForLesson(lesson);
                                     
-                                    if (pdfResource) {
-                                      console.log('Opening PDF from lesson click:', pdfResource);
-                                      openPdfViewer(pdfResource, lesson.title, lesson.id, module.id);
+                                    if (pdfUrl) {
+                                      console.log('Opening PDF from lesson click:', pdfUrl);
+                                      // Create a mock resource object for the PDF viewer
+                                      const mockResource: Resource = {
+                                        id: 'lesson-pdf',
+                                        title: lesson.title,
+                                        resource_type: 'file',
+                                        url: pdfUrl,
+                                        file_path: ''
+                                      };
+                                      openPdfViewer(mockResource, lesson.title, lesson.id, module.id);
                                     } else {
                                       console.log('No PDF resource found for lesson:', lesson.title);
                                       alert('No PDF material available for this lesson');
@@ -481,7 +528,8 @@ const CourseDetail: React.FC = () => {
                                   {/* PDF Indicator */}
                                   {lesson.resources.some(resource => 
                                     resource.resource_type === 'file' && 
-                                    (resource.url?.includes('.pdf') || resource.file_path?.includes('.pdf'))
+                                    (resource.url?.toLowerCase().includes('.pdf') || 
+                                     resource.file_path?.toLowerCase().includes('.pdf'))
                                   ) && (
                                     <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${
                                       isAccessible
