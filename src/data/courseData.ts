@@ -97,7 +97,7 @@ export const regulationCourses: CourseData[] = [
     level: "Beginner",
     duration: "1 Day",
     capacity: "15 students",
-    description: "In-person regulatory training with hands-on instruction covering professional RPAS regulations and safety protocols.",
+    description: "In-person regulation training with hands-on instruction covering professional RPAS regulations and safety protocols.",
     features: [
       "Transport Canada RPAS Basic Certificate preparation",
       "Face-to-face expert instruction",
