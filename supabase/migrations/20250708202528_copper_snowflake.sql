@@ -292,7 +292,7 @@ WHERE NOT EXISTS (SELECT 1 FROM contact_locations);
 INSERT INTO student_success_stories (photo_url, name, position, company, rating, text) 
 SELECT * FROM (VALUES 
   ('https://images.pexels.com/photos/3763188/pexels-photo-3763188.jpeg?auto=compress&cs=tinysrgb&w=150', 'Sarah Mitchell', 'Commercial Drone Pilot', 'SkyView Surveying', 5, 'The RPAS Advanced Certification course at ATS was exceptional. The instructors'' expertise and hands-on approach gave me the confidence to start my commercial drone business.'),
-  ('https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150', 'David Chen', 'Safety Manager', 'Alberta Infrastructure', 5, 'ATS provided our team with comprehensive drone safety training. Their customized corporate program addressed our specific operational needs and regulatory requirements.'),
+  ('https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150', 'David Chen', 'Safety Manager', 'Alberta Infrastructure', 5, 'ATS provided our team with comprehensive drone safety training. Their customized corporate program addressed our specific operational needs and Regulation requirements.'),
   ('https://images.pexels.com/photos/3756681/pexels-photo-3756681.jpeg?auto=compress&cs=tinysrgb&w=150', 'Maria Rodriguez', 'Real Estate Photographer', 'Horizon Properties', 5, 'Started with zero drone experience and now I''m confidently shooting aerial real estate photography. The basic certification course was well-structured.')
 ) AS v(photo_url, name, position, company, rating, text)
 WHERE NOT EXISTS (SELECT 1 FROM student_success_stories);
