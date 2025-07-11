@@ -1269,268 +1269,83 @@ export default Portal;
                       const isEnrolled = isEnrolledInCourse(course.id);
                       const isEnrolling = enrollingCourseId === course.id;
 
-                      return (
-                        <SwiperSlide key={course.id}>
-                          <div className="course-card min-h-[600px] min-w-[350px] border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow duration-200 bg-white flex flex-col">
-                            {/* Course Header */}
-                            <div className="mb-4 flex-shrink-0">
-                              <div className="flex flex-wrap gap-2 mb-3">
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTypeColor(course.type)}`}>
-                                  {course.type || 'General'}
-                                </span>
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getLevelColor(course.level)}`}>
-                                  {course.level || 'All Levels'}
-                                </span>
-                                {course.age_requirement && (
-                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                    Age {course.age_requirement}+
-                                  </span>
-                                )}
-                                {isEnrolled && (
-                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    <CheckCircle className="h-3 w-3 mr-1" />
-                                    Enrolled
-                                  </span>
-                                )}
-                              </div>
-                              <h3 className="text-lg font-semibold text-gray-900 mb-3 min-h-[3rem] line-clamp-2">
-                                {course.title || 'Untitled Course'}
-                              </h3>
-                            </div>
-
-                            {/* Course Description */}
-                            <div className="mb-4 flex-grow">
-                              <p className="text-gray-600 text-sm leading-relaxed min-h-[4.5rem]">
-                                {course.description 
-                                  ? truncateText(course.description, 150)
-                                  : 'No description available.'
-                                }
-                              </p>
-                            </div>
-
-                            {/* Course Details */}
-                            <div className="space-y-2 mb-4 flex-shrink-0">
-                              {course.duration && (
-                                <div className="flex items-center text-sm text-gray-600">
-                                  <Clock className="h-4 w-4 mr-2 flex-shrink-0" />
-                                  <span>Duration: {course.duration}</span>
-                                </div>
-                              )}
-                              {course.max_students && (
-                                <div className="flex items-center text-sm text-gray-600">
-                                  <Users className="h-4 w-4 mr-2 flex-shrink-0" />
-                                  <span>Capacity: {course.max_students} students</span>
-                                </div>
-                              )}
-                              {course.price && (
-                                <div className="flex items-center text-sm text-gray-600">
-                                  <DollarSign className="h-4 w-4 mr-2 flex-shrink-0" />
-                                  <span className="font-medium text-green-600">
-                                    {course.currency || 'USD'} ${course.price.toLocaleString()}
-                                  </span>
-                                </div>
-                              )}
-                              {course.experience_requirement && (
-                                <div className="flex items-center text-sm text-gray-600">
-                                  <Award className="h-4 w-4 mr-2 flex-shrink-0" />
-                                  <span>Experience: {truncateText(course.experience_requirement, 25)}</span>
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Prerequisites */}
-                            {course.suggested_preparation && (
-                              <div className="mb-4 p-3 bg-gray-50 rounded-lg flex-shrink-0">
-                                <h4 className="text-sm font-medium text-gray-900 mb-1">Suggested Preparation:</h4>
-                                <p className="text-xs text-gray-600 line-clamp-2">
-                                  {truncateText(course.suggested_preparation, 100)}
-                                </p>
-                              </div>
-                            )}
-
-                            {/* Enroll Button */}
-                            <div className="mt-auto flex-shrink-0">
-                              <button 
-                                onClick={() => handleEnrollment(course)}
-                                disabled={isEnrolled || isEnrolling}
-                                className={`w-full py-3 px-4 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center ${
-                                  isEnrolled 
-                                    ? 'bg-green-100 text-green-800 cursor-not-allowed'
-                                    : isEnrolling
-                                    ? 'bg-gray-400 text-white cursor-not-allowed'
-                                    : 'bg-green-600 hover:bg-green-700 text-white transform hover:scale-105'
-                                }`}
-                              >
-                                {isEnrolling ? (
-                                  <>
-                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                    Enrolling...
-                                  </>
-                                ) : isEnrolled ? (
-                                  <>
-                                    <CheckCircle className="h-4 w-4 mr-2" />
-                                    Enrolled
-                                  </>
-                                ) : (
-                                  <>
-                                    <UserPlus className="h-4 w-4 mr-2" />
-                                    Enroll Now
-                                  </>
-                                )}
-                              </button>
-                            </div>
-                          </div>
-                        </SwiperSlide>
-                      );
-                    })}
-                  </Swiper>
-                </div>
-              )}
-            </div>
-
-            {/* Enrolled Courses Section */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                <GraduationCap className="h-6 w-6 mr-2 text-blue-600" />
-                My Enrolled Courses
-              </h2>
-              
-              {enrollments.length === 0 ? (
-                <div className="text-center py-12">
-                  <GraduationCap className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Courses Enrolled</h3>
-                  <p className="text-gray-600 mb-6">
-                    You haven't enrolled in any courses yet. Browse the available courses above to get started.
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {enrollments.map((enrollment) => {
-                    const course = courses.find(c => c.id.toString() === enrollment.course_id);
-                    if (!course) return null;
-
-                    return (
-                      <div key={enrollment.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow duration-200">
-                        <div className="flex items-start justify-between mb-4">
-                          <h3 className="text-lg font-semibold text-gray-900 flex-1">
-                            {course.title || 'Untitled Course'}
-                          </h3>
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 ml-2">
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Enrolled
-                          </span>
-                        </div>
-                        
-                        <p className="text-gray-600 text-sm mb-4">
-                          {course.description 
-                            ? truncateText(course.description, 120)
-                            : 'No description available.'
-                          }
-                        </p>
-                        
-                        <div className="space-y-2 text-sm text-gray-600">
-                          <div className="flex items-center">
-                            <Calendar className="h-4 w-4 mr-2" />
-                            <span>Enrolled: {formatDate(enrollment.enrolled_at)}</span>
-                          </div>
-                          {course.duration && (
-                            <div className="flex items-center">
-                              <Clock className="h-4 w-4 mr-2" />
-                              <span>Duration: {course.duration}</span>
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="mt-4 pt-4 border-t border-gray-200">
-                          <button 
-                            onClick={() => handleAccessCourse(course.id)}
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center"
-                          >
-                            <BookOpen className="h-4 w-4 mr-2" />
-                            Access Course
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-<>
-{/* Certificates Section */}
-<div className="bg-white rounded-xl shadow-lg p-6">
-  <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-    <Award className="h-6 w-6 mr-2 text-blue-600" />
-    My Certificates
-  </h2>
-  <div className="text-center py-12">
-    <Award className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-    <h3 className="text-lg font-medium text-gray-900 mb-2">No Certificates Yet</h3>
-    <p className="text-gray-600 mb-4">
-      Complete courses to earn your professional drone certifications.
-    </p>
-    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-      <div className="flex items-center justify-center">
-        <Award className="h-5 w-5 text-green-600 mr-2" />
-        <span className="text-green-800 font-medium">Coming Soon</span>
+return (
+  <>
+    {/* Certificates Section */}
+    <div className="bg-white rounded-xl shadow-lg p-6">
+      <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+        <Award className="h-6 w-6 mr-2 text-blue-600" />
+        My Certificates
+      </h2>
+      <div className="text-center py-12">
+        <Award className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+        <h3 className="text-lg font-medium text-gray-900 mb-2">No Certificates Yet</h3>
+        <p className="text-gray-600 mb-4">
+          Complete courses to earn your professional drone certifications.
+        </p>
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <div className="flex items-center justify-center">
+            <Award className="h-5 w-5 text-green-600 mr-2" />
+            <span className="text-green-800 font-medium">Coming Soon</span>
+          </div>
+          <p className="text-green-700 text-sm mt-2">
+            Digital certificates and verification system will be available here.
+          </p>
+        </div>
       </div>
-      <p className="text-green-700 text-sm mt-2">
-        Digital certificates and verification system will be available here.
-      </p>
     </div>
-  </div>
-</div>
 
-{/* Notifications Section */}
-<div className="bg-white rounded-xl shadow-lg p-6">
-  <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-    <Bell className="h-6 w-6 mr-2 text-blue-600" />
-    Notifications
-  </h2>
-  <div className="text-center py-8">
-    <Bell className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-    <h3 className="text-lg font-medium text-gray-900 mb-2">No New Notifications</h3>
-    <p className="text-gray-600">
-      Course updates and important announcements will appear here.
-    </p>
-  </div>
-</div>
+    {/* Notifications Section */}
+    <div className="bg-white rounded-xl shadow-lg p-6">
+      <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+        <Bell className="h-6 w-6 mr-2 text-blue-600" />
+        Notifications
+      </h2>
+      <div className="text-center py-8">
+        <Bell className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+        <h3 className="text-lg font-medium text-gray-900 mb-2">No New Notifications</h3>
+        <p className="text-gray-600">
+          Course updates and important announcements will appear here.
+        </p>
+      </div>
+    </div>
 
-{/* Custom Styles for Swiper */}
-<style jsx>{`
-  .course-carousel .swiper-pagination {
-    position: relative !important;
-    margin-top: 2rem !important;
-  }
-  .course-carousel .swiper-pagination-bullet {
-    width: 12px !important;
-    height: 12px !important;
-    margin: 0 6px !important;
-  }
-  .course-card {
-    height: 600px;
-    display: flex;
-    flex-direction: column;
-  }
-  .line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  .line-clamp-3 {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  @media (max-width: 768px) {
-    .course-card {
-      min-width: 300px;
-      height: 550px;
-    }
-  }
-`}</style>
+    {/* Custom Styles for Swiper */}
+    <style jsx>{`
+      .course-carousel .swiper-pagination {
+        position: relative !important;
+        margin-top: 2rem !important;
+      }
+      .course-carousel .swiper-pagination-bullet {
+        width: 12px !important;
+        height: 12px !important;
+        margin: 0 6px !important;
+      }
+      .course-card {
+        height: 600px;
+        display: flex;
+        flex-direction: column;
+      }
+      .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .line-clamp-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      @media (max-width: 768px) {
+        .course-card {
+          min-width: 300px;
+          height: 550px;
+        }
+      }
+    `}</style>
+  </>
+);
 
 export default Portal;
