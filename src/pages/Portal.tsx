@@ -381,22 +381,16 @@ const Portal: React.FC = () => {
           .from('students')
           .update(studentUpdates)
           .eq('id', user.id)
-          .select();
+          .select()
+          .single();
 
         if (profileError) throw profileError;
         
-        // Get the updated profile data
-        if (data && data.length > 0) {
-          updatedProfile = data[0];
-        } else {
-          // If no data returned, fetch the current profile
-          const { data: currentProfile } = await supabase
-            .from('students')
-            .select('*')
-            .eq('id', user.id)
-            .single();
-          updatedProfile = currentProfile || profile;
-        }
+        // Update successful, use returned data
+        updatedProfile = data;
+      } else {
+        // No student fields changed, keep current profile
+        updatedProfile = profile;
       }
 
       // Update local state
@@ -415,6 +409,16 @@ const Portal: React.FC = () => {
 
     } catch (error: any) {
       console.error('Error updating profile:', error);
+      
+      // Handle specific RLS error
+      if (error.message?.includes('row-level security policy')) {
+        setProfileMessage({
+          type: 'error',
+          text: 'Permission denied. Please contact support if this persists.'
+        });
+        return;
+      }
+      
       setProfileMessage({
         type: 'error',
         text: error.message || 'Failed to update profile. Please try again.'
