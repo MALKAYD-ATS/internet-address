@@ -1100,7 +1100,7 @@ const Portal: React.FC = () => {
   );
 
 export default Portal;
-<>
+export default Portal;
   <div className="text-center mb-6">
     <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
       <User className="h-10 w-10 text-blue-600" />
