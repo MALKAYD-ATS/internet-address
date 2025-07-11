@@ -1101,89 +1101,90 @@ const Portal: React.FC = () => {
 };
 
 export default Portal;
-                  <div className="text-center mb-6">
-                    <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <User className="h-10 w-10 text-blue-600" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900">{profile.full_name}</h3>
-                    <p className="text-gray-600 text-sm">Student ID: {profile.id.slice(0, 8)}</p>
-                  </div>
+<>
+  <div className="text-center mb-6">
+    <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <User className="h-10 w-10 text-blue-600" />
+    </div>
+    <h3 className="text-lg font-semibold text-gray-900">{profile.full_name}</h3>
+    <p className="text-gray-600 text-sm">Student ID: {profile.id.slice(0, 8)}</p>
+  </div>
 
-                  <div className="space-y-3">
-                    <div className="flex items-center p-3 bg-gray-50 rounded-lg">
-                      <Mail className="h-5 w-5 text-gray-400 mr-3" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">Email</p>
-                        <p className="text-sm text-gray-600">{user?.email}</p>
-                      </div>
-                    </div>
+  <div className="space-y-3">
+    <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+      <Mail className="h-5 w-5 text-gray-400 mr-3" />
+      <div>
+        <p className="text-sm font-medium text-gray-900">Email</p>
+        <p className="text-sm text-gray-600">{user?.email}</p>
+      </div>
+    </div>
 
-                    <div className="flex items-center p-3 bg-gray-50 rounded-lg">
-                      <Phone className="h-5 w-5 text-gray-400 mr-3" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">Phone</p>
-                        <p className="text-sm text-gray-600">{profile.phone_number || 'Not provided'}</p>
-                      </div>
-                    </div>
+    <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+      <Phone className="h-5 w-5 text-gray-400 mr-3" />
+      <div>
+        <p className="text-sm font-medium text-gray-900">Phone</p>
+        <p className="text-sm text-gray-600">{profile.phone_number || 'Not provided'}</p>
+      </div>
+    </div>
 
-                    <div className="flex items-center p-3 bg-gray-50 rounded-lg">
-                      <Calendar className="h-5 w-5 text-gray-400 mr-3" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">Member Since</p>
-                        <p className="text-sm text-gray-600">{formatDate(profile.created_at)}</p>
-                      </div>
-                    </div>
-                  </div>
+    <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+      <Calendar className="h-5 w-5 text-gray-400 mr-3" />
+      <div>
+        <p className="text-sm font-medium text-gray-900">Member Since</p>
+        <p className="text-sm text-gray-600">{formatDate(profile.created_at)}</p>
+      </div>
+    </div>
+  </div>
 
-                  <button className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center">
-                    <Settings className="h-4 w-4 mr-2" />
-                    Edit Profile
-                    <span className="ml-2 text-xs bg-blue-500 px-2 py-1 rounded">Coming Soon</span>
-                  </button>
-                </div>
-                  <div className="text-center mb-6">
-                    <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <User className="h-10 w-10 text-blue-600" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900">{profile.full_name}</h3>
-                    <p className="text-gray-600 text-sm">Student ID: {profile.id.slice(0, 8)}</p>
-                  </div>
+  <button className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center">
+    <Settings className="h-4 w-4 mr-2" />
+    Edit Profile
+    <span className="ml-2 text-xs bg-blue-500 px-2 py-1 rounded">Coming Soon</span>
+  </button>
 
-                  <div className="space-y-3">
-                    <div className="flex items-center p-3 bg-gray-50 rounded-lg">
-                      <Mail className="h-5 w-5 text-gray-400 mr-3" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">Email</p>
-                        <p className="text-sm text-gray-600">{user?.email}</p>
-                      </div>
-                    </div>
+  {/* If you truly intended this entire second duplicate block, it must also be included */}
+  <div className="text-center mb-6">
+    <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <User className="h-10 w-10 text-blue-600" />
+    </div>
+    <h3 className="text-lg font-semibold text-gray-900">{profile.full_name}</h3>
+    <p className="text-gray-600 text-sm">Student ID: {profile.id.slice(0, 8)}</p>
+  </div>
 
-                    <div className="flex items-center p-3 bg-gray-50 rounded-lg">
-                      <Phone className="h-5 w-5 text-gray-400 mr-3" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">Phone</p>
-                        <p className="text-sm text-gray-600">{profile.phone_number || 'Not provided'}</p>
-                      </div>
-                    </div>
+  <div className="space-y-3">
+    <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+      <Mail className="h-5 w-5 text-gray-400 mr-3" />
+      <div>
+        <p className="text-sm font-medium text-gray-900">Email</p>
+        <p className="text-sm text-gray-600">{user?.email}</p>
+      </div>
+    </div>
 
-                    <div className="flex items-center p-3 bg-gray-50 rounded-lg">
-                      <Calendar className="h-5 w-5 text-gray-400 mr-3" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">Member Since</p>
-                        <p className="text-sm text-gray-600">{formatDate(profile.created_at)}</p>
-                      </div>
-                    </div>
-                  </div>
+    <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+      <Phone className="h-5 w-5 text-gray-400 mr-3" />
+      <div>
+        <p className="text-sm font-medium text-gray-900">Phone</p>
+        <p className="text-sm text-gray-600">{profile.phone_number || 'Not provided'}</p>
+      </div>
+    </div>
 
-                  <button className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center">
-                    <Settings className="h-4 w-4 mr-2" />
-                    Edit Profile
-                    <span className="ml-2 text-xs bg-blue-500 px-2 py-1 rounded">Coming Soon</span>
-                  </button>
-                </div>
-              ) : null}
-            </div>
-          </div>
+    <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+      <Calendar className="h-5 w-5 text-gray-400 mr-3" />
+      <div>
+        <p className="text-sm font-medium text-gray-900">Member Since</p>
+        <p className="text-sm text-gray-600">{formatDate(profile.created_at)}</p>
+      </div>
+    </div>
+  </div>
+
+  <button className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center">
+    <Settings className="h-4 w-4 mr-2" />
+    Edit Profile
+    <span className="ml-2 text-xs bg-blue-500 px-2 py-1 rounded">Coming Soon</span>
+  </button>
+</>
+
+
 
           {/* Main Dashboard Content */}
           <div className="lg:col-span-2 space-y-8">
