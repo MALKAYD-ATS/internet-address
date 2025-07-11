@@ -234,7 +234,7 @@ const Training: React.FC = () => {
                 <BookOpen className="h-4 sm:h-5 w-4 sm:w-5 mr-2" />
                 Regulatory Courses
                 <span className="ml-2 bg-white bg-opacity-20 text-xs px-2 py-1 rounded-full">
-                  {totalRegulatory}
+                  {totalRegulation}
                 </span>
               </button>
               <button
