@@ -1268,7 +1268,7 @@ const Portal: React.FC = () => {
                     {courses.map((course) => {
                       const isEnrolled = isEnrolledInCourse(course.id);
                       const isEnrolling = enrollingCourseId === course.id;
-                  }
+                  
 return (
   <>
     {/* Certificates Section */}
