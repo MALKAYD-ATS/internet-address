@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, X, Loader2, AlertCircle, ZoomIn, ZoomOut } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Loader2, AlertCircle, ZoomIn, ZoomOut, CheckCircle } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url';
 
@@ -422,15 +422,11 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({
                   <>
                     <CheckCircle className="h-4 w-4 mr-2" />
                     Mark Complete
-                  <div className="text-center">
-                    <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-2" />
-                    <p className="text-sm text-gray-600">Loading page {currentPage}...</p>
-                  </div>
+                  </>
                 )}
               </button>
             )}
-            
-                className="pdf-canvas block max-w-full max-h-full"
+            <div className="text-sm text-gray-500">
               Use arrow keys to navigate • ESC to close
             </div>
           </div>
@@ -445,49 +441,15 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({
           display: flex;
           align-items: center;
           justify-content: center;
-          overflow: auto;
         }
         
         .pdf-canvas {
-          display: block;
-          margin: 0 auto;
-        }
-        
-        /* Responsive canvas sizing */
-        @media (max-width: 768px) {
-          .pdf-container {
-            height: calc(100vh - 180px);
-            padding: 10px;
-          }
+          width: 100% !important;
+          height: auto !important;
+          max-width: 100vw;
+          max-height: calc(100vh - 200px);
         }
       `}</style>
-      
-      {/* Mark as Complete Button */}
-      {showCompleteButton && (
-        <div className="mt-4 pt-4 border-t border-gray-200">
-          <button
-            onClick={handleComplete}
-            disabled={isCompleting}
-            className={`w-full py-3 px-4 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center ${
-              isCompleting
-                ? 'bg-gray-400 cursor-not-allowed text-white'
-                : 'bg-green-600 hover:bg-green-700 text-white transform hover:scale-105'
-            }`}
-          >
-            {isCompleting ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Marking Complete...
-              </>
-            ) : (
-              <>
-                <CheckCircle className="h-4 w-4 mr-2" />
-                Mark Lesson as Complete
-              </>
-            )}
-          </button>
-        </div>
-      )}
     </div>
   );
 };
