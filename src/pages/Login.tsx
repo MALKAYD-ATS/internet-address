@@ -75,6 +75,7 @@ const Login: React.FC = () => {
               </label>
               <input
                 id="email"
+                name="email"
                 type="email"
                 required
                 value={email}
@@ -90,6 +91,7 @@ const Login: React.FC = () => {
               </label>
               <input
                 id="password"
+                name="password"
                 type="password"
                 required
                 value={password}
