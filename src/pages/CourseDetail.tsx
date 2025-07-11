@@ -70,7 +70,6 @@ const CourseDetail: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [completingLesson, setCompletingLesson] = useState<string | null>(null);
   const [courseProgress, setCourseProgress] = useState(0);
-  const [certificateGenerated, setCertificateGenerated] = useState(false);
   const [pdfViewer, setPdfViewer] = useState<{
     isOpen: boolean;
     pdfUrl: string | null;
@@ -106,90 +105,16 @@ const CourseDetail: React.FC = () => {
 
   // Check for certificate eligibility when progress reaches 100%
   useEffect(() => {
-    if (courseProgress === 100 && user && course && !certificateGenerated) {
+    if (courseProgress === 100 && user && course) {
       generateCertificate();
     }
-  }, [courseProgress, user, course, certificateGenerated]);
+  }, [courseProgress, user, course]);
 
   const generateCertificate = async () => {
-    if (!user || !course) return;
-    
     try {
-      console.log('Checking for existing certificate...');
-      
-      // Check if certificate already exists
-      const { data: existingCert, error: checkError } = await supabase
-        .from('student_certificates')
-        .select('*')
-        .eq('student_id', user.id)
-        .eq('course_id', course.id)
-        .single();
-
-      if (checkError && checkError.code !== 'PGRST116') {
-        console.error('Error checking existing certificate:', checkError);
-        return;
-      }
-
-      if (existingCert) {
-        console.log('Certificate already exists');
-        setCertificateGenerated(true);
-        return;
-      }
-
-      console.log('Generating new certificate...');
-      
-      // Check for course-specific certificate template
-      const { data: template, error: templateError } = await supabase
-        .from('certificate_templates')
-        .select('template_url')
-        .eq('course_id', course.id)
-        .single();
-
-      let certificateUrl = 'https://nnhgbtrkxepkeotpdnxw.supabase.co/storage/v1/object/public/media-assets/certificates/certificate-of-completion-basic-online.pdf';
-      
-      if (!templateError && template) {
-        certificateUrl = template.template_url;
-      }
-
-      // Get student profile for name
-      const { data: studentProfile, error: profileError } = await supabase
-        .from('students')
-        .select('full_name')
-        .eq('id', user.id)
-        .single();
-
-      if (profileError) {
-        console.error('Error fetching student profile:', profileError);
-        return;
-      }
-
-      // For now, use the template URL directly
-      // In a full implementation, this would:
-      // 1. Download the template PDF
-      // 2. Overlay student name and date
-      // 3. Upload to storage at media-assets/student-certificates/{student_id}/{course_id}.pdf
-      const finalCertificateUrl = certificateUrl;
-
-      // Insert certificate record
-      const { error: insertError } = await supabase
-        .from('student_certificates')
-        .insert([
-          {
-            student_id: user.id,
-            course_id: course.id,
-            certificate_url: finalCertificateUrl,
-            issued_at: new Date().toISOString()
-          }
-        ]);
-
-      if (insertError) {
-        console.error('Error inserting certificate:', insertError);
-        return;
-      }
-
-      console.log('Certificate generated successfully');
-      setCertificateGenerated(true);
-      
+      // TODO: Implement certificate generation
+      console.log('Generating certificate for course completion');
+      // This would integrate with Supabase Storage for PDF template
     } catch (error) {
       console.error('Error generating certificate:', error);
     }
@@ -331,7 +256,7 @@ const CourseDetail: React.FC = () => {
   const openPdfViewer = (resource: Resource, lessonTitle: string, lessonId: string, moduleId: string) => {
     console.log('Opening PDF viewer with resource:', resource);
     
-    let pdfUrl = resource.url || resource.file_path || '';
+    let pdfUrl = resource.url || resource.file_path;
     
     if (!pdfUrl) {
       console.error('No PDF URL found for resource:', resource);
@@ -339,15 +264,9 @@ const CourseDetail: React.FC = () => {
       return;
     }
 
-    // Handle different URL formats
-    if (pdfUrl.startsWith('http')) {
-      // Already a full URL, use as-is
-    } else if (pdfUrl.startsWith('/')) {
-      // Absolute path, prepend origin
-      pdfUrl = `${window.location.origin}${pdfUrl}`;
-    } else {
-      // Relative path, prepend origin and slash
-      pdfUrl = `${window.location.origin}/${pdfUrl}`;
+    // Handle relative paths
+    if (pdfUrl.startsWith('/') || !pdfUrl.startsWith('http')) {
+      pdfUrl = `${window.location.origin}${pdfUrl.startsWith('/') ? '' : '/'}${pdfUrl}`;
     }
 
     console.log('Final PDF URL:', pdfUrl);
@@ -581,7 +500,7 @@ const CourseDetail: React.FC = () => {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
                 <div className="space-y-3">
                   <button
-                    onClick={() => navigate('/portal')}
+                    onClick={() => navigate('/portal/training')}
                     className="w-full flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                   >
                     <BookOpen className="w-4 h-4" />
