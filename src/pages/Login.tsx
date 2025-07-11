@@ -36,7 +36,7 @@ const Login: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 flex items-center justify-center p-4 relative overflow-hidden">
       {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10 pointer-events-none">
+      <div className="absolute inset-0 opacity-10">
         <div className="absolute top-20 left-10 w-4 h-4 bg-white rounded-full animate-pulse"></div>
         <div className="absolute top-40 right-20 w-6 h-6 bg-white rounded-full animate-bounce"></div>
         <div className="absolute bottom-40 left-20 w-3 h-3 bg-white rounded-full animate-ping"></div>
@@ -75,7 +75,6 @@ const Login: React.FC = () => {
               </label>
               <input
                 id="email"
-                name="email"
                 type="email"
                 required
                 value={email}
@@ -91,7 +90,6 @@ const Login: React.FC = () => {
               </label>
               <input
                 id="password"
-                name="password"
                 type="password"
                 required
                 value={password}
