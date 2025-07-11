@@ -291,7 +291,7 @@ const Training: React.FC = () => {
               </div>
               <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md text-center transform transition-all duration-500 hover:scale-110 hover:shadow-xl">
                 <div className={`h-6 sm:h-8 w-6 sm:w-8 mx-auto mb-2 sm:mb-3 ${selectedType === 'Regulation' ? 'text-blue-600' : 'text-green-600'}`}>
-                  {selectedType === 'Regulatory' ? <BookOpen className="h-full w-full" /> : <Plane className="h-full w-full" />}
+                  {selectedType === 'Regulation' ? <BookOpen className="h-full w-full" /> : <Plane className="h-full w-full" />}
                 </div>
                 <div className="text-xl sm:text-2xl font-bold text-gray-900">{filteredCourses.length}</div>
                 <div className="text-gray-600 text-xs sm:text-base">{selectedType} Courses</div>
