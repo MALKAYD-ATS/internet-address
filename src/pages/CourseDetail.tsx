@@ -437,7 +437,28 @@ const CourseDetail: React.FC = () => {
                         <div className="space-y-2">
                           {module.lessons.map((lesson) => (
                             <div key={lesson.id} className="ml-8">
-                              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                              <div 
+                                className={`flex items-center justify-between p-3 bg-gray-50 rounded-lg transition-all duration-200 ${
+                                  isAccessible ? 'hover:bg-gray-100 cursor-pointer' : 'cursor-not-allowed'
+                                }`}
+                                onClick={() => {
+                                  if (isAccessible) {
+                                    // Find the first PDF resource for this lesson
+                                    const pdfResource = lesson.resources.find(resource => 
+                                      resource.resource_type === 'file' && 
+                                      (resource.url?.includes('.pdf') || resource.file_path?.includes('.pdf'))
+                                    );
+                                    
+                                    if (pdfResource) {
+                                      console.log('Opening PDF from lesson click:', pdfResource);
+                                      openPdfViewer(pdfResource, lesson.title, lesson.id, module.id);
+                                    } else {
+                                      console.log('No PDF resource found for lesson:', lesson.title);
+                                      alert('No PDF material available for this lesson');
+                                    }
+                                  }
+                                }}
+                              >
                                 <div className="flex items-center gap-3">
                                   <PlayCircle className={`w-4 h-4 ${
                                     isAccessible ? 'text-blue-500' : 'text-gray-300'
@@ -451,41 +472,35 @@ const CourseDetail: React.FC = () => {
                                     <p className={`text-xs ${
                                       isAccessible ? 'text-gray-500' : 'text-gray-400'
                                     }`}>
-                                      {lesson.type}
+                                      {lesson.type} • Click to view slides
                                     </p>
                                   </div>
                                 </div>
 
                                 <div className="flex items-center gap-2">
-                                  {/* PDF Resources */}
-                                  {lesson.resources
-                                    .filter(resource => resource.resource_type === 'file' && 
-                                           (resource.url?.includes('.pdf') || resource.file_path?.includes('.pdf')))
-                                    .map((resource) => (
-                                      <button
-                                        key={resource.id}
-                                        onClick={() => {
-                                          if (isAccessible) {
-                                            console.log('Opening PDF resource:', resource);
-                                            openPdfViewer(resource, lesson.title, lesson.id, module.id);
-                                          }
-                                        }}
-                                        disabled={!isAccessible}
-                                        className={`flex items-center gap-1 px-3 py-1 rounded text-xs font-medium transition-colors ${
-                                          isAccessible
-                                            ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                                            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                        }`}
-                                      >
-                                        <FileText className="w-3 h-3" />
-                                        {resource.title || 'View PDF'}
-                                      </button>
-                                    ))}
+                                  {/* PDF Indicator */}
+                                  {lesson.resources.some(resource => 
+                                    resource.resource_type === 'file' && 
+                                    (resource.url?.includes('.pdf') || resource.file_path?.includes('.pdf'))
+                                  ) && (
+                                    <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${
+                                      isAccessible
+                                        ? 'bg-blue-100 text-blue-700'
+                                        : 'bg-gray-100 text-gray-400'
+                                    }`}>
+                                      <FileText className="w-3 h-3" />
+                                      PDF
+                                    </div>
+                                  )}
 
                                   {/* Mark Complete Button */}
                                   {isAccessible && !isCompleted && (
                                     <button
                                       onClick={() => handleMarkLessonComplete(lesson.id, module.id)}
+                                      onClick={(e) => {
+                                        e.stopPropagation(); // Prevent lesson click when clicking complete button
+                                        handleMarkLessonComplete(lesson.id, module.id);
+                                      }}
                                       disabled={completingLesson === lesson.id}
                                       className="flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded text-xs font-medium hover:bg-green-200 transition-colors disabled:opacity-50"
                                     >
