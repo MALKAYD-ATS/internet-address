@@ -320,7 +320,7 @@ const CourseDetail: React.FC = () => {
         // Construct Supabase Storage URL
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
         const bucketName = 'media-assets';
-        pdfUrl = `${supabaseUrl}/storage/v1/object/public/${bucketName}/courses/${pdfResource.file_path}`;
+        pdfUrl = `${supabaseUrl}/storage/v1/object/public/${bucketName}/${pdfResource.file_path}`;
       }
     }
     
