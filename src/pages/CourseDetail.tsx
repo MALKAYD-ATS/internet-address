@@ -256,7 +256,8 @@ const CourseDetail: React.FC = () => {
   const openPdfViewer = (resource: Resource, lessonTitle: string, lessonId: string, moduleId: string) => {
     console.log('Opening PDF viewer with resource:', resource);
     
-    let pdfUrl = resource.url || resource.file_path;
+    // Get PDF URL from resource
+    let pdfUrl = resource.url || resource.file_path || '';
     
     if (!pdfUrl) {
       console.error('No PDF URL found for resource:', resource);
@@ -264,12 +265,22 @@ const CourseDetail: React.FC = () => {
       return;
     }
 
-    // Handle relative paths
-    if (pdfUrl.startsWith('/') || !pdfUrl.startsWith('http')) {
+    // Handle relative paths and ensure proper URL format
+    if (!pdfUrl.startsWith('http')) {
+      // If it's a relative path, make it absolute
       pdfUrl = `${window.location.origin}${pdfUrl.startsWith('/') ? '' : '/'}${pdfUrl}`;
     }
 
     console.log('Final PDF URL:', pdfUrl);
+
+    // Validate URL before opening viewer
+    try {
+      new URL(pdfUrl);
+    } catch (error) {
+      console.error('Invalid PDF URL:', pdfUrl);
+      alert('Invalid PDF file path');
+      return;
+    }
 
     setPdfViewer({
       isOpen: true,
@@ -453,7 +464,12 @@ const CourseDetail: React.FC = () => {
                                     .map((resource) => (
                                       <button
                                         key={resource.id}
-                                        onClick={() => isAccessible && openPdfViewer(resource, lesson.title, lesson.id, module.id)}
+                                        onClick={() => {
+                                          if (isAccessible) {
+                                            console.log('Opening PDF resource:', resource);
+                                            openPdfViewer(resource, lesson.title, lesson.id, module.id);
+                                          }
+                                        }}
                                         disabled={!isAccessible}
                                         className={`flex items-center gap-1 px-3 py-1 rounded text-xs font-medium transition-colors ${
                                           isAccessible
@@ -462,7 +478,7 @@ const CourseDetail: React.FC = () => {
                                         }`}
                                       >
                                         <FileText className="w-3 h-3" />
-                                        View PDF
+                                        {resource.title || 'View PDF'}
                                       </button>
                                     ))}
 

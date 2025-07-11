@@ -39,16 +39,39 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({
       try {
         setLoading(true);
         setError(null);
+        
+        console.log('Loading PDF from URL:', pdfUrl);
 
-        const loadingTask = pdfjsLib.getDocument(pdfUrl);
+        // Create loading task with proper configuration
+        const loadingTask = pdfjsLib.getDocument({
+          url: pdfUrl,
+          cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',
+          cMapPacked: true,
+          enableXfa: true,
+        });
+        
         const pdfDocument = await loadingTask.promise;
+        
+        console.log('PDF loaded successfully, pages:', pdfDocument.numPages);
         
         setPdf(pdfDocument);
         setTotalPages(pdfDocument.numPages);
         setCurrentPage(1);
       } catch (err) {
         console.error('Error loading PDF:', err);
-        setError('This material could not be loaded. Please contact support.');
+        
+        // Provide more specific error messages
+        if (err instanceof Error) {
+          if (err.message.includes('404') || err.message.includes('Not Found')) {
+            setError('PDF file not found. Please check if the file exists.');
+          } else if (err.message.includes('CORS')) {
+            setError('Unable to load PDF due to security restrictions. Please contact support.');
+          } else {
+            setError(`Failed to load PDF: ${err.message}`);
+          }
+        } else {
+          setError('This material could not be loaded. Please contact support.');
+        }
       } finally {
         setLoading(false);
       }
@@ -84,14 +107,17 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({
         const containerWidth = containerRef.current?.clientWidth || window.innerWidth - 100;
         const containerHeight = window.innerHeight - 200; // Leave room for header/footer
         
-        // Calculate base scale to fit container (fresh calculation each time)
+        // Calculate base scale to fit container width primarily
         const baseScale = Math.min(
           (containerWidth - 40) / viewport.width,
-          containerHeight / viewport.height
+          (containerHeight - 40) / viewport.height,
+          2.0 // Maximum base scale
         );
         
         // Apply user zoom factor to base scale
         const finalScale = baseScale * scale;
+        
+        console.log('Rendering page', currentPage, 'with scale:', finalScale);
         
         // Get final viewport with calculated scale
         const scaledViewport = page.getViewport({ scale: finalScale });
@@ -110,10 +136,11 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({
         });
 
         await renderTask.promise;
+        console.log('Page rendered successfully');
       } catch (err) {
         if (err?.name !== 'RenderingCancelledException') {
           console.error('Error rendering page:', err);
-          setError('Failed to render page. Please try again.');
+          setError(`Failed to render page ${currentPage}. Please try again.`);
         }
       } finally {
         setPageLoading(false);
@@ -167,11 +194,11 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({
 
   // Zoom functions
   const zoomIn = () => {
-    setScale(prev => Math.min(prev + 0.25, 3.0));
+    setScale(prev => Math.min(prev + 0.25, 4.0)); // Increased max zoom
   };
 
   const zoomOut = () => {
-    setScale(prev => Math.max(prev - 0.25, 0.5));
+    setScale(prev => Math.max(prev - 0.25, 0.25)); // Decreased min zoom for better overview
   };
 
   const resetZoom = () => {
@@ -395,12 +422,15 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({
                   <>
                     <CheckCircle className="h-4 w-4 mr-2" />
                     Mark Complete
-                  </>
+                  <div className="text-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-2" />
+                    <p className="text-sm text-gray-600">Loading page {currentPage}...</p>
+                  </div>
                 )}
               </button>
             )}
             
-            <div className="text-sm text-gray-500">
+                className="pdf-canvas block max-w-full max-h-full"
               Use arrow keys to navigate • ESC to close
             </div>
           </div>
@@ -415,13 +445,20 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({
           display: flex;
           align-items: center;
           justify-content: center;
+          overflow: auto;
         }
         
         .pdf-canvas {
-          width: 100% !important;
-          height: auto !important;
-          max-width: 100vw;
-          max-height: calc(100vh - 200px);
+          display: block;
+          margin: 0 auto;
+        }
+        
+        /* Responsive canvas sizing */
+        @media (max-width: 768px) {
+          .pdf-container {
+            height: calc(100vh - 180px);
+            padding: 10px;
+          }
         }
       `}</style>
       
