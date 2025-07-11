@@ -5,8 +5,7 @@ import { supabase } from '../lib/supabase';
 
 interface HeaderLogo {
   id: string;
-  logo_url: stri]
-ng;
+  logo_url: string;
   alt_text: string;
   order_index: number;
   is_active: boolean;
