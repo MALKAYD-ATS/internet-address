@@ -80,8 +80,7 @@ interface Principle {
   symbol: string;
   title: string;
   text: string;
-  color_from: string;
-  color_to: string;
+  color: string;
 }
 
 interface HeadingCard {
@@ -549,14 +548,6 @@ const Home: React.FC = () => {
       {principles.map((principle, index) => {
         const isFlipped = flippedPrinciples.has(principle.title);
         
-        // Create gradient class with fallbacks
-        const colorFrom = principle.color_from || 'from-blue-600';
-        const colorTo = principle.color_to || 'to-blue-800';
-        const gradientClass = `bg-gradient-to-br ${colorFrom} ${colorTo}`;
-        
-        // Create border class from color_from
-        const borderClass = colorFrom.replace('from-', 'border-').replace('-600', '-200') || 'border-blue-200';
-        
         // Ensure we have a valid symbol
         const symbolToRender = principle.symbol || 'Award';
 
@@ -573,7 +564,12 @@ const Home: React.FC = () => {
                 onClick={() => togglePrincipleFlip(principle.title)}
               >
                 <div
-                  className={`${gradientClass} rounded-xl shadow-lg h-full flex items-center justify-center transform transition-all duration-500 hover:scale-105 hover:shadow-2xl`}
+                  className="rounded-xl shadow-lg h-full flex items-center justify-center transform transition-all duration-500 hover:scale-105 hover:shadow-2xl"
+                  style={{ 
+                    background: principle.color 
+                      ? `linear-gradient(135deg, ${principle.color}, ${principle.color}dd)` 
+                      : 'linear-gradient(135deg, #2563eb, #1d4ed8)' // fallback blue gradient
+                  }}
                 >
                   <div className="text-center text-white">
                     {renderIcon(symbolToRender, 'h-16 w-16 mx-auto mb-4')}
@@ -589,7 +585,10 @@ const Home: React.FC = () => {
                 onClick={() => togglePrincipleFlip(principle.title)}
               >
                 <div
-                  className={`bg-white border-2 ${borderClass} rounded-xl shadow-lg h-full flex items-center justify-center p-8 transform transition-all duration-500 hover:shadow-2xl`}
+                  className="bg-white border-2 rounded-xl shadow-lg h-full flex items-center justify-center p-8 transform transition-all duration-500 hover:shadow-2xl"
+                  style={{ 
+                    borderColor: principle.color || '#3b82f6' // use the color for border, fallback to blue
+                  }}
                 >
                   <div className="text-center">
                     <h3 className="text-2xl font-bold text-gray-900 mb-4">
