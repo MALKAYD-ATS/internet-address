@@ -86,14 +86,3 @@ const Portal: React.FC = () => {
 };
 
 export default Portal;
-```
-
-The main issues I fixed were:
-
-1. Multiple export statements
-2. Duplicate component definitions
-3. Misplaced JSX fragments
-4. Missing closing brackets for the component
-5. Proper organization of the imports at the top
-
-The file should now be properly structured with all necessary closing brackets and proper component organization.
