@@ -26,7 +26,7 @@ interface SupabaseCourse {
 }
 
 const Training: React.FC = () => {
-  const [selectedType, setSelectedType] = useState<'Regulatory' | 'Application'>('Regulatory');
+  const [selectedType, setSelectedType] = useState<'Regulation' | 'Application'>('Regulation');
   const [courses, setCourses] = useState<SupabaseCourse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
