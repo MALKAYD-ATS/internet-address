@@ -157,7 +157,7 @@ const Portal: React.FC = () => {
             email: user.email || '',
             password: '',
             phone_number: data.phone_number || '',
-            profile_image: data.profile_image || ''
+            profile_image: ''
           });
         }
       } catch (err) {
@@ -321,7 +321,7 @@ const Portal: React.FC = () => {
         email: user.email || '',
         password: '',
         phone_number: profile.phone_number || '',
-        profile_image: profile.profile_image || ''
+        profile_image: ''
       });
     }
   };
@@ -352,7 +352,16 @@ const Portal: React.FC = () => {
 
       if (Object.keys(authUpdates).length > 0) {
         const { error: authError } = await supabase.auth.updateUser(authUpdates);
-        if (authError) throw authError;
+        if (authError) {
+          if (authError.message.includes('New password should be different from the old password')) {
+            setProfileMessage({
+              type: 'error',
+              text: 'New password must be different from your current password.'
+            });
+            return;
+          }
+          throw authError;
+        }
       }
 
       // Update students table - only update fields that have changed
@@ -362,28 +371,27 @@ const Portal: React.FC = () => {
       if (profileForm.phone_number !== (profile.phone_number || '')) {
         studentUpdates.phone_number = profileForm.phone_number;
       }
-      
-      // Only update profile_image if it has changed
-      if (profileForm.profile_image !== (profile.profile_image || '')) {
-        studentUpdates.profile_image = profileForm.profile_image;
-      }
 
       let updatedProfile = profile;
       
       // Only make database call if there are changes to student fields
       if (Object.keys(studentUpdates).length > 0) {
+        // Use upsert to handle cases where student record doesn't exist
+        const upsertData = {
+          id: user.id,
+          full_name: profile.full_name,
+          ...studentUpdates
+        };
+        
         const { data, error: profileError } = await supabase
           .from('students')
-          .update(studentUpdates)
-          .eq('id', user.id)
+          .upsert(upsertData)
           .select()
           .single();
 
         if (profileError) throw profileError;
         updatedProfile = data;
       }
-
-      if (profileError) throw profileError;
 
       // Update local state
       setProfile(updatedProfile);
@@ -561,24 +569,7 @@ const Portal: React.FC = () => {
                 <div className="space-y-4">
                   <div className="text-center mb-6">
                     <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
-                      {profile.profile_image ? (
-                        <img
-                          src={profile.profile_image}
-                          alt="Profile"
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                            const parent = e.currentTarget.parentElement;
-                            if (parent) {
-                              const icon = document.createElement('div');
-                              icon.innerHTML = '<svg class="h-10 w-10 text-blue-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>';
-                              parent.appendChild(icon);
-                            }
-                          }}
-                        />
-                      ) : (
-                        <User className="h-10 w-10 text-blue-600" />
-                      )}
+                      <User className="h-10 w-10 text-blue-600" />
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900">{profile.full_name}</h3>
                     <p className="text-gray-600 text-sm">Student ID: {profile.id.slice(0, 8)}</p>
@@ -644,21 +635,6 @@ const Portal: React.FC = () => {
                           onChange={handleProfileInputChange}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                           placeholder="Enter your phone number"
-                        />
-                      </div>
-
-                      {/* Profile Image URL */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Profile Image URL
-                        </label>
-                        <input
-                          type="url"
-                          name="profile_image"
-                          value={profileForm.profile_image}
-                          onChange={handleProfileInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                          placeholder="Enter image URL"
                         />
                       </div>
 
