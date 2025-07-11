@@ -194,7 +194,7 @@ const Training: React.FC = () => {
 
   // Calculate stats
   const totalCourses = courses.length;
-  const totalRegulatory = courses.filter(course => course.type === 'Regulation').length;
+  const totalRegulation = courses.filter(course => course.type === 'Regulation').length;
   const totalApplication = courses.filter(course => course.type === 'Application').length;
 
   return (
