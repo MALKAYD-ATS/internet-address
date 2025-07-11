@@ -1,6 +1,3 @@
-I notice this file has several syntax and structural issues. Here's the corrected version with proper closing brackets and structure:
-
-```typescript
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
