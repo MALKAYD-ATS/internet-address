@@ -1347,5 +1347,6 @@ return (
     `}</style>
   </>
 );
+};
 
 export default Portal;
