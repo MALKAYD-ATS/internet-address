@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   BookOpen, 
@@ -14,6 +14,74 @@ import {
   Circle
 } from 'lucide-react';
 import PDFSlideViewer from '../components/PDFSlideViewer';
+
+// Course title to PDF filename mapping based on Supabase Storage structure
+const COURSE_PDF_MAPPING: { [key: string]: { folder: string; filename: string } } = {
+  // Basic Operations Online Course
+  'Drone Pilot Certificate – Basic Operations (Online)': {
+    folder: 'basic-operations-online',
+    filename: 'basic-operations-online-section-0.pdf'
+  },
+  'Basic Operations Online': {
+    folder: 'basic-operations-online', 
+    filename: 'basic-operations-online-section-0.pdf'
+  },
+  'RPAS Basic Operations': {
+    folder: 'basic-operations-online',
+    filename: 'basic-operations-online-section-0.pdf'
+  },
+  
+  // Advanced Operations Online Course
+  'Drone Pilot Certificate – Advanced Operations (Online)': {
+    folder: 'advanced-operations-online',
+    filename: 'rpas-advanced-operations-slides-0.pdf'
+  },
+  'Advanced Operations Online': {
+    folder: 'advanced-operations-online',
+    filename: 'rpas-advanced-operations-slides-0.pdf'
+  },
+  'RPAS Advanced Operations': {
+    folder: 'advanced-operations-online',
+    filename: 'rpas-advanced-operations-slides-0.pdf'
+  },
+  
+  // Recency Requirements Online Course
+  'Recency Requirements Online': {
+    folder: 'recency-requirements-online',
+    filename: 'recency-course-online-slide-set.pdf'
+  },
+  'Flight Review': {
+    folder: 'recency-requirements-online',
+    filename: 'recency-course-online-slide-set.pdf'
+  },
+  'RPAS Recency Requirements': {
+    folder: 'recency-requirements-online',
+    filename: 'recency-course-online-slide-set.pdf'
+  },
+  
+  // Reference Material Online Course (multiple PDFs available)
+  'Reference Material Online': {
+    folder: 'reference-material-online',
+    filename: '06-knowledge-requirements-for-pilots-of-remotely-piloted-aircraft-systems.pdf'
+  },
+  'RPAS Reference Materials': {
+    folder: 'reference-material-online',
+    filename: '06-knowledge-requirements-for-pilots-of-remotely-piloted-aircraft-systems.pdf'
+  }
+};
+
+// Additional reference materials for the Reference Material Online course
+const REFERENCE_MATERIAL_PDFS = [
+  '01-T_D_OPS018_(ADVANCED_PRE_READING_GUIDE).pdf',
+  '02-T&D_OPS017_(FLIGHT_REVIEW_PRE_READING_GUIDE).pdf',
+  '04-from-the-ground-up.pdf',
+  '05-study-guide-for-the-restricted-operator-certificate-with-aeronautical-qualification-roc-a.pdf',
+  '06-knowledge-requirements-for-pilots-of-remotely-piloted-aircraft-systems.pdf',
+  '07-privacy-guidelines-for-drone-operators.pdf',
+  '08-find-your-drone-category.pdf',
+  '09-where-can-you-fly-your-drone.pdf',
+  '10-rpas-101.pdf'
+];
 
 interface Course {
   id: string;
@@ -299,13 +367,49 @@ const CourseDetail: React.FC = () => {
     });
   };
 
-  // Helper function to get PDF URL for lesson resources
+  // Enhanced helper function to get PDF URL for lesson resources
   const getPdfUrlForLesson = (lesson: Lesson): string | null => {
-    const pdfResource = lesson.resources.find(resource => 
+    // First, try to find existing PDF resource in lesson
+    let pdfResource = lesson.resources.find(resource => 
       resource.resource_type === 'file' && 
       (resource.url?.toLowerCase().includes('.pdf') || 
        resource.file_path?.toLowerCase().includes('.pdf'))
     );
+    
+    // If no PDF resource found, try to map based on course title and lesson title
+    if (!pdfResource && course) {
+      const courseMapping = COURSE_PDF_MAPPING[course.title];
+      
+      if (courseMapping) {
+        // For Reference Material course, try to match lesson title to specific PDF
+        if (courseMapping.folder === 'reference-material-online') {
+          const lessonTitle = lesson.title.toLowerCase();
+          let matchedFilename = courseMapping.filename; // default
+          
+          // Try to match lesson title to specific reference material
+          if (lessonTitle.includes('advanced') || lessonTitle.includes('pre-reading')) {
+            matchedFilename = '01-T_D_OPS018_(ADVANCED_PRE_READING_GUIDE).pdf';
+          } else if (lessonTitle.includes('flight review')) {
+            matchedFilename = '02-T&D_OPS017_(FLIGHT_REVIEW_PRE_READING_GUIDE).pdf';
+          } else if (lessonTitle.includes('ground up')) {
+            matchedFilename = '04-from-the-ground-up.pdf';
+          } else if (lessonTitle.includes('rpas 101')) {
+            matchedFilename = '10-rpas-101.pdf';
+          }
+          
+          courseMapping.filename = matchedFilename;
+        }
+        
+        // Create a mock resource with the mapped file path
+        pdfResource = {
+          id: 'mapped-pdf',
+          title: lesson.title,
+          resource_type: 'file',
+          url: '',
+          file_path: `${courseMapping.folder}/${courseMapping.filename}`
+        };
+      }
+    }
     
     if (!pdfResource) return null;
     
@@ -314,13 +418,25 @@ const CourseDetail: React.FC = () => {
     if (pdfResource.url) {
       pdfUrl = pdfResource.url;
     } else if (pdfResource.file_path) {
+      // Handle full URLs
       if (pdfResource.file_path.startsWith('http')) {
+        pdfUrl = pdfResource.file_path;
+      } else if (pdfResource.file_path.includes('/storage/v1/object/public/')) {
+        // Already a complete Supabase Storage URL
         pdfUrl = pdfResource.file_path;
       } else {
         // Construct Supabase Storage URL
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
         const bucketName = 'media-assets';
         pdfUrl = `${supabaseUrl}/storage/v1/object/public/${bucketName}/${pdfResource.file_path}`;
+      }
+    } else {
+      // Fallback: try to construct URL from course mapping
+      const courseMapping = COURSE_PDF_MAPPING[course?.title || ''];
+      if (courseMapping) {
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const bucketName = 'media-assets';
+        pdfUrl = `${supabaseUrl}/storage/v1/object/public/${bucketName}/${courseMapping.folder}/${courseMapping.filename}`;
       }
     }
     
@@ -489,7 +605,12 @@ const CourseDetail: React.FC = () => {
                                     const pdfUrl = getPdfUrlForLesson(lesson);
                                     
                                     if (pdfUrl) {
-                                      console.log('Opening PDF from lesson click:', pdfUrl);
+                                      console.log('Opening PDF from lesson click:', {
+                                        lessonTitle: lesson.title,
+                                        courseTitle: course?.title,
+                                        pdfUrl: pdfUrl
+                                      });
+                                      
                                       // Create a mock resource object for the PDF viewer
                                       const mockResource: Resource = {
                                         id: 'lesson-pdf',
@@ -500,7 +621,11 @@ const CourseDetail: React.FC = () => {
                                       };
                                       openPdfViewer(mockResource, lesson.title, lesson.id, module.id);
                                     } else {
-                                      console.log('No PDF resource found for lesson:', lesson.title);
+                                      console.log('No PDF resource found for lesson:', {
+                                        lessonTitle: lesson.title,
+                                        courseTitle: course?.title,
+                                        availableResources: lesson.resources
+                                      });
                                       alert('No PDF material available for this lesson');
                                     }
                                   }
@@ -544,7 +669,6 @@ const CourseDetail: React.FC = () => {
                                   {/* Mark Complete Button */}
                                   {isAccessible && !isCompleted && (
                                     <button
-                                      onClick={() => handleMarkLessonComplete(lesson.id, module.id)}
                                       onClick={(e) => {
                                         e.stopPropagation(); // Prevent lesson click when clicking complete button
                                         handleMarkLessonComplete(lesson.id, module.id);
