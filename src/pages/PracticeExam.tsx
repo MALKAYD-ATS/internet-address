@@ -237,7 +237,7 @@ const PracticeExam: React.FC = () => {
   };
 
   const handleSubmitExam = async () => {
-    if (!user || !course) return;
+    if (!user || !course || !exam) return;
 
     try {
       // Calculate score
@@ -249,7 +249,7 @@ const PracticeExam: React.FC = () => {
       });
 
       const percentage = Math.round((correctAnswers / questions.length) * 100);
-      const passingScore = 70; // Default passing score
+      const passingScore = exam.passing_percentage || 70;
       const passed = percentage >= passingScore;
 
       setExamResults({
@@ -275,7 +275,7 @@ const PracticeExam: React.FC = () => {
               is_correct: state.selectedAnswer === questions[index].correct_answer
             })),
             score: percentage,
-            duration_minutes: course.exam_duration_minutes || 60,
+            duration_minutes: 60,
             is_submitted: true
           }
         ]);
