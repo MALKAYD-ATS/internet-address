@@ -38,7 +38,7 @@ WHERE lesson_id IN (
 -- Update resources for Advanced Operations Online course
 -- Using the actual filename pattern: rpas-advanced-operations-slides-0.pptx.pdf
 UPDATE ats_lesson_resources 
-SET file_path = 'courses/advanced-operations-online/rpas-advanced-operations-slides-0.pptx.pdf',
+SET file_path = 'courses/advanced-operations-online/rpas-advanced-operations-slides-0.pdf',
     url = NULL
 WHERE lesson_id IN (
   SELECT aml.id 
