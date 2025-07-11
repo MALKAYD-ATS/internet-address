@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Award, Users, CheckCircle, Calendar, BookOpen, Plane, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import CourseCard from '../components/CourseCard';
-import { CourseData } from '../data/courseData';
 
 interface SupabaseCourse {
   id: string;
@@ -22,12 +20,29 @@ interface SupabaseCourse {
   start_date: string | null;
   whats_included: any;
   is_active: boolean | null;
+  is_online: boolean | null;
   created_at: string;
+}
+
+interface CourseDisplayData {
+  id: string;
+  title: string;
+  description: string;
+  duration: string;
+  nextStartDate: string;
+  price: string | null;
+  level: string;
+  type: string;
+  ageRequirement: number | null;
+  maxStudents: number | null;
+  whatsIncluded: string[];
 }
 
 const Training: React.FC = () => {
   const [selectedType, setSelectedType] = useState<'Regulation' | 'Application'>('Regulation');
   const [courses, setCourses] = useState<SupabaseCourse[]>([]);
+  const [regulationCourses, setRegulationCourses] = useState<CourseDisplayData[]>([]);
+  const [applicationCourses, setApplicationCourses] = useState<CourseDisplayData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,7 +55,7 @@ const Training: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        // Single query to fetch all active courses
+        // Fetch all active courses
         const { data, error } = await supabase
           .from('courses_ats')
           .select('*')
@@ -56,14 +71,20 @@ const Training: React.FC = () => {
         }
 
         if (isMounted) {
-          // Ensure no duplicates by filtering unique IDs
-          const uniqueCourses = data ? data.filter((course, index, self) => 
-            index === self.findIndex(c => c.id === course.id)
-          ) : [];
+          const coursesData = data || [];
+          setCourses(coursesData);
           
-          setCourses(uniqueCourses);
-          console.log('Fetched courses:', uniqueCourses.length);
-          console.log('Course types:', uniqueCourses.map(c => ({ id: c.id, title: c.title, type: c.type })));
+          // Process and group courses
+          const processedCourses = coursesData.map(transformCourse);
+          const regulation = processedCourses.filter(course => course.type.toLowerCase() === 'regulation');
+          const application = processedCourses.filter(course => course.type.toLowerCase() === 'application');
+          
+          setRegulationCourses(regulation);
+          setApplicationCourses(application);
+          
+          console.log('Fetched courses:', coursesData.length);
+          console.log('Regulation courses:', regulation.length);
+          console.log('Application courses:', application.length);
         }
       } catch (err) {
         console.error('Fetch error:', err);
@@ -85,8 +106,8 @@ const Training: React.FC = () => {
     };
   }, []); // Empty dependency array ensures this runs only once
 
-  // Convert Supabase course to CourseData format
-  const convertToCourseData = (course: SupabaseCourse): CourseData => {
+  // Transform Supabase course to display format
+  const transformCourse = (course: SupabaseCourse): CourseDisplayData => {
     // Parse whats_included field
     let features: string[] = [];
     if (course.whats_included) {
@@ -102,100 +123,42 @@ const Training: React.FC = () => {
       }
     }
 
-    // Parse document_requirement into array
-    let documentRequirements: string[] = [];
-    if (course.document_requirement) {
-      if (typeof course.document_requirement === 'string') {
-        try {
-          const parsed = JSON.parse(course.document_requirement);
-          documentRequirements = Array.isArray(parsed) ? parsed : [course.document_requirement];
-        } catch {
-          documentRequirements = [course.document_requirement];
-        }
-      }
-    }
-
-    // Parse suggested_preparation into array
-    let preparationRequirements: string[] = [];
-    if (course.suggested_preparation) {
-      if (typeof course.suggested_preparation === 'string') {
-        try {
-          const parsed = JSON.parse(course.suggested_preparation);
-          preparationRequirements = Array.isArray(parsed) ? parsed : [course.suggested_preparation];
-        } catch {
-          preparationRequirements = [course.suggested_preparation];
-        }
-      }
-    }
-
-    // Parse equipment_requirement into array for requirements
-    let equipmentRequirements: string[] = [];
-    if (course.equipment_requirement) {
-      if (typeof course.equipment_requirement === 'string') {
-        try {
-          const parsed = JSON.parse(course.equipment_requirement);
-          equipmentRequirements = Array.isArray(parsed) ? parsed : [course.equipment_requirement];
-        } catch {
-          equipmentRequirements = [course.equipment_requirement];
-        }
-      }
-    }
-
     // Format price
-    const formattedPrice = course.price 
+    const formattedPrice = course.price && course.price > 0
       ? `${course.currency || 'USD'} $${course.price.toLocaleString()}`
-      : undefined;
+      : null;
 
-    // Format next date
-    const nextDate = course.start_date 
+    // Format next start date
+    const nextStartDate = course.start_date 
       ? new Date(course.start_date).toLocaleDateString('en-US', { 
           year: 'numeric', 
           month: 'long', 
           day: 'numeric' 
         })
-      : 'Contact for scheduling';
-
-    // Format capacity
-    const capacity = course.max_students 
-      ? `${course.max_students} students`
-      : 'Contact for details';
+      : 'Contact us for next available date';
 
     return {
-      id: parseInt(course.id.replace(/-/g, '').substring(0, 8), 16) || Math.floor(Math.random() * 1000000), // Convert UUID to number for compatibility
+      id: course.id,
       title: course.title || 'Untitled Course',
       description: course.description || 'No description available.',
-      level: course.level || 'All Levels',
-      minimumAge: course.age_requirement || 18,
       duration: course.duration || 'Contact for details',
+      nextStartDate,
       price: formattedPrice,
-      capacity: capacity,
-      nextDate: nextDate,
-      features: features,
-      prerequisites: {
-        age: course.age_requirement ? `${course.age_requirement}+ years` : '',
-        experience: course.experience_requirement || '',
-        equipment: course.equipment_requirement || '',
-        other: []
-      },
-      requirements: {
-        documents: documentRequirements,
-        equipment: equipmentRequirements,
-        preparation: preparationRequirements
-      }
+      level: course.level || 'All Levels',
+      type: course.type || 'General',
+      ageRequirement: course.age_requirement,
+      maxStudents: course.max_students,
+      whatsIncluded: features
     };
   };
 
-  // Filter courses by selected type and convert to CourseData format
-  const filteredCourses = React.useMemo(() => {
-    const filtered = courses.filter(course => course.type === selectedType);
-    console.log(`Filtering for ${selectedType}:`, filtered.length, 'courses');
-    return filtered.map(convertToCourseData);
-  }, [courses, selectedType]);
+  // Get current courses based on selected type
+  const currentCourses = selectedType === 'Regulation' ? regulationCourses : applicationCourses;
 
   // Calculate stats
   const totalCourses = courses.length;
-  const totalRegulation = courses.filter(course => course.type === 'Regulation').length;
-  const totalApplication = courses.filter(course => course.type === 'Application').length;
+  const totalRegulation = regulationCourses.length;
+  const totalApplication = applicationCourses.length;
 
   return (
     <div className="bg-gray-50 min-h-screen py-8 sm:py-12 transform transition-all duration-500" style={{ scrollBehavior: 'smooth' }}>
@@ -293,7 +256,7 @@ const Training: React.FC = () => {
                 <div className={`h-6 sm:h-8 w-6 sm:w-8 mx-auto mb-2 sm:mb-3 ${selectedType === 'Regulation' ? 'text-blue-600' : 'text-green-600'}`}>
                   {selectedType === 'Regulation' ? <BookOpen className="h-full w-full" /> : <Plane className="h-full w-full" />}
                 </div>
-                <div className="text-xl sm:text-2xl font-bold text-gray-900">{filteredCourses.length}</div>
+                <div className="text-xl sm:text-2xl font-bold text-gray-900">{currentCourses.length}</div>
                 <div className="text-gray-600 text-xs sm:text-base">{selectedType} Courses</div>
               </div>
               <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md text-center transform transition-all duration-500 hover:scale-110 hover:shadow-xl">
@@ -329,7 +292,7 @@ const Training: React.FC = () => {
                 </p>
               </div>
 
-              {filteredCourses.length === 0 ? (
+              {currentCourses.length === 0 ? (
                 <div className="text-center py-12 bg-white rounded-xl shadow-lg">
                   {selectedType === 'Regulation' ? (
                     <BookOpen className="h-16 w-16 text-gray-300 mx-auto mb-6" />
@@ -342,9 +305,88 @@ const Training: React.FC = () => {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
-                  {filteredCourses.map((course) => (
-                    <CourseCard key={`${selectedType}-${course.id}`} course={course} />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                  {currentCourses.map((course) => (
+                    <div key={course.id} className="bg-white rounded-xl shadow-lg overflow-hidden transform transition-all duration-500 hover:scale-105 hover:shadow-2xl">
+                      <div className="p-6">
+                        {/* Course Header */}
+                        <div className="mb-4">
+                          <div className="flex flex-wrap gap-2 mb-3">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              {course.type}
+                            </span>
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              {course.level}
+                            </span>
+                            {course.ageRequirement && (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                Age {course.ageRequirement}+
+                              </span>
+                            )}
+                          </div>
+                          <h3 className="text-xl font-bold text-gray-900 mb-2">{course.title}</h3>
+                          {course.price && (
+                            <div className="text-lg font-bold text-blue-700 mb-2">
+                              {course.price}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Course Description */}
+                        <p className="text-gray-600 mb-4 leading-relaxed text-sm line-clamp-3">
+                          {course.description}
+                        </p>
+
+                        {/* Course Details */}
+                        <div className="space-y-2 mb-4 text-sm text-gray-600">
+                          <div className="flex items-center">
+                            <Calendar className="h-4 w-4 mr-2" />
+                            <span>Duration: {course.duration}</span>
+                          </div>
+                          <div className="flex items-center">
+                            <Calendar className="h-4 w-4 mr-2" />
+                            <span>Next Start: {course.nextStartDate}</span>
+                          </div>
+                          {course.maxStudents && (
+                            <div className="flex items-center">
+                              <Users className="h-4 w-4 mr-2" />
+                              <span>Max Students: {course.maxStudents}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* What's Included */}
+                        {course.whatsIncluded.length > 0 && (
+                          <div className="mb-4">
+                            <h4 className="font-semibold text-gray-900 mb-2 text-sm">What's Included:</h4>
+                            <ul className="space-y-1">
+                              {course.whatsIncluded.slice(0, 3).map((item, index) => (
+                                <li key={index} className="flex items-start text-xs">
+                                  <CheckCircle className="h-3 w-3 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                                  <span className="text-gray-700">{item}</span>
+                                </li>
+                              ))}
+                              {course.whatsIncluded.length > 3 && (
+                                <li className="text-xs text-gray-500 italic pl-5">
+                                  +{course.whatsIncluded.length - 3} more features...
+                                </li>
+                              )}
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* Action Buttons */}
+                        <div className="flex flex-col gap-2">
+                          <button className="w-full bg-blue-700 hover:bg-blue-800 text-white py-2.5 px-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 flex items-center justify-center text-sm">
+                            <span>Register Now</span>
+                            <ArrowRight className="ml-2 h-4 w-4" />
+                          </button>
+                          <button className="w-full border-2 border-gray-300 hover:border-blue-700 hover:text-blue-700 text-gray-700 py-2.5 px-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 text-sm">
+                            Learn More
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   ))}
                 </div>
               )}
@@ -396,6 +438,16 @@ const Training: React.FC = () => {
           </>
         )}
       </div>
+
+      {/* Custom CSS for line clamping */}
+      <style jsx>{`
+        .line-clamp-3 {
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+      `}</style>
     </div>
   );
 };
