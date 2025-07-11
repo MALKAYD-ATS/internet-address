@@ -28,7 +28,7 @@ SET is_online = true
 WHERE 
   title ILIKE '%online%' 
   OR description ILIKE '%online%'
-  OR type = 'Regulatory'  -- Assuming regulatory courses can be delivered online
+  OR type = 'Regulation'  -- Assuming regulatory courses can be delivered online
   OR duration ILIKE '%self-paced%';
 
 -- If no courses are marked as online yet, mark the first few as online for demonstration
