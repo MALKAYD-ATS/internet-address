@@ -355,16 +355,33 @@ const Portal: React.FC = () => {
         if (authError) throw authError;
       }
 
-      // Update students table
-      const { data: updatedProfile, error: profileError } = await supabase
-        .from('students')
-        .update({
-          phone_number: profileForm.phone_number,
-          profile_image: profileForm.profile_image
-        })
-        .eq('id', user.id)
-        .select()
-        .single();
+      // Update students table - only update fields that have changed
+      const studentUpdates: any = {};
+      
+      // Only update phone_number if it has changed
+      if (profileForm.phone_number !== (profile.phone_number || '')) {
+        studentUpdates.phone_number = profileForm.phone_number;
+      }
+      
+      // Only update profile_image if it has changed
+      if (profileForm.profile_image !== (profile.profile_image || '')) {
+        studentUpdates.profile_image = profileForm.profile_image;
+      }
+
+      let updatedProfile = profile;
+      
+      // Only make database call if there are changes to student fields
+      if (Object.keys(studentUpdates).length > 0) {
+        const { data, error: profileError } = await supabase
+          .from('students')
+          .update(studentUpdates)
+          .eq('id', user.id)
+          .select()
+          .single();
+
+        if (profileError) throw profileError;
+        updatedProfile = data;
+      }
 
       if (profileError) throw profileError;
 
