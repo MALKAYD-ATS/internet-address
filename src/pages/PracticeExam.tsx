@@ -206,6 +206,7 @@ const PracticeExam: React.FC = () => {
     };
 
     fetchData();
+  }, [courseId, user]);
 
   // Timer countdown
   useEffect(() => {

@@ -3,8 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
-inter]
-face HeaderLogo {
+interface HeaderLogo {
   id: string;
   logo_url: string;
   alt_text: string;
