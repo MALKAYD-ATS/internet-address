@@ -93,6 +93,17 @@ const Portal: React.FC = () => {
   const [enrollingCourseId, setEnrollingCourseId] = useState<number | null>(null);
   const [enrollmentMessage, setEnrollmentMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
+  // Profile editing state
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    email: '',
+    password: '',
+    phone_number: '',
+    profile_image: ''
+  });
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileMessage, setProfileMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+
   // Fetch header logo
   useEffect(() => {
     const fetchHeaderLogo = async () => {
@@ -141,6 +152,13 @@ const Portal: React.FC = () => {
           console.error('Error fetching profile:', error);
         } else {
           setProfile(data);
+          // Initialize profile form with current data
+          setProfileForm({
+            email: user.email || '',
+            password: '',
+            phone_number: data.phone_number || '',
+            profile_image: data.profile_image || ''
+          });
         }
       } catch (err) {
         setError('An unexpected error occurred.');
@@ -289,6 +307,102 @@ const Portal: React.FC = () => {
     }
   }, [enrollmentMessage]);
 
+  const handleEditProfile = () => {
+    setIsEditingProfile(true);
+    setProfileMessage(null);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingProfile(false);
+    setProfileMessage(null);
+    // Reset form to current profile data
+    if (profile && user) {
+      setProfileForm({
+        email: user.email || '',
+        password: '',
+        phone_number: profile.phone_number || '',
+        profile_image: profile.profile_image || ''
+      });
+    }
+  };
+
+  const handleProfileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setProfileForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user || !profile) return;
+
+    setProfileLoading(true);
+    setProfileMessage(null);
+
+    try {
+      // Update auth user email and password if changed
+      const authUpdates: any = {};
+      if (profileForm.email !== user.email) {
+        authUpdates.email = profileForm.email;
+      }
+      if (profileForm.password.trim()) {
+        authUpdates.password = profileForm.password;
+      }
+
+      if (Object.keys(authUpdates).length > 0) {
+        const { error: authError } = await supabase.auth.updateUser(authUpdates);
+        if (authError) throw authError;
+      }
+
+      // Update students table
+      const { data: updatedProfile, error: profileError } = await supabase
+        .from('students')
+        .update({
+          phone_number: profileForm.phone_number,
+          profile_image: profileForm.profile_image
+        })
+        .eq('id', user.id)
+        .select()
+        .single();
+
+      if (profileError) throw profileError;
+
+      // Update local state
+      setProfile(updatedProfile);
+      setIsEditingProfile(false);
+      setProfileMessage({
+        type: 'success',
+        text: 'Profile updated successfully!'
+      });
+
+      // Clear password field
+      setProfileForm(prev => ({
+        ...prev,
+        password: ''
+      }));
+
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      setProfileMessage({
+        type: 'error',
+        text: error.message || 'Failed to update profile. Please try again.'
+      });
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  // Clear profile message after 5 seconds
+  useEffect(() => {
+    if (profileMessage) {
+      const timer = setTimeout(() => {
+        setProfileMessage(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [profileMessage]);
+
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -385,6 +499,26 @@ const Portal: React.FC = () => {
         </div>
       )}
 
+      {/* Profile Update Message */}
+      {profileMessage && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+          <div className={`p-4 rounded-lg border ${
+            profileMessage.type === 'success' 
+              ? 'bg-green-50 border-green-200 text-green-800' 
+              : 'bg-red-50 border-red-200 text-red-800'
+          }`}>
+            <div className="flex items-center">
+              {profileMessage.type === 'success' ? (
+                <CheckCircle className="h-5 w-5 mr-2 flex-shrink-0" />
+              ) : (
+                <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
+              )}
+              <span className="font-medium">{profileMessage.text}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Profile Section */}
@@ -409,44 +543,176 @@ const Portal: React.FC = () => {
               ) : profile ? (
                 <div className="space-y-4">
                   <div className="text-center mb-6">
-                    <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <User className="h-10 w-10 text-blue-600" />
+                    <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
+                      {profile.profile_image ? (
+                        <img
+                          src={profile.profile_image}
+                          alt="Profile"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            const parent = e.currentTarget.parentElement;
+                            if (parent) {
+                              const icon = document.createElement('div');
+                              icon.innerHTML = '<svg class="h-10 w-10 text-blue-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>';
+                              parent.appendChild(icon);
+                            }
+                          }}
+                        />
+                      ) : (
+                        <User className="h-10 w-10 text-blue-600" />
+                      )}
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900">{profile.full_name}</h3>
                     <p className="text-gray-600 text-sm">Student ID: {profile.id.slice(0, 8)}</p>
                   </div>
 
-                  <div className="space-y-3">
-                    <div className="flex items-center p-3 bg-gray-50 rounded-lg">
-                      <Mail className="h-5 w-5 text-gray-400 mr-3" />
+                  {isEditingProfile ? (
+                    /* Edit Profile Form */
+                    <div className="space-y-4">
+                      <h4 className="text-lg font-semibold text-gray-900 mb-4">Edit Profile</h4>
+                      
+                      {/* Student ID (Read-only) */}
                       <div>
-                        <p className="text-sm font-medium text-gray-900">Email</p>
-                        <p className="text-sm text-gray-600">{user?.email}</p>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Student ID (Read-only)
+                        </label>
+                        <input
+                          type="text"
+                          value={profile.id.slice(0, 8)}
+                          disabled
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed text-sm"
+                        />
+                      </div>
+
+                      {/* Email */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Email Address
+                        </label>
+                        <input
+                          type="email"
+                          name="email"
+                          value={profileForm.email}
+                          onChange={handleProfileInputChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                          placeholder="Enter your email"
+                        />
+                      </div>
+
+                      {/* Password */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          New Password (leave blank to keep current)
+                        </label>
+                        <input
+                          type="password"
+                          name="password"
+                          value={profileForm.password}
+                          onChange={handleProfileInputChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                          placeholder="Enter new password"
+                        />
+                      </div>
+
+                      {/* Phone Number */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Phone Number
+                        </label>
+                        <input
+                          type="tel"
+                          name="phone_number"
+                          value={profileForm.phone_number}
+                          onChange={handleProfileInputChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                          placeholder="Enter your phone number"
+                        />
+                      </div>
+
+                      {/* Profile Image URL */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Profile Image URL
+                        </label>
+                        <input
+                          type="url"
+                          name="profile_image"
+                          value={profileForm.profile_image}
+                          onChange={handleProfileInputChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                          placeholder="Enter image URL"
+                        />
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex flex-col sm:flex-row gap-3 mt-6">
+                        <button
+                          onClick={handleSaveProfile}
+                          disabled={profileLoading}
+                          className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center text-sm ${
+                            profileLoading
+                              ? 'bg-gray-400 cursor-not-allowed text-white'
+                              : 'bg-green-600 hover:bg-green-700 text-white'
+                          }`}
+                        >
+                          {profileLoading ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                              Saving...
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle className="h-4 w-4 mr-2" />
+                              Save Changes
+                            </>
+                          )}
+                        </button>
+                        <button
+                          onClick={handleCancelEdit}
+                          disabled={profileLoading}
+                          className="flex-1 py-2 px-4 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center text-sm"
+                        >
+                          Cancel
+                        </button>
                       </div>
                     </div>
-
-                    <div className="flex items-center p-3 bg-gray-50 rounded-lg">
-                      <Phone className="h-5 w-5 text-gray-400 mr-3" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">Phone</p>
-                        <p className="text-sm text-gray-600">{profile.phone_number || 'Not provided'}</p>
+                  ) : (
+                    /* View Profile */
+                    <div className="space-y-3">
+                      <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                        <Mail className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-gray-900">Email</p>
+                          <p className="text-sm text-gray-600 truncate">{user?.email}</p>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="flex items-center p-3 bg-gray-50 rounded-lg">
-                      <Calendar className="h-5 w-5 text-gray-400 mr-3" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">Member Since</p>
-                        <p className="text-sm text-gray-600">{formatDate(profile.created_at)}</p>
+                      <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                        <Phone className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-gray-900">Phone</p>
+                          <p className="text-sm text-gray-600">{profile.phone_number || 'Not provided'}</p>
+                        </div>
                       </div>
-                    </div>
-                  </div>
 
-                  <button className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center">
-                    <Settings className="h-4 w-4 mr-2" />
-                    Edit Profile
-                    <span className="ml-2 text-xs bg-blue-500 px-2 py-1 rounded">Coming Soon</span>
-                  </button>
+                      <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                        <Calendar className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-gray-900">Member Since</p>
+                          <p className="text-sm text-gray-600">{formatDate(profile.created_at)}</p>
+                        </div>
+                      </div>
+
+                      <button 
+                        onClick={handleEditProfile}
+                        className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center text-sm"
+                      >
+                        <Settings className="h-4 w-4 mr-2" />
+                        Edit Profile
+                      </button>
+                    </div>
+                  )}
                 </div>
               ) : null}
             </div>
