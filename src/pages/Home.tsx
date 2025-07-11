@@ -625,13 +625,43 @@ const Home: React.FC = () => {
             {headingCards.map((direction, index) => (
               <div key={index} className="relative bg-white rounded-xl shadow-lg overflow-hidden transform transition-all duration-500 hover:scale-105 hover:shadow-2xl">
                 {/* Video Background - Responsive Container */}
-                <div className="relative h-48 sm:h-56 md:h-64 overflow-hidden">
-                  {direction.video_url ? (
-                    <video
-                      className="absolute inset-0 w-full h-full object-cover"
+                // Create dynamic gradient style from database colors
+                const createGradientStyle = () => {
+                  if (principle.color_from && principle.color_to) {
+                    // Use gradient colors from database
+                    return {
+                      background: `linear-gradient(to bottom right, ${principle.color_from}, ${principle.color_to})`
+                    };
+                  } else if (principle.color) {
+                    // Use single color from database
+                    return {
+                      backgroundColor: principle.color
+                    };
+                  } else {
+                    // Fallback gradient
+                    return {
+                      background: 'linear-gradient(to bottom right, #2563eb, #1e40af)'
+                    };
+                  }
+                };
                       autoPlay
-                      muted
-                      loop
+                // Create border color from principle color
+                const createBorderStyle = () => {
+                  if (principle.color_from) {
+                    // Extract color and create a lighter version for border
+                    return {
+                      borderColor: principle.color_from + '33' // Add transparency
+                    };
+                  } else if (principle.color) {
+                    return {
+                      borderColor: principle.color + '33' // Add transparency
+                    };
+                  } else {
+                    return {
+                      borderColor: '#dbeafe' // Default blue-50 equivalent
+                    };
+                  }
+                };
                       playsInline
                       onError={(e) => {
                         // Hide video and show fallback background
@@ -732,7 +762,8 @@ const Home: React.FC = () => {
                         className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 inline-flex items-center justify-center"
                       >
                         Visit Website
-                        <ExternalLink className="ml-2 h-4 w-4" />
+                          className="rounded-xl shadow-lg h-full flex items-center justify-center transform transition-all duration-500 hover:scale-105 hover:shadow-2xl"
+                          style={createGradientStyle()}
                       </a>
                     </div>
                   </div>
@@ -778,7 +809,8 @@ const Home: React.FC = () => {
                   <p className="text-gray-600 text-sm">Send us an email anytime</p>
                 </div>
               </>
-            )}
+                          className="bg-white border-2 rounded-xl shadow-lg h-full flex items-center justify-center p-8 transform transition-all duration-500 hover:shadow-2xl"
+                          style={createBorderStyle()}
 
             <div className="bg-white rounded-xl shadow-lg p-6 text-center transform transition-all duration-500 hover:scale-105 hover:shadow-xl">
               <div className="bg-blue-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
