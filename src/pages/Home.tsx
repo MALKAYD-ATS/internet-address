@@ -699,7 +699,14 @@ const Home: React.FC = () => {
                           src={venture.logo_url}
                           alt={`${venture.name} logo`}
                           className="max-h-20 max-w-full object-contain transform transition-all duration-300 hover:scale-110"
-                          onError={(e) => {
+                          className="rounded-xl shadow-lg h-full flex items-center justify-center transform transition-all duration-500 hover:scale-105 hover:shadow-2xl"
+                          style={{
+                            background: principle.color_from && principle.color_to 
+                              ? `linear-gradient(135deg, ${principle.color_from}, ${principle.color_to})`
+                              : principle.color 
+                                ? principle.color
+                                : 'linear-gradient(135deg, #3b82f6, #1d4ed8)' // fallback blue gradient
+                          }}
                             e.currentTarget.style.display = 'none';
                           }}
                         />
@@ -732,7 +739,14 @@ const Home: React.FC = () => {
                         className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 inline-flex items-center justify-center"
                       >
                         Visit Website
-                        <ExternalLink className="ml-2 h-4 w-4" />
+                          className="bg-white border-2 rounded-xl shadow-lg h-full flex items-center justify-center p-8 transform transition-all duration-500 hover:shadow-2xl"
+                          style={{
+                            borderColor: principle.color_from 
+                              ? principle.color_from.replace(/from-/, '').replace(/-600/, '') 
+                              : principle.color 
+                                ? principle.color
+                                : '#3b82f6'
+                          }}
                       </a>
                     </div>
                   </div>
