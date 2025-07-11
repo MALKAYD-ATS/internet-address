@@ -1172,16 +1172,9 @@ export default Portal;
       <div>
         <p className="text-sm font-medium text-gray-900">Member Since</p>
         <p className="text-sm text-gray-600">{formatDate(profile.created_at)}</p>
-      </div>
-    </div>
-  </div>
+};
 
-  <button className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center">
-    <Settings className="h-4 w-4 mr-2" />
-    Edit Profile
-    <span className="ml-2 text-xs bg-blue-500 px-2 py-1 rounded">Coming Soon</span>
-  </button>
-</>
+export default Portal;
 
 
 
