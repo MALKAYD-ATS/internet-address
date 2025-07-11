@@ -1311,7 +1311,8 @@ return (
     </div>
 
     {/* Custom Styles for Swiper */}
-    <style jsx>{`
+    <style jsx>{
+      `
       .course-carousel .swiper-pagination {
         position: relative !important;
         margin-top: 2rem !important;
@@ -1347,6 +1348,5 @@ return (
     `}</style>
   </>
 );
-};
 
 export default Portal;
