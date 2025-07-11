@@ -331,7 +331,7 @@ const Training: React.FC = () => {
 
               {filteredCourses.length === 0 ? (
                 <div className="text-center py-12 bg-white rounded-xl shadow-lg">
-                  {selectedType === 'Regulatory' ? (
+                  {selectedType === 'Regulation' ? (
                     <BookOpen className="h-16 w-16 text-gray-300 mx-auto mb-6" />
                   ) : (
                     <Plane className="h-16 w-16 text-gray-300 mx-auto mb-6" />
