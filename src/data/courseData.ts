@@ -191,7 +191,7 @@ export const regulationCourses: CourseData[] = [
     capacity: "8 students",
     description: "Refresher course for advanced pilots to maintain skills and stay current with regulations.",
     features: [
-      "Regulatory updates and changes review",
+      "Regulation updates and changes review",
       "Skills assessment and performance evaluation",
       "Advanced maneuvers and procedures review",
       "Safety protocol refresh and best practices",
