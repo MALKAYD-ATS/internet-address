@@ -154,8 +154,7 @@ const PracticeExam: React.FC = () => {
         const { data: questionsData, error: questionsError } = await supabase
           .from('practice_questions')
           .select('*')
-          .eq('course_id', courseId)
-          .limit(1000); // Fetch more questions to ensure we have enough
+          .eq('course_id', courseId);
 
         if (questionsError) {
           console.error('Error fetching questions:', questionsError);
@@ -173,21 +172,12 @@ const PracticeExam: React.FC = () => {
         // Use exam configuration or defaults
         const questionCount = examData.number_of_questions || 50;
         const examDurationMinutes = 60; // Default exam duration
-        
-        console.log(`Exam requires ${questionCount} questions`);
-        console.log(`Available questions in database: ${questionsData.length}`);
 
-        // Check if we have enough questions
-        if (questionsData.length < questionCount) {
-          console.warn(`Only ${questionsData.length} questions available, but exam requires ${questionCount}`);
-        }
-
-        // Randomize and select the required number of questions
+        // Randomize and limit questions
         const shuffledQuestions = [...questionsData].sort(() => Math.random() - 0.5);
-        const selectedQuestions = shuffledQuestions.slice(0, questionCount);
+        const selectedQuestions = shuffledQuestions.slice(0, Math.min(questionCount, shuffledQuestions.length));
         
-        console.log(`Selected ${selectedQuestions.length} questions for the exam`);
-        
+        console.log(`Selected ${selectedQuestions.length} questions out of ${questionsData.length} available`);
         
         setQuestions(selectedQuestions);
         setQuestionStates(selectedQuestions.map(() => ({
@@ -197,13 +187,6 @@ const PracticeExam: React.FC = () => {
         // Set timer
         setTimeRemaining(examDurationMinutes * 60); // Convert to seconds
         setExamStartTime(new Date());
-        
-        // Show warning if not enough questions
-        if (questionsData.length < questionCount) {
-          setError(`Warning: This exam is configured for ${questionCount} questions, but only ${questionsData.length} questions are available in the database for this course.`);
-          setLoading(false);
-          return;
-        }
 
       } catch (err) {
         setError('An unexpected error occurred.');
