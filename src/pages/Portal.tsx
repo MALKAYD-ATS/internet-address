@@ -381,11 +381,22 @@ const Portal: React.FC = () => {
           .from('students')
           .update(studentUpdates)
           .eq('id', user.id)
-          .select()
-          .single();
+          .select();
 
         if (profileError) throw profileError;
-        updatedProfile = data;
+        
+        // Get the updated profile data
+        if (data && data.length > 0) {
+          updatedProfile = data[0];
+        } else {
+          // If no data returned, fetch the current profile
+          const { data: currentProfile } = await supabase
+            .from('students')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+          updatedProfile = currentProfile || profile;
+        }
       }
 
       // Update local state
