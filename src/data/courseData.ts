@@ -219,7 +219,7 @@ export const regulationCourses: CourseData[] = [
     level: "Expert",
     duration: "5 Days",
     capacity: "8 students",
-    description: "Expert-level regulatory training for complex commercial operations and specialized applications.",
+    description: "Expert-level regulation training for complex commercial operations and specialized applications.",
     features: [
       "Transport Canada Level 1 Complex Operations certification",
       "BVLOS (Beyond Visual Line of Sight) operations procedures",
