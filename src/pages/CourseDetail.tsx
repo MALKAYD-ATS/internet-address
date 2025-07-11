@@ -369,85 +369,24 @@ const CourseDetail: React.FC = () => {
 
   // Enhanced helper function to get PDF URL for lesson resources
   const getPdfUrlForLesson = (lesson: Lesson): string | null => {
-    // First, try to find existing PDF resource in lesson
-    let pdfResource = lesson.resources.find(resource => 
-      resource.resource_type === 'file' && 
-      (resource.url?.toLowerCase().includes('.pdf') || 
-       resource.file_path?.toLowerCase().includes('.pdf'))
-    );
-    
-    // If no PDF resource found, try to map based on course title and lesson title
-    if (!pdfResource && course) {
-      const courseMapping = COURSE_PDF_MAPPING[course.title];
+    // First, check if the lesson content contains a PDF URL
+    if (lesson.content && lesson.content.trim()) {
+      const content = lesson.content.trim();
       
-      if (courseMapping) {
-        // For Reference Material course, try to match lesson title to specific PDF
-        if (courseMapping.folder === 'reference-material-online') {
-          const lessonTitle = lesson.title.toLowerCase();
-          let matchedFilename = courseMapping.filename; // default
-          
-          // Try to match lesson title to specific reference material
-          if (lessonTitle.includes('advanced') || lessonTitle.includes('pre-reading')) {
-            matchedFilename = '01-T_D_OPS018_(ADVANCED_PRE_READING_GUIDE).pdf';
-          } else if (lessonTitle.includes('flight review')) {
-            matchedFilename = '02-T&D_OPS017_(FLIGHT_REVIEW_PRE_READING_GUIDE).pdf';
-          } else if (lessonTitle.includes('ground up')) {
-            matchedFilename = '04-from-the-ground-up.pdf';
-          } else if (lessonTitle.includes('rpas 101')) {
-            matchedFilename = '10-rpas-101.pdf';
-          }
-          
-          courseMapping.filename = matchedFilename;
-        }
-        
-        // Create a mock resource with the mapped file path
-        pdfResource = {
-          id: 'mapped-pdf',
-          title: lesson.title,
-          resource_type: 'file',
-          url: '',
-          file_path: `${courseMapping.folder}/${courseMapping.filename}`
-        };
+      // Check if content is already a valid URL
+      if (content.startsWith('http')) {
+        return content;
       }
-    }
-    
-    if (!pdfResource) return null;
-    
-    let pdfUrl = '';
-    
-    if (pdfResource.url) {
-      pdfUrl = pdfResource.url;
-    } else if (pdfResource.file_path) {
-      // Handle full URLs
-      if (pdfResource.file_path.startsWith('http')) {
-        pdfUrl = pdfResource.file_path;
-      } else if (pdfResource.file_path.includes('/storage/v1/object/public/')) {
-        // Already a complete Supabase Storage URL
-        pdfUrl = pdfResource.file_path;
-      } else {
-        // Construct Supabase Storage URL
+      
+      // If content looks like a file path, construct Supabase Storage URL
+      if (content.includes('.pdf')) {
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
         const bucketName = 'media-assets';
-        pdfUrl = `${supabaseUrl}/storage/v1/object/public/${bucketName}/${pdfResource.file_path}`;
-      }
-    } else {
-      // Fallback: try to construct URL from course mapping
-      const courseMapping = COURSE_PDF_MAPPING[course?.title || ''];
-      if (courseMapping) {
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-        const bucketName = 'media-assets';
-        pdfUrl = `${supabaseUrl}/storage/v1/object/public/${bucketName}/${courseMapping.folder}/${courseMapping.filename}`;
+        return `${supabaseUrl}/storage/v1/object/public/${bucketName}/${content}`;
       }
     }
     
-    // Validate URL
-    try {
-      new URL(pdfUrl);
-      return pdfUrl;
-    } catch (error) {
-      console.error('Invalid PDF URL:', pdfUrl);
-      return null;
-    }
+    return null;
   };
 
   const closePdfViewer = () => {
@@ -651,11 +590,7 @@ const CourseDetail: React.FC = () => {
 
                                 <div className="flex items-center gap-2">
                                   {/* PDF Indicator */}
-                                  {lesson.resources.some(resource => 
-                                    resource.resource_type === 'file' && 
-                                    (resource.url?.toLowerCase().includes('.pdf') || 
-                                     resource.file_path?.toLowerCase().includes('.pdf'))
-                                  ) && (
+                                  {(lesson.content && lesson.content.includes('.pdf')) && (
                                     <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${
                                       isAccessible
                                         ? 'bg-blue-100 text-blue-700'
