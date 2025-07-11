@@ -376,16 +376,11 @@ const Portal: React.FC = () => {
       
       // Only make database call if there are changes to student fields
       if (Object.keys(studentUpdates).length > 0) {
-        // Use upsert to handle cases where student record doesn't exist
-        const upsertData = {
-          id: user.id,
-          full_name: profile.full_name,
-          ...studentUpdates
-        };
-        
+        // Use targeted update to avoid RLS policy violations
         const { data, error: profileError } = await supabase
           .from('students')
-          .upsert(upsertData)
+          .update(studentUpdates)
+          .eq('id', user.id)
           .select()
           .single();
 
