@@ -3,13 +3,41 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
+interface HeaderLogo {
+  logo_url: string;
+  alt_text?: string;
+}
+
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [headerLogo, setHeaderLogo] = useState<HeaderLogo | null>(null);
   const navigate = useNavigate();
   const { signIn } = useAuth();
+
+  React.useEffect(() => {
+    const fetchHeaderLogo = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('header_logo')
+          .select('logo_url, alt_text')
+          .eq('is_active', true)
+          .order('order_index', { ascending: true })
+          .limit(1)
+          .single();
+
+        if (data && !error) {
+          setHeaderLogo(data);
+        }
+      } catch (err) {
+        console.error('Error fetching header logo:', err);
+      }
+    };
+
+    fetchHeaderLogo();
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
