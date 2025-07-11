@@ -1098,7 +1098,6 @@ const Portal: React.FC = () => {
       `}</style>
     </div>
   );
-};
 
 export default Portal;
 <>
