@@ -29,7 +29,6 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({
   const [scale, setScale] = useState(1.0);
   const [pageLoading, setPageLoading] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
-  const [renderTask, setRenderTask] = useState<pdfjsLib.PDFRenderTask | null>(null);
   
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);

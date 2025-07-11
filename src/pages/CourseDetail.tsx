@@ -255,11 +255,8 @@ const CourseDetail: React.FC = () => {
 
   const openPdfViewer = (resource: Resource, lessonTitle: string, lessonId: string, moduleId: string) => {
     console.log('Opening PDF viewer with resource:', resource);
-    console.log('Resource URL:', resource.url);
-    console.log('Resource file_path:', resource.file_path);
     
     let pdfUrl = resource.url || resource.file_path;
-    console.log('Initial PDF URL:', pdfUrl);
     
     if (!pdfUrl) {
       console.error('No PDF URL found for resource:', resource);
@@ -267,47 +264,20 @@ const CourseDetail: React.FC = () => {
       return;
     }
 
-    // Handle different URL formats
-    if (!pdfUrl.startsWith('http')) {
-      // If it's a relative path, make it absolute
-      if (pdfUrl.startsWith('/')) {
-        pdfUrl = `${window.location.origin}${pdfUrl}`;
-      } else {
-        pdfUrl = `${window.location.origin}/${pdfUrl}`;
-      }
+    // Handle relative paths
+    if (pdfUrl.startsWith('/') || !pdfUrl.startsWith('http')) {
+      pdfUrl = `${window.location.origin}${pdfUrl.startsWith('/') ? '' : '/'}${pdfUrl}`;
     }
 
     console.log('Final PDF URL:', pdfUrl);
 
-    // Test if URL is accessible
-    fetch(pdfUrl, { method: 'HEAD' })
-      .then(response => {
-        if (!response.ok) {
-          console.error('PDF URL not accessible:', response.status, response.statusText);
-          alert('PDF file could not be accessed. Please contact support.');
-          return;
-        }
-        
-        // URL is accessible, open viewer
-        setPdfViewer({
-          isOpen: true,
-          pdfUrl,
-          lessonTitle,
-          lessonId,
-          moduleId,
-        });
-      })
-      .catch(error => {
-        console.error('Error checking PDF URL:', error);
-        // Still try to open the viewer in case it's a CORS issue
-        setPdfViewer({
-          isOpen: true,
-          pdfUrl,
-          lessonTitle,
-          lessonId,
-          moduleId,
-        });
-      });
+    setPdfViewer({
+      isOpen: true,
+      pdfUrl,
+      lessonTitle,
+      lessonId,
+      moduleId,
+    });
   };
 
   const closePdfViewer = () => {
@@ -534,7 +504,7 @@ const CourseDetail: React.FC = () => {
                     className="w-full flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                   >
                     <BookOpen className="w-4 h-4" />
-                    Back to Portal
+                    Back to Courses
                   </button>
                 </div>
               </div>

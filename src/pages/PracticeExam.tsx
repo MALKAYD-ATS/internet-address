@@ -32,19 +32,11 @@ interface HeaderLogo {
 }
 
 interface Course {
-  id: string;
+  id: number;
   title: string | null;
   description: string | null;
-}
-
-interface Exam {
-  id: string;
-  course_id: string;
-  title: string;
-  description: string | null;
-  number_of_questions: number | null;
-  passing_percentage: number | null;
-  is_active: boolean;
+  exam_number_of_questions: number | null;
+  exam_duration_minutes: number | null;
 }
 
 interface ExamQuestion {
@@ -71,7 +63,6 @@ const PracticeExam: React.FC = () => {
   const [headerLogo, setHeaderLogo] = useState<HeaderLogo | null>(null);
   
   const [course, setCourse] = useState<Course | null>(null);
-  const [exam, setExam] = useState<Exam | null>(null);
   const [questions, setQuestions] = useState<ExamQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [questionStates, setQuestionStates] = useState<QuestionState[]>([]);
@@ -237,7 +228,7 @@ const PracticeExam: React.FC = () => {
   };
 
   const handleSubmitExam = async () => {
-    if (!user || !course || !exam) return;
+    if (!user || !course) return;
 
     try {
       // Calculate score
@@ -249,7 +240,7 @@ const PracticeExam: React.FC = () => {
       });
 
       const percentage = Math.round((correctAnswers / questions.length) * 100);
-      const passingScore = exam.passing_percentage || 70;
+      const passingScore = 70; // Default passing score
       const passed = percentage >= passingScore;
 
       setExamResults({
@@ -275,7 +266,7 @@ const PracticeExam: React.FC = () => {
               is_correct: state.selectedAnswer === questions[index].correct_answer
             })),
             score: percentage,
-            duration_minutes: 60,
+            duration_minutes: course.exam_duration_minutes || 60,
             is_submitted: true
           }
         ]);
