@@ -1269,8 +1269,331 @@ const Portal: React.FC = () => {
                       const isEnrolled = isEnrolledInCourse(course.id);
                       const isEnrolling = enrollingCourseId === course.id;
                   
-return (
-  <>
+                      return (
+                        <div key={course.id} className="bg-white rounded-xl shadow-lg overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-xl course-card">
+                          {/* Course content would go here */}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right Sidebar */}
+        <div className="space-y-6">
+          {/* Quick Actions */}
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+              <Zap className="h-6 w-6 mr-2 text-blue-600" />
+              Quick Actions
+            </h2>
+            <div className="space-y-3">
+              <button
+                onClick={() => navigate('/training')}
+                className="w-full flex items-center justify-center px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors duration-200"
+              >
+                <BookOpen className="h-5 w-5 mr-2" />
+                Browse Courses
+              </button>
+              <button
+                onClick={() => setShowEditProfile(true)}
+                className="w-full flex items-center justify-center px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors duration-200"
+              >
+                <User className="h-5 w-5 mr-2" />
+                Edit Profile
+              </button>
+            </div>
+          </div>
+
+          {/* Certificates Section */}
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+              <Award className="h-6 w-6 mr-2 text-blue-600" />
+              My Certificates
+            </h2>
+            {loadingCertificates ? (
+              <div className="text-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
+                <p className="text-gray-600">Loading certificates...</p>
+              </div>
+            ) : certificates.length === 0 ? (
+              <div className="text-center py-8">
+                <Award className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No Certificates Yet</h3>
+                <p className="text-gray-600 mb-4">
+                  Complete courses to earn your professional drone certifications.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {certificates.map((cert) => (
+                  <div key={cert.id} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900">{cert.course_title}</h3>
+                        <p className="text-sm text-gray-600">
+                          Issued: {new Date(cert.issued_at).toLocaleDateString()}
+                        </p>
+                        {cert.expires_at && (
+                          <p className="text-sm text-gray-600">
+                            Expires: {new Date(cert.expires_at).toLocaleDateString()}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          cert.is_revoked 
+                            ? 'bg-red-100 text-red-800' 
+                            : 'bg-green-100 text-green-800'
+                        }`}>
+                          {cert.is_revoked ? 'Revoked' : 'Active'}
+                        </span>
+                        {cert.certificate_url && !cert.is_revoked && (
+                          <a
+                            href={cert.certificate_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg transition-colors duration-200"
+                          >
+                            <Download className="h-3 w-3 mr-1" />
+                            View
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Notifications Section */}
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+              <Bell className="h-6 w-6 mr-2 text-blue-600" />
+              Notifications
+            </h2>
+            <div className="text-center py-8">
+              <Bell className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No New Notifications</h3>
+              <p className="text-gray-600">
+                Course updates and important announcements will appear here.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Edit Profile Modal */}
+      {showEditProfile && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-900">Edit Profile</h2>
+                <button
+                  onClick={() => {
+                    setShowEditProfile(false);
+                    setEditFormData({
+                      full_name: studentProfile?.full_name || '',
+                      email: user?.email || '',
+                      phone_number: studentProfile?.phone_number || '',
+                      profile_image: studentProfile?.profile_image || '',
+                      password: ''
+                    });
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+
+              {editSuccess && (
+                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center">
+                    <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
+                    <span className="text-green-800 text-sm">Profile updated successfully!</span>
+                  </div>
+                </div>
+              )}
+
+              {editError && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="flex items-center">
+                    <AlertCircle className="h-5 w-5 text-red-600 mr-2" />
+                    <span className="text-red-800 text-sm">{editError}</span>
+                  </div>
+                </div>
+              )}
+
+              <form onSubmit={handleEditSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Student ID
+                  </label>
+                  <input
+                    type="text"
+                    value={user?.id || ''}
+                    disabled
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Student ID cannot be changed</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    name="full_name"
+                    value={editFormData.full_name}
+                    onChange={handleEditInputChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={editFormData.email}
+                    onChange={handleEditInputChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone_number"
+                    value={editFormData.phone_number}
+                    onChange={handleEditInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Profile Image URL
+                  </label>
+                  <input
+                    type="url"
+                    name="profile_image"
+                    value={editFormData.profile_image}
+                    onChange={handleEditInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="https://example.com/image.jpg"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={editFormData.password}
+                    onChange={handleEditInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Leave blank to keep current password"
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="submit"
+                    disabled={editLoading}
+                    className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors duration-200 ${
+                      editLoading
+                        ? 'bg-gray-400 cursor-not-allowed text-white'
+                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    }`}
+                  >
+                    {editLoading ? (
+                      <div className="flex items-center justify-center">
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Saving...
+                      </div>
+                    ) : (
+                      'Save Changes'
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowEditProfile(false);
+                      setEditFormData({
+                        full_name: studentProfile?.full_name || '',
+                        email: user?.email || '',
+                        phone_number: studentProfile?.phone_number || '',
+                        profile_image: studentProfile?.profile_image || '',
+                        password: ''
+                      });
+                    }}
+                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors duration-200"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Styles for Swiper */}
+      <style jsx>{`
+        .course-carousel .swiper-pagination {
+          position: relative !important;
+          margin-top: 2rem !important;
+        }
+        .course-carousel .swiper-pagination-bullet {
+          width: 12px !important;
+          height: 12px !important;
+          margin: 0 6px !important;
+        }
+        .course-card {
+          height: 600px;
+          display: flex;
+          flex-direction: column;
+        }
+        .line-clamp-2 {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+        .line-clamp-3 {
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+        @media (max-width: 768px) {
+          .course-card {
+            min-width: 300px;
+            height: 550px;
+          }
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default Portal;
     {/* Certificates Section */}
     <div className="bg-white rounded-xl shadow-lg p-6">
       <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
