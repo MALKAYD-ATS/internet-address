@@ -31,11 +31,32 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-700 to-blue-500 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-10 left-10 w-32 h-32 bg-white rounded-full opacity-20"></div>
+        <div className="absolute top-40 right-20 w-24 h-24 bg-white rounded-full opacity-15"></div>
+        <div className="absolute bottom-20 left-20 w-40 h-40 bg-white rounded-full opacity-10"></div>
+        <div className="absolute bottom-40 right-10 w-20 h-20 bg-white rounded-full opacity-25"></div>
+      </div>
+      
       <div className="max-w-md w-full space-y-8">
+        {/* Logo Section */}
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900">Student Portal</h2>
-          <p className="mt-2 text-gray-600">Sign in to access your courses</p>
+          <img
+            src={headerLogo?.logo_url || "/ATS.png"}
+            alt={headerLogo?.alt_text || "Aboriginal Training Services"}
+            className="h-20 w-auto mx-auto mb-4"
+            onError={(e) => {
+              e.currentTarget.src = '/ATS.png';
+              e.currentTarget.alt = 'Aboriginal Training Services';
+            }}
+          />
+        </div>
+        
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-white">Student Portal</h2>
+          <p className="mt-2 text-blue-100">Sign in to access your courses</p>
         </div>
 
         <div className="bg-white rounded-lg shadow-lg p-8">

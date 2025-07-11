@@ -16,6 +16,7 @@ import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
+import EditProfile from '../components/EditProfile';
 import { 
   User, 
   Phone, 
@@ -92,6 +93,7 @@ const Portal: React.FC = () => {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [enrollingCourseId, setEnrollingCourseId] = useState<number | null>(null);
   const [enrollmentMessage, setEnrollmentMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [showEditProfile, setShowEditProfile] = useState(false);
 
   // Fetch header logo
   useEffect(() => {
@@ -350,8 +352,8 @@ const Portal: React.FC = () => {
                 }}
               />
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Student Portal</h1>
-                <p className="text-gray-600 text-sm sm:text-base">Welcome back!</p>
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Student Portal</h1>
+                <p className="text-gray-600 text-xs sm:text-sm md:text-base">Welcome back!</p>
               </div>
             </div>
             <button
@@ -444,8 +446,13 @@ const Portal: React.FC = () => {
 
                   <button className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center">
                     <Settings className="h-4 w-4 mr-2" />
-                    Edit Profile
-                    <span className="ml-2 text-xs bg-blue-500 px-2 py-1 rounded">Coming Soon</span>
+                    <button
+                      onClick={() => setShowEditProfile(true)}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center"
+                    >
+                      <Settings className="h-4 w-4 mr-2" />
+                      Edit Profile
+                    </button>
                   </button>
                 </div>
               ) : null}
@@ -765,6 +772,17 @@ const Portal: React.FC = () => {
         </div>
 
       </div>
+
+      {/* Edit Profile Modal */}
+      <EditProfile
+        isOpen={showEditProfile}
+        onClose={() => setShowEditProfile(false)}
+        profile={profile}
+        onProfileUpdate={(updatedProfile) => {
+          setProfile(updatedProfile);
+          setShowEditProfile(false);
+        }}
+      />
 
       {/* Custom Styles for Swiper */}
       <style jsx>{`

@@ -32,11 +32,19 @@ interface HeaderLogo {
 }
 
 interface Course {
-  id: number;
+  id: string;
   title: string | null;
   description: string | null;
-  exam_number_of_questions: number | null;
-  exam_duration_minutes: number | null;
+}
+
+interface Exam {
+  id: string;
+  course_id: string;
+  title: string;
+  description: string | null;
+  number_of_questions: number | null;
+  passing_percentage: number | null;
+  is_active: boolean;
 }
 
 interface ExamQuestion {
@@ -63,6 +71,7 @@ const PracticeExam: React.FC = () => {
   const [headerLogo, setHeaderLogo] = useState<HeaderLogo | null>(null);
   
   const [course, setCourse] = useState<Course | null>(null);
+  const [exam, setExam] = useState<Exam | null>(null);
   const [questions, setQuestions] = useState<ExamQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [questionStates, setQuestionStates] = useState<QuestionState[]>([]);
