@@ -32,6 +32,7 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({
   
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const renderTaskRef = useRef<pdfjsLib.PDFRenderTask | null>(null);
 
   // Load PDF document
   useEffect(() => {
@@ -59,8 +60,6 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({
 
   // Render current page with proper scaling
   useEffect(() => {
-    let renderTask: pdfjsLib.PDFRenderTask | null = null;
-
     const renderPage = async () => {
       if (!pdf || !canvasRef.current) return;
 
@@ -73,20 +72,21 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({
         if (!context) return;
 
         // Cancel previous render task if it exists
-        if (renderTask) {
-          renderTask.cancel();
+        if (renderTaskRef.current) {
+          renderTaskRef.current.cancel();
+          renderTaskRef.current = null;
         }
 
         // Get the base viewport at scale 1.0
         const viewport = page.getViewport({ scale: 1.0 });
         
         // Calculate container dimensions
-        const containerWidth = containerRef.current?.clientWidth || window.innerWidth - 100;
-        const containerHeight = window.innerHeight - 200; // Leave room for header/footer
+        const containerWidth = containerRef.current?.clientWidth || Math.min(window.innerWidth - 100, 800);
+        const containerHeight = Math.min(window.innerHeight - 200, 600); // Leave room for header/footer
         
         // Calculate base scale to fit container (fresh calculation each time)
         const baseScale = Math.min(
-          (containerWidth - 40) / viewport.width,
+          (containerWidth - 80) / viewport.width,
           containerHeight / viewport.height
         );
         
@@ -99,17 +99,22 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({
         // Set canvas dimensions
         canvas.height = scaledViewport.height;
         canvas.width = scaledViewport.width;
+        
+        // Set canvas style dimensions for proper display
+        canvas.style.width = `${scaledViewport.width}px`;
+        canvas.style.height = `${scaledViewport.height}px`;
 
         // Clear canvas
         context.clearRect(0, 0, canvas.width, canvas.height);
 
         // Create render task
-        renderTask = page.render({
+        renderTaskRef.current = page.render({
           canvasContext: context,
           viewport: scaledViewport,
         });
 
-        await renderTask.promise;
+        await renderTaskRef.current.promise;
+        renderTaskRef.current = null;
       } catch (err) {
         if (err?.name !== 'RenderingCancelledException') {
           console.error('Error rendering page:', err);
@@ -123,8 +128,9 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({
     renderPage();
 
     return () => {
-      if (renderTask) {
-        renderTask.cancel();
+      if (renderTaskRef.current) {
+        renderTaskRef.current.cancel();
+        renderTaskRef.current = null;
       }
     };
   }, [pdf, currentPage, scale]);
@@ -295,7 +301,7 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({
       <div className="flex-1 flex items-center justify-center p-4 overflow-hidden">
         <div 
           ref={containerRef}
-          className="pdf-container relative w-full h-full flex items-center justify-center"
+          className="pdf-container relative w-full h-full flex items-center justify-center max-w-4xl"
         >
           {/* Navigation Arrows */}
           <button
@@ -325,7 +331,7 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({
           </button>
 
           {/* PDF Canvas */}
-          <div className="relative bg-white shadow-2xl rounded-lg overflow-hidden">
+          <div className="relative bg-white shadow-2xl rounded-lg overflow-hidden max-w-full">
             {pageLoading && (
               <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
                 <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
@@ -333,7 +339,7 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({
             )}
             <canvas
               ref={canvasRef}
-              className="pdf-canvas block"
+              className="pdf-canvas block max-w-full h-auto"
             />
           </div>
         </div>
@@ -410,18 +416,17 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({
       {/* Custom CSS for PDF viewer */}
       <style jsx>{`
         .pdf-container {
-          width: 100%;
-          height: calc(100vh - 200px);
           display: flex;
           align-items: center;
           justify-content: center;
+          min-height: 400px;
+          max-height: calc(100vh - 200px);
         }
         
         .pdf-canvas {
-          width: 100% !important;
-          height: auto !important;
-          max-width: 100vw;
-          max-height: calc(100vh - 200px);
+          display: block;
+          max-width: 100%;
+          height: auto;
         }
       `}</style>
       

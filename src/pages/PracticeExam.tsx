@@ -35,8 +35,16 @@ interface Course {
   id: number;
   title: string | null;
   description: string | null;
-  exam_number_of_questions: number | null;
-  exam_duration_minutes: number | null;
+}
+
+interface Exam {
+  id: string;
+  title: string;
+  description: string | null;
+  number_of_questions: number | null;
+  passing_percentage: number | null;
+  is_active: boolean | null;
+  course_id: string;
 }
 
 interface ExamQuestion {
@@ -63,6 +71,7 @@ const PracticeExam: React.FC = () => {
   const [headerLogo, setHeaderLogo] = useState<HeaderLogo | null>(null);
   
   const [course, setCourse] = useState<Course | null>(null);
+  const [exam, setExam] = useState<Exam | null>(null);
   const [questions, setQuestions] = useState<ExamQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [questionStates, setQuestionStates] = useState<QuestionState[]>([]);
@@ -112,7 +121,7 @@ const PracticeExam: React.FC = () => {
         // Fetch course details
         const { data: courseData, error: courseError } = await supabase
           .from('courses_ats')
-          .select('id, title, description, exam_number_of_questions, exam_duration_minutes')
+          .select('id, title, description')
           .eq('id', courseId)
           .single();
 
@@ -123,6 +132,30 @@ const PracticeExam: React.FC = () => {
         }
 
         setCourse(courseData);
+
+        // Fetch exam details for this course
+        const { data: examData, error: examError } = await supabase
+          .from('exams')
+          .select('*')
+          .eq('course_id', courseId)
+          .eq('is_active', true)
+          .single();
+
+        if (examError) {
+          console.error('Error fetching exam:', examError);
+          // Use defaults if no exam found
+          setExam({
+            id: 'default',
+            title: 'Practice Exam',
+            description: null,
+            number_of_questions: 50,
+            passing_percentage: 70,
+            is_active: true,
+            course_id: courseId
+          });
+        } else {
+          setExam(examData);
+        }
 
         // Fetch practice questions for this course (using same questions as practice)
         const { data: questionsData, error: questionsError } = await supabase
@@ -142,9 +175,13 @@ const PracticeExam: React.FC = () => {
           return;
         }
 
-        // Use course settings or defaults
-        const questionCount = courseData.exam_number_of_questions || 50;
-        const examDuration = courseData.exam_duration_minutes || 60;
+        // Use exam settings or defaults
+        const currentExam = examData || {
+          number_of_questions: 50,
+          passing_percentage: 70
+        };
+        
+        const questionCount = currentExam.number_of_questions || 50;
 
         // Randomize and limit questions
         const shuffledQuestions = [...questionsData].sort(() => Math.random() - 0.5);
@@ -156,6 +193,7 @@ const PracticeExam: React.FC = () => {
         })));
 
         // Set timer
+        const examDuration = 60; // Default duration
         setTimeRemaining(examDuration * 60); // Convert to seconds
         setExamStartTime(new Date());
 
@@ -168,7 +206,6 @@ const PracticeExam: React.FC = () => {
     };
 
     fetchData();
-  }, [courseId, user]);
 
   // Timer countdown
   useEffect(() => {
@@ -228,7 +265,7 @@ const PracticeExam: React.FC = () => {
   };
 
   const handleSubmitExam = async () => {
-    if (!user || !course) return;
+    if (!user || !course || !exam) return;
 
     try {
       // Calculate score
@@ -240,7 +277,7 @@ const PracticeExam: React.FC = () => {
       });
 
       const percentage = Math.round((correctAnswers / questions.length) * 100);
-      const passingScore = 70; // Default passing score
+      const passingScore = exam.passing_percentage || 70;
       const passed = percentage >= passingScore;
 
       setExamResults({
@@ -266,7 +303,7 @@ const PracticeExam: React.FC = () => {
               is_correct: state.selectedAnswer === questions[index].correct_answer
             })),
             score: percentage,
-            duration_minutes: course.exam_duration_minutes || 60,
+            duration_minutes: 60, // Default duration
             is_submitted: true
           }
         ]);
@@ -435,9 +472,18 @@ const PracticeExam: React.FC = () => {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                {course.title || 'Course Practice Exam'}
+                {exam?.title || course.title || 'Practice Exam'}
               </h1>
-              <p className="text-gray-600">Final assessment for course completion</p>
+              <p className="text-gray-600">
+                {exam?.description || 'Final assessment for course completion'}
+              </p>
+              {exam && (
+                <div className="mt-2 text-sm text-gray-500">
+                  <span>Questions: {exam.number_of_questions || 50}</span>
+                  <span className="mx-2">•</span>
+                  <span>Passing Score: {exam.passing_percentage || 70}%</span>
+                </div>
+              )}
             </div>
             <Link
               to={`/student/courses/${courseId}`}
