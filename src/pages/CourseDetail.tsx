@@ -198,7 +198,7 @@ const generateCertificate = async () => {
       .select('*')
       .eq('student_id', user.id)
       .eq('course_id', courseId)
-      .single();
+      .maybeSingle();
 
     if (existing) {
       console.log('Certificate already exists, skipping creation.');
