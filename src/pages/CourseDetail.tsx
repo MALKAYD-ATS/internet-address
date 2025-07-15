@@ -189,15 +189,47 @@ const CourseDetail: React.FC = () => {
     }
   }, [courseProgress, user, course]);
 
-  const generateCertificate = async () => {
-    try {
-      // TODO: Implement certificate generation
-      console.log('Generating certificate for course completion');
-      // This would integrate with Supabase Storage for PDF template
-    } catch (error) {
-      console.error('Error generating certificate:', error);
+const generateCertificate = async () => {
+  try {
+    // Check if certificate already exists
+    const { data: existing, error: existingError } = await supabase
+      .from('student_certificates')
+      .select('*')
+      .eq('student_id', user.id)
+      .eq('course_id', courseId)
+      .single();
+
+    if (existing) {
+      console.log('Certificate already exists, skipping creation.');
+      return;
     }
-  };
+
+    if (existingError && existingError.details && !existingError.message.includes('No rows')) {
+      throw existingError;
+    }
+
+    // Insert certificate
+    const { error: insertError } = await supabase
+      .from('student_certificates')
+      .insert([
+        {
+          student_id: user.id,
+          course_id: courseId,
+          issued_at: new Date().toISOString(),
+          url: null // or a URL if you have a generated PDF
+        }
+      ]);
+
+    if (insertError) {
+      console.error('Error inserting certificate:', insertError);
+      throw insertError;
+    }
+
+    console.log('Certificate generated successfully!');
+  } catch (error) {
+    console.error('Error generating certificate:', error);
+  }
+};
 
   const fetchCourseData = async () => {
     try {
