@@ -988,12 +988,12 @@ const Home: React.FC = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
-              href="https://calendly.com/majid-abtraining/30min"
-              target="_blank"
+              href="https://calendar.google.com/calendar/appointments/schedules/AcZssZ2bz2nYWBjGWvZBrsOogdaD5_c4M5O0tPpz_Rt9nhc8WM5TvyzpLQY2cdvQaUiQHHko4HW6gjON?gv=true"
+              target="_blank" 
               rel="noopener noreferrer"
               className="bg-white text-blue-900 hover:bg-gray-100 px-8 py-4 rounded-lg text-lg font-semibold transition-all duration-300 transform hover:scale-105"
             >
-              Schedule Consultation
+              Book An Appointment
             </a>
             <Link
               to="/training"
