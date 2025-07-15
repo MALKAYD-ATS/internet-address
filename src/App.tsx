@@ -23,7 +23,8 @@ function App() {
           <Route path="/training" element={<Layout><Training /></Layout>} />
           <Route path="/indigenous-relations" element={<Layout><IndigenousRelations /></Layout>} />
           <Route path="/dashboard" element={<Layout><StudentDashboard /></Layout>} />
-          
+          <Route path="/sign-up" element={<Layout><SignUp /></Layout>} />
+
           {/* Login page without layout */}
           <Route path="/login" element={<Login />} />
           
