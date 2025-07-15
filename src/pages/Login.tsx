@@ -113,7 +113,7 @@ const Login: React.FC = () => {
               Log in to your Account
             </h2>
             <p className="mt-2 text-gray-600">
-              Welcome back! Select method to log in:
+              Welcome to the ATS Student Portal:
             </p>
           </div>
 
