@@ -12,6 +12,7 @@ import Portal from './pages/Portal';
 import CourseDetail from './pages/CourseDetail';
 import PracticeQuestions from './pages/PracticeQuestions';
 import PracticeExam from './pages/PracticeExam';
+import SignUp from './pages/SignUp';
 
 function App() {
   return (
