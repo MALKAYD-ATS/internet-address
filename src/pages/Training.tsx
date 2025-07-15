@@ -277,12 +277,12 @@ const Training: React.FC = () => {
                       </div>
 
                       {/* Course Title */}
-                      <h3 className="text-xl font-semibold text-gray-900 mb-3 line-clamp-2">
+                      <h3 className="text-xl font-semibold text-gray-900 mb-3">
                         {course.title}
                       </h3>
 
                       {/* Course Description */}
-                      <p className="text-gray-600 mb-4 flex-grow line-clamp-3">
+                      <p className="text-gray-600 mb-4 flex-grow">
                         {course.description}
                       </p>
 
