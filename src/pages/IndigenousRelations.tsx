@@ -427,7 +427,7 @@ const IndigenousRelations: React.FC = () => {
                 {titleSection?.text || 'Keepers of the land, keepers of the data, and keepers of the environment'}
               </p>
               <p className="text-base sm:text-lg md:text-xl lg:text-2xl mb-6 sm:mb-8 text-white max-w-4xl mx-auto leading-relaxed bg-black/50 backdrop-blur-md rounded-lg p-4 sm:p-6 shadow-2xl border border-white/20">
-                {titleSection?.slogan || 'Honoring Indigenous values while advancing drone technology for environmental protection, community service, and cultural preservation.'}
+                {titleSection?.slogan || 'Honoring Indigenous values while advancing RPAS technology for environmental protection, community service, and cultural preservation.'}
               </p>
             </div>
           </div>
