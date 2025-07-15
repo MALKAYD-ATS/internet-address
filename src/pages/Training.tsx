@@ -322,7 +322,7 @@ const Training: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
                   {currentCourses.map((course) => (
                     <div key={course.id} className="bg-white rounded-xl shadow-lg overflow-hidden transform transition-all duration-500 hover:scale-105 hover:shadow-2xl">
-                      <div className="relative h-96 perspective-1000">
+                      <div className="relative min-h-[500px] max-h-[600px] perspective-1000">
                         <div
                           className={`relative w-full h-full transition-transform duration-700 transform-style-preserve-3d ${
                             flippedCards.has(course.id) ? 'rotate-y-180' : ''
@@ -330,7 +330,7 @@ const Training: React.FC = () => {
                         >
                           {/* Front of Card */}
                           <div className="absolute inset-0 w-full h-full backface-hidden">
-                            <div className="p-6 h-full flex flex-col">
+                            <div className="p-6 h-full flex flex-col overflow-y-auto">
                         {/* Course Header */}
                         <div className="mb-4">
                           <div className="flex flex-wrap gap-2 mb-3">
@@ -379,9 +379,10 @@ const Training: React.FC = () => {
 
                         {/* What's Included */}
                         {course.whatsIncluded.length > 0 && (
-                          <div className="mb-4">
+                          <div className="mb-4 flex-shrink-0">
                             <h4 className="font-semibold text-gray-900 mb-2 text-sm">What's Included:</h4>
-                            <ul className="space-y-1">
+                            <div className="max-h-24 overflow-y-auto">
+                              <ul className="space-y-1">
                               {course.whatsIncluded.slice(0, 3).map((item, index) => (
                                 <li key={index} className="flex items-start text-xs">
                                   <CheckCircle className="h-3 w-3 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
@@ -393,19 +394,22 @@ const Training: React.FC = () => {
                                   +{course.whatsIncluded.length - 3} more features...
                                 </li>
                               )}
-                            </ul>
+                              </ul>
+                            </div>
                           </div>
                         )}
 
                         {/* Action Buttons */}
-                        <div className="flex flex-col gap-2 mt-auto">
+                        <div className="flex flex-col gap-2 mt-auto flex-shrink-0 sticky bottom-0 bg-white pt-2">
                           <button className="w-full bg-blue-700 hover:bg-blue-800 text-white py-2.5 px-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 flex items-center justify-center text-sm">
                             <span>Register Now</span>
                             <ArrowRight className="ml-2 h-4 w-4" />
                           </button>
-                          <button className="w-full border-2 border-gray-300 hover:border-blue-700 hover:text-blue-700 text-gray-700 py-2.5 px-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 text-sm">
+                          <button
                             onClick={() => toggleCardFlip(course.id)}
                             className="w-full border-2 border-gray-300 hover:border-blue-700 hover:text-blue-700 text-gray-700 py-2.5 px-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 text-sm"
+                          >
+                            Learn More
                           </button>
                         </div>
                             </div>
@@ -413,8 +417,8 @@ const Training: React.FC = () => {
 
                           {/* Back of Card */}
                           <div className="absolute inset-0 w-full h-full backface-hidden rotate-y-180">
-                            <div className="p-6 h-full flex flex-col bg-gradient-to-br from-blue-50 to-blue-100">
-                              <div className="flex items-center justify-between mb-4">
+                            <div className="p-6 h-full flex flex-col bg-gradient-to-br from-blue-50 to-blue-100 overflow-y-auto">
+                              <div className="flex items-center justify-between mb-4 flex-shrink-0 sticky top-0 bg-gradient-to-br from-blue-50 to-blue-100 pb-2">
                                 <h3 className="text-xl font-bold text-gray-900">{course.title}</h3>
                                 <button
                                   onClick={() => toggleCardFlip(course.id)}
@@ -425,7 +429,7 @@ const Training: React.FC = () => {
                               </div>
                               
                               {/* Full Description */}
-                              <div className="flex-1 overflow-y-auto mb-4">
+                              <div className="flex-1 mb-4 overflow-y-auto">
                                 <h4 className="font-semibold text-gray-900 mb-3">Course Description</h4>
                                 <p className="text-gray-700 leading-relaxed mb-4">
                                   {course.description}
@@ -474,7 +478,7 @@ const Training: React.FC = () => {
                               </div>
                               
                               {/* Action Buttons on Back */}
-                              <div className="flex flex-col gap-2">
+                              <div className="flex flex-col gap-2 flex-shrink-0 sticky bottom-0 bg-gradient-to-br from-blue-50 to-blue-100 pt-2">
                                 <button className="w-full bg-blue-700 hover:bg-blue-800 text-white py-2.5 px-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 flex items-center justify-center text-sm">
                                   <span>Register Now</span>
                                   <ArrowRight className="ml-2 h-4 w-4" />
