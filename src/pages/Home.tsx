@@ -935,7 +935,7 @@ const handleSubmit = async (e: React.FormEvent) => {
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
               Real testimonials from graduates who have advanced their careers through 
-              professional drone training at Aboriginal Training Services.
+              professional RPAS training at Aboriginal Training Services.
             </p>
           </div>
           
