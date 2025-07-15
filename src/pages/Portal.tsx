@@ -99,6 +99,16 @@ const Portal: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [profileLoading, setProfileLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Profile editing states
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingProfile, setEditingProfile] = useState({
+    full_name: '',
+    phone_number: ''
+  });
+  const [updateLoading, setUpdateLoading] = useState(false);
+  const [updateError, setUpdateError] = useState<string | null>(null);
+  const [updateSuccess, setUpdateSuccess] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -175,6 +185,16 @@ const Portal: React.FC = () => {
     fetchData();
   }, [user]);
 
+  // Initialize editing profile when profile data is loaded
+  useEffect(() => {
+    if (profile) {
+      setEditingProfile({
+        full_name: profile.full_name || '',
+        phone_number: profile.phone_number || ''
+      });
+    }
+  }, [profile]);
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -190,6 +210,87 @@ const Portal: React.FC = () => {
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  const handleEditProfile = () => {
+    setIsEditing(true);
+    setUpdateError(null);
+    setUpdateSuccess(false);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setUpdateError(null);
+    setUpdateSuccess(false);
+    // Reset to original values
+    if (profile) {
+      setEditingProfile({
+        full_name: profile.full_name || '',
+        phone_number: profile.phone_number || ''
+      });
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setEditingProfile(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user || !profile) return;
+
+    // Verify session before updating
+    const session = await verifySession();
+    if (!session) {
+      navigate('/login', { replace: true });
+      return;
+    }
+
+    try {
+      setUpdateLoading(true);
+      setUpdateError(null);
+
+      // Update student profile
+      const { error: profileError } = await supabase
+        .from('students')
+        .update({
+          full_name: editingProfile.full_name.trim(),
+          phone_number: editingProfile.phone_number.trim() || null
+        })
+        .eq('id', user.id);
+
+      if (profileError) {
+        if (profileError.message.includes('JWT')) {
+          await logout();
+          return;
+        }
+        throw profileError;
+      }
+
+      // Update local state
+      setProfile(prev => prev ? {
+        ...prev,
+        full_name: editingProfile.full_name.trim(),
+        phone_number: editingProfile.phone_number.trim() || null
+      } : null);
+
+      setIsEditing(false);
+      setUpdateSuccess(true);
+      
+      // Hide success message after 3 seconds
+      setTimeout(() => {
+        setUpdateSuccess(false);
+      }, 3000);
+
+    } catch (err) {
+      console.error('Error updating profile:', err);
+      setUpdateError('Failed to update profile. Please try again.');
+    } finally {
+      setUpdateLoading(false);
+    }
   };
 
   if (loading || profileLoading) {
@@ -489,20 +590,104 @@ const Portal: React.FC = () => {
           <div className="space-y-6">
             <div className="bg-white rounded-lg shadow">
               <div className="p-6 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900">Profile Information</h2>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-900">Profile Information</h2>
+                  {!isEditing ? (
+                    <button
+                      onClick={handleEditProfile}
+                      className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      <Settings className="w-4 h-4" />
+                      <span>Edit Profile</span>
+                    </button>
+                  ) : (
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={handleCancelEdit}
+                        disabled={updateLoading}
+                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors disabled:opacity-50"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleSaveProfile}
+                        disabled={updateLoading || !editingProfile.full_name.trim()}
+                        className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                      >
+                        {updateLoading ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <CheckCircle className="w-4 h-4" />
+                        )}
+                        <span>{updateLoading ? 'Saving...' : 'Save Changes'}</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="p-6">
+                {/* Success Message */}
+                {updateSuccess && (
+                  <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center">
+                      <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
+                      <span className="text-green-800 font-medium">Profile updated successfully!</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Error Message */}
+                {updateError && (
+                  <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="flex items-center">
+                      <AlertCircle className="w-5 h-5 text-red-600 mr-2" />
+                      <span className="text-red-800">{updateError}</span>
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-4">
+                  {/* Student ID - Read Only */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Student ID
+                    </label>
+                    <div className="flex items-center space-x-2">
+                      <User className="w-5 h-5 text-gray-400" />
+                      <span className="text-gray-900 font-mono bg-gray-50 px-3 py-2 rounded border">
+                        {profile.id}
+                      </span>
+                      <span className="text-xs text-gray-500">(Read-only)</span>
+                    </div>
+                  </div>
+
+                  {/* Full Name - Editable */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Full Name
                     </label>
-                    <div className="flex items-center space-x-2">
-                      <User className="w-5 h-5 text-gray-400" />
-                      <span className="text-gray-900">{profile.full_name}</span>
-                    </div>
+                    {isEditing ? (
+                      <div className="flex items-center space-x-2">
+                        <User className="w-5 h-5 text-gray-400" />
+                        <input
+                          type="text"
+                          name="full_name"
+                          value={editingProfile.full_name}
+                          onChange={handleInputChange}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="Enter your full name"
+                          required
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-2">
+                        <User className="w-5 h-5 text-gray-400" />
+                        <span className="text-gray-900">{profile.full_name}</span>
+                      </div>
+                    )}
                   </div>
                   
+                  {/* Email - Read Only (managed by Supabase Auth) */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Email
@@ -510,21 +695,38 @@ const Portal: React.FC = () => {
                     <div className="flex items-center space-x-2">
                       <Mail className="w-5 h-5 text-gray-400" />
                       <span className="text-gray-900">{user?.email}</span>
+                      <span className="text-xs text-gray-500">(Managed by account settings)</span>
                     </div>
                   </div>
 
-                  {profile.phone_number && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Phone Number
-                      </label>
+                  {/* Phone Number - Editable */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Phone Number
+                    </label>
+                    {isEditing ? (
                       <div className="flex items-center space-x-2">
                         <Phone className="w-5 h-5 text-gray-400" />
-                        <span className="text-gray-900">{profile.phone_number}</span>
+                        <input
+                          type="tel"
+                          name="phone_number"
+                          value={editingProfile.phone_number}
+                          onChange={handleInputChange}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="Enter your phone number (optional)"
+                        />
                       </div>
-                    </div>
-                  )}
+                    ) : (
+                      <div className="flex items-center space-x-2">
+                        <Phone className="w-5 h-5 text-gray-400" />
+                        <span className="text-gray-900">
+                          {profile.phone_number || 'Not provided'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
 
+                  {/* Member Since - Read Only */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Member Since
