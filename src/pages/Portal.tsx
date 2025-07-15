@@ -627,10 +627,12 @@ const Portal: React.FC = () => {
     checkSession();
   }, [navigate, loading]);
       year: 'numeric',
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
       month: 'long',
       day: 'numeric'
     });
-  };
 
   const getLevelColor = (level: string | null) => {
     if (!level) return 'bg-gray-100 text-gray-800';

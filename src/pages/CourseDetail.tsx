@@ -350,18 +350,6 @@ const CourseDetail: React.FC = () => {
         ], { 
           onConflict: 'student_id,course_id,module_id'
         });
-        .from('student_module_progress')
-        .upsert([
-          {
-            student_id: user.id,
-            course_id: courseId,
-            module_id: moduleId,
-            completed: true,
-            completed_at: new Date().toISOString(),
-          }
-        ], { 
-          onConflict: 'student_id,course_id,module_id'
-        });
 
       if (error) {
         if (error.message.includes('JWT')) {
