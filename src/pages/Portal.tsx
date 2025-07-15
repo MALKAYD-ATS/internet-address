@@ -253,6 +253,10 @@ const Portal: React.FC = () => {
       setUpdateLoading(true);
       setUpdateError(null);
 
+      console.log('Updating profile for user ID:', user.id);
+      console.log('Current profile data:', profile);
+      console.log('New profile data:', editingProfile);
+
       // Update student profile
       const { error: profileError } = await supabase
         .from('students')
@@ -263,6 +267,7 @@ const Portal: React.FC = () => {
         .eq('id', user.id);
 
       if (profileError) {
+        console.error('Profile update error:', profileError);
         if (profileError.message.includes('JWT')) {
           await logout();
           return;
@@ -270,11 +275,13 @@ const Portal: React.FC = () => {
         throw profileError;
       }
 
+      console.log('Profile updated successfully in database');
+
       // Update local state
       setProfile(prev => prev ? {
         ...prev,
         full_name: editingProfile.full_name.trim(),
-        phone_number: editingProfile.phone_number.trim() || null
+        phone_number: editingProfile.phone_number.trim() || ''
       } : null);
 
       setIsEditing(false);
@@ -287,7 +294,7 @@ const Portal: React.FC = () => {
 
     } catch (err) {
       console.error('Error updating profile:', err);
-      setUpdateError('Failed to update profile. Please try again.');
+      setUpdateError(`Failed to update profile: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setUpdateLoading(false);
     }
