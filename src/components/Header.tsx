@@ -100,13 +100,11 @@ const Header: React.FC = () => {
             <div className="flex items-center space-x-2 sm:space-x-6">
               <div className="flex items-center space-x-1 sm:space-x-2">
                 <Phone className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden xs:inline">+1 (587) 524-0275</span>
-                <span className="xs:hidden">Call</span>
+                <span className="">+1 (587) 524-0275</span>
               </div>
               <div className="flex items-center space-x-1 sm:space-x-2">
                 <Mail className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">darcy@abtraining.ca</span>
-                <span className="sm:hidden">Email</span>
+                <span className="">darcy@abtraining.ca</span>
               </div>
             </div>
             <div className="hidden md:block">
