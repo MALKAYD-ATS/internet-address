@@ -658,7 +658,7 @@ const IndigenousRelations: React.FC = () => {
                 Indigenous-Focused Applications
               </h2>
               <p className="text-lg sm:text-xl text-white max-w-3xl mx-auto leading-relaxed bg-black/50 backdrop-blur-md rounded-lg p-4 shadow-2xl border border-white/20">
-                Specific ways we apply drone technology to serve Indigenous communities 
+                Specific ways we apply RPAS technology to serve Indigenous communities 
                 and support cultural and environmental objectives.
               </p>
             </div>
