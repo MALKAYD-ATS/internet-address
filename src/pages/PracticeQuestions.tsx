@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase';
+import { supabase, verifySession, logout } from '../lib/supabase';
 
 interface HeaderLogo {
   id: string;
@@ -97,9 +97,19 @@ const PracticeQuestions: React.FC = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!courseId || !user) return;
+      if (!courseId || !user) {
+        navigate('/login', { replace: true });
+        return;
+      }
+
+      const session = await verifySession();
+      if (!session) {
+        navigate('/login', { replace: true });
+        return;
+      }
 
       try {
+        console.log('Fetching practice questions data...');
         setLoading(true);
         setError(null);
 
@@ -111,6 +121,10 @@ const PracticeQuestions: React.FC = () => {
           .single();
 
         if (courseError) {
+          if (courseError.message.includes('JWT')) {
+            await logout();
+            return;
+          }
           setError('Course not found.');
           console.error('Error fetching course:', courseError);
           return;
@@ -125,6 +139,10 @@ const PracticeQuestions: React.FC = () => {
           .eq('course_id', courseId);
 
         if (questionsError) {
+          if (questionsError.message.includes('JWT')) {
+            await logout();
+            return;
+          }
           console.error('Error fetching questions:', questionsError);
           setError('Failed to load practice questions.');
           return;
@@ -156,12 +174,11 @@ const PracticeQuestions: React.FC = () => {
     };
 
     fetchData();
-  }, [courseId, user]);
+  }, [courseId, user, navigate]);
 
   const handleSignOut = async () => {
     try {
-      await signOut();
-      navigate('/login');
+      await logout();
     } catch (error) {
       console.error('Sign out error:', error);
     }

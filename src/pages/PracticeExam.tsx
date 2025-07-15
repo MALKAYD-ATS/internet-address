@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase';
+import { supabase, verifySession, logout } from '../lib/supabase';
 import { 
   ArrowLeft, 
   BookOpen, 
@@ -103,9 +103,19 @@ const PracticeExam: React.FC = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!courseId || !user) return;
+      if (!courseId || !user) {
+        navigate('/login', { replace: true });
+        return;
+      }
+
+      const session = await verifySession();
+      if (!session) {
+        navigate('/login', { replace: true });
+        return;
+      }
 
       try {
+        console.log('Fetching practice exam data...');
         setLoading(true);
         setError(null);
 
@@ -117,6 +127,10 @@ const PracticeExam: React.FC = () => {
           .single();
 
         if (courseError) {
+          if (courseError.message.includes('JWT')) {
+            await logout();
+            return;
+          }
           setError('Course not found.');
           console.error('Error fetching course:', courseError);
           return;
@@ -131,6 +145,10 @@ const PracticeExam: React.FC = () => {
           .eq('course_id', courseId);
 
         if (questionsError) {
+          if (questionsError.message.includes('JWT')) {
+            await logout();
+            return;
+          }
           console.error('Error fetching questions:', questionsError);
           setError('Failed to load exam questions.');
           return;
@@ -168,7 +186,7 @@ const PracticeExam: React.FC = () => {
     };
 
     fetchData();
-  }, [courseId, user]);
+  }, [courseId, user, navigate]);
 
   // Timer countdown
   useEffect(() => {
@@ -200,8 +218,7 @@ const PracticeExam: React.FC = () => {
 
   const handleSignOut = async () => {
     try {
-      await signOut();
-      navigate('/login');
+      await logout();
     } catch (error) {
       console.error('Sign out error:', error);
     }
@@ -230,7 +247,14 @@ const PracticeExam: React.FC = () => {
   const handleSubmitExam = async () => {
     if (!user || !course) return;
 
+    const session = await verifySession();
+    if (!session) {
+      navigate('/login', { replace: true });
+      return;
+    }
+
     try {
+      console.log('Submitting exam...');
       // Calculate score
       let correctAnswers = 0;
       questions.forEach((question, index) => {
@@ -272,12 +296,21 @@ const PracticeExam: React.FC = () => {
         ]);
 
       if (error) {
+        if (error.message.includes('JWT')) {
+          await logout();
+          return;
+        }
         console.error('Error saving exam attempt:', error);
       }
 
+      console.log('Exam submitted successfully');
       setIsSubmitted(true);
     } catch (error) {
       console.error('Error submitting exam:', error);
+      
+      if (error instanceof Error && error.message.includes('JWT')) {
+        await logout();
+      }
     }
   };
 

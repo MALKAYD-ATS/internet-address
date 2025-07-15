@@ -3,7 +3,111 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    storage: localStorage,
+    autoRefreshToken: true,
+    detectSessionInUrl: true
+  }
+})
+
+// Helper function to verify active session
+export const verifySession = async () => {
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    
+    if (error) {
+      console.error('Error getting session:', error);
+      await handleAuthError();
+      return null;
+    }
+    
+    if (!session) {
+      console.warn('No valid session found');
+      return null;
+    }
+    
+    // Check if session is expired or about to expire (within 5 minutes)
+    const now = Math.floor(Date.now() / 1000);
+    const expiresAt = session.expires_at || 0;
+    
+    if (expiresAt - now < 300) { // Less than 5 minutes remaining
+      console.log('Session expiring soon, attempting refresh...');
+      return await refreshSessionSafely();
+    }
+    
+    return session;
+  } catch (error) {
+    console.error('Unexpected error verifying session:', error);
+    await handleAuthError();
+    return null;
+  }
+};
+
+// Helper function to safely refresh session
+export const refreshSessionSafely = async () => {
+  try {
+    const { data: { session: refreshedSession }, error } = await supabase.auth.refreshSession();
+    
+    if (error) {
+      console.error('Error refreshing session:', error);
+      await handleAuthError();
+      return null;
+    }
+    
+    if (!refreshedSession) {
+      console.warn('No session returned after refresh');
+      await handleAuthError();
+      return null;
+    }
+    
+    console.log('Session refreshed successfully');
+    return refreshedSession;
+  } catch (error) {
+    console.error('Unexpected error refreshing session:', error);
+    await handleAuthError();
+    return null;
+  }
+};
+
+// Helper function to handle authentication errors
+export const handleAuthError = async () => {
+  try {
+    console.log('Handling auth error: clearing session and redirecting to login');
+    await supabase.auth.signOut();
+    localStorage.clear();
+    
+    // Only redirect if not already on login page
+    if (window.location.pathname !== '/login') {
+      window.location.href = '/login';
+    }
+  } catch (error) {
+    console.error('Error during auth error handling:', error);
+    // Force redirect even if signOut fails
+    localStorage.clear();
+    if (window.location.pathname !== '/login') {
+      window.location.href = '/login';
+    }
+  }
+};
+
+// Enhanced logout function
+export const logout = async () => {
+  try {
+    console.log('Logging out user...');
+    await supabase.auth.signOut();
+    localStorage.clear();
+    sessionStorage.clear(); // Clear session storage as well
+    window.location.href = '/login';
+  } catch (error) {
+    console.error('Error during logout:', error);
+    // Force logout even if signOut fails
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.href = '/login';
+  }
+};
 
 export type Database = {
   public: {

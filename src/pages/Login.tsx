@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { supabase, verifySession } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { ArrowLeft, Plane, Shield, Award, Users } from 'lucide-react';
 
@@ -10,25 +10,74 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { signIn } = useAuth();
+  const { signIn, user } = useAuth();
+
+  // Redirect if already logged in
+  React.useEffect(() => {
+    const checkExistingSession = async () => {
+      if (user) {
+        console.log('User already logged in, redirecting to portal');
+        navigate('/portal', { replace: true });
+        return;
+      }
+      
+      // Double-check with session verification
+      try {
+        const session = await verifySession();
+        if (session) {
+          console.log('Valid session found, redirecting to portal');
+          navigate('/portal', { replace: true });
+        }
+      } catch (error) {
+        console.log('No valid session found, staying on login page');
+      }
+    };
+
+    checkExistingSession();
+  }, [user, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email || !password) {
+      setError('Please enter both email and password');
+      return;
+    }
+    
     setLoading(true);
     setError('');
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      console.log('Attempting login for:', email);
+      
+      const { error } = await signIn(email, password);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Login error:', error);
+        
+        // Provide user-friendly error messages
+        if (error.message.includes('Invalid login credentials')) {
+          setError('Invalid email or password. Please check your credentials and try again.');
+        } else if (error.message.includes('Email not confirmed')) {
+          setError('Please check your email and click the confirmation link before logging in.');
+        } else if (error.message.includes('Too many requests')) {
+          setError('Too many login attempts. Please wait a few minutes before trying again.');
+        } else {
+          setError(error.message || 'An error occurred during login. Please try again.');
+        }
+        return;
+      }
 
-      // Navigate to portal after successful login
-      navigate('/portal');
+      console.log('Login successful, redirecting to portal');
+      
+      // Small delay to ensure auth state is updated
+      setTimeout(() => {
+        navigate('/portal', { replace: true });
+      }, 100);
+      
     } catch (error: any) {
-      setError(error.message);
+      console.error('Unexpected login error:', error);
+      setError('An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);
     }

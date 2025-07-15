@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, verifySession, logout } from '../lib/supabase';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { 
@@ -154,8 +154,19 @@ const CourseDetail: React.FC = () => {
 
   useEffect(() => {
     if (courseId) {
-      fetchCourseData();
-      fetchModuleProgress();
+      // Verify session before fetching data
+      const initializeData = async () => {
+        const session = await verifySession();
+        if (!session) {
+          navigate('/login', { replace: true });
+          return;
+        }
+        
+        fetchCourseData();
+        fetchModuleProgress();
+      };
+      
+      initializeData();
     }
   }, [courseId, user]);
 
@@ -190,6 +201,7 @@ const CourseDetail: React.FC = () => {
 
   const fetchCourseData = async () => {
     try {
+      console.log('Fetching course data for:', courseId);
       setLoading(true);
       
       // Fetch course details
@@ -199,7 +211,13 @@ const CourseDetail: React.FC = () => {
         .eq('id', courseId)
         .single();
 
-      if (courseError) throw courseError;
+      if (courseError) {
+        if (courseError.message.includes('JWT')) {
+          await logout();
+          return;
+        }
+        throw courseError;
+      }
       setCourse(courseData);
 
       // Fetch modules with lessons and resources
@@ -215,7 +233,13 @@ const CourseDetail: React.FC = () => {
         .eq('course_id', courseId)
         .order('order');
 
-      if (modulesError) throw modulesError;
+      if (modulesError) {
+        if (modulesError.message.includes('JWT')) {
+          await logout();
+          return;
+        }
+        throw modulesError;
+      }
 
       const formattedModules = modulesData.map(module => ({
         id: module.id,
@@ -246,14 +270,27 @@ const CourseDetail: React.FC = () => {
   const fetchModuleProgress = async () => {
     if (!user) return;
 
+    const session = await verifySession();
+    if (!session) {
+      navigate('/login', { replace: true });
+      return;
+    }
+
     try {
+      console.log('Fetching module progress...');
       const { data, error } = await supabase
         .from('student_module_progress')
         .select('*')
         .eq('student_id', user.id)
         .eq('course_id', courseId);
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('JWT')) {
+          await logout();
+          return;
+        }
+        throw error;
+      }
       setModuleProgress(data || []);
     } catch (err) {
       console.error('Error fetching module progress:', err);
@@ -290,7 +327,14 @@ const CourseDetail: React.FC = () => {
   const handleMarkLessonComplete = async (lessonId: string, moduleId: string) => {
     if (!user) return;
 
+    const session = await verifySession();
+    if (!session) {
+      navigate('/login', { replace: true });
+      return;
+    }
+
     try {
+      console.log('Marking lesson complete:', lessonId);
       setCompletingLesson(lessonId);
 
       const { error } = await supabase
@@ -306,15 +350,40 @@ const CourseDetail: React.FC = () => {
         ], { 
           onConflict: 'student_id,course_id,module_id'
         });
+        .from('student_module_progress')
+        .upsert([
+          {
+            student_id: user.id,
+            course_id: courseId,
+            module_id: moduleId,
+            completed: true,
+            completed_at: new Date().toISOString(),
+          }
+        ], { 
+          onConflict: 'student_id,course_id,module_id'
+        });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('JWT')) {
+          await logout();
+          return;
+        }
+        throw error;
+      }
 
       // Refresh progress data
+      console.log('Lesson marked complete, refreshing progress...');
       await fetchModuleProgress();
       
       alert('Lesson marked as complete!');
     } catch (err) {
       console.error('Error marking lesson complete:', err);
+      
+      if (err instanceof Error && err.message.includes('JWT')) {
+        await logout();
+        return;
+      }
+      
       alert('Failed to mark lesson as complete');
     } finally {
       setCompletingLesson(null);
@@ -398,6 +467,20 @@ const CourseDetail: React.FC = () => {
       moduleId: null,
     });
   };
+
+  // Add session verification on component mount
+  useEffect(() => {
+    const checkSession = async () => {
+      if (!user) return;
+      
+      const session = await verifySession();
+      if (!session) {
+        navigate('/login', { replace: true });
+      }
+    };
+
+    checkSession();
+  }, [user, navigate]);
 
   const allModulesCompleted = modules.length > 0 && modules.every(module => isModuleCompleted(module.id));
 

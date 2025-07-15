@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { supabase, verifySession, logout } from '../lib/supabase';
 
 interface HeaderLogo {
   id: string;
@@ -91,6 +91,7 @@ interface StudentCertificate {
 const Portal: React.FC = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -148,12 +149,25 @@ const Portal: React.FC = () => {
   // Fetch student profile data
   useEffect(() => {
     const fetchProfile = async () => {
-      if (!user) return;
+      if (!user) {
+        console.log('No user found, redirecting to login');
+        navigate('/login', { replace: true });
+        return;
+      }
 
       try {
+        // Verify session before making authenticated requests
+        const session = await verifySession();
+        if (!session) {
+          console.log('No valid session, redirecting to login');
+          navigate('/login', { replace: true });
+          return;
+        }
+        
         setLoading(true);
         setError(null);
 
+        console.log('Fetching profile for user:', user.id);
         const { data, error } = await supabase
           .from('students')
           .select('*')
@@ -161,14 +175,20 @@ const Portal: React.FC = () => {
           .single();
 
         if (error) {
+          console.error('Error fetching profile:', error);
           if (error.code === 'PGRST116') {
             // No rows returned - profile doesn't exist
             setError('Profile data not found.');
+          } else if (error.message.includes('JWT')) {
+            // JWT/Auth related error
+            console.log('JWT error, redirecting to login');
+            await logout();
+            return;
           } else {
             setError('Failed to load profile data.');
           }
-          console.error('Error fetching profile:', error);
         } else {
+          console.log('Profile fetched successfully');
           setProfile(data);
           // Initialize profile form with current data
           setProfileForm({
@@ -180,6 +200,11 @@ const Portal: React.FC = () => {
         }
       } catch (err) {
         setError('An unexpected error occurred.');
+        
+        // If it's an auth-related error, redirect to login
+        if (err instanceof Error && err.message.includes('JWT')) {
+          await logout();
+        }
         console.error('Profile fetch error:', err);
       } finally {
         setLoading(false);
@@ -192,11 +217,22 @@ const Portal: React.FC = () => {
   // Fetch courses from Supabase
   useEffect(() => {
     const fetchCourses = async () => {
+      if (!user) return;
+      
       try {
+        // Verify session before making requests
+        const session = await verifySession();
+        if (!session) {
+          console.log('No valid session for courses fetch, redirecting to login');
+          navigate('/login', { replace: true });
+          return;
+        }
+        
         setLoadingCourses(true);
         setErrorCourses(null);
 
         // Query only active courses that are available online
+        console.log('Fetching courses...');
         const { data, error } = await supabase
           .from('courses_ats')
           .select('*')
@@ -205,10 +241,17 @@ const Portal: React.FC = () => {
           .order('title', { ascending: true });
 
         if (error) {
-          setErrorCourses('Failed to load courses.');
           console.error('Error fetching courses:', error);
+          
+          if (error.message.includes('JWT')) {
+            await logout();
+            return;
+          }
+          
+          setErrorCourses('Failed to load courses.');
         } else {
           setCourses(data || []);
+          console.log('Courses fetched successfully:', data?.length || 0);
         }
       } catch (err) {
         setErrorCourses('An unexpected error occurred while loading courses.');
@@ -219,7 +262,7 @@ const Portal: React.FC = () => {
     };
 
     fetchCourses();
-  }, []);
+  }, [user, navigate]);
 
   // Fetch user enrollments
   useEffect(() => {
@@ -227,6 +270,13 @@ const Portal: React.FC = () => {
       if (!user) return;
 
       try {
+        const session = await verifySession();
+        if (!session) {
+          navigate('/login', { replace: true });
+          return;
+        }
+        
+        console.log('Fetching enrollments...');
         const { data, error } = await supabase
           .from('enrollments')
           .select('*')
@@ -234,6 +284,11 @@ const Portal: React.FC = () => {
 
         if (error) {
           console.error('Error fetching enrollments:', error);
+          
+          if (error.message.includes('JWT')) {
+            await logout();
+            return;
+          }
         } else {
           setEnrollments(data || []);
         }
@@ -243,7 +298,7 @@ const Portal: React.FC = () => {
     };
 
     fetchEnrollments();
-  }, [user]);
+  }, [user, navigate]);
 
   // Fetch user certificates
   useEffect(() => {
@@ -251,6 +306,13 @@ const Portal: React.FC = () => {
       if (!user) return;
 
       try {
+        const session = await verifySession();
+        if (!session) {
+          navigate('/login', { replace: true });
+          return;
+        }
+        
+        console.log('Fetching certificates...');
         setLoadingCertificates(true);
         setErrorCertificates(null);
 
@@ -265,6 +327,11 @@ const Portal: React.FC = () => {
 
         if (error) {
           console.error('Error fetching certificates:', error);
+          
+          if (error.message.includes('JWT')) {
+            await logout();
+            return;
+          }
           setErrorCertificates('Failed to load certificates');
         } else {
           setCertificates(data || []);
@@ -278,7 +345,7 @@ const Portal: React.FC = () => {
     };
 
     fetchCertificates();
-  }, [user]);
+  }, [user, navigate]);
 
   // Check if user is enrolled in a course
   const isEnrolledInCourse = (courseId: number) => {
@@ -287,6 +354,13 @@ const Portal: React.FC = () => {
 
   // Handle course enrollment
   const handleEnrollment = async (course: Course) => {
+    // Check if user is authenticated
+    const session = await verifySession();
+    if (!session) {
+      navigate('/login', { replace: true });
+      return;
+    }
+    
     // Check if user is authenticated
     if (!user) {
       setEnrollmentMessage({
@@ -309,6 +383,7 @@ const Portal: React.FC = () => {
     setEnrollmentMessage(null);
 
     try {
+      console.log('Enrolling in course:', course.id);
       const { data, error } = await supabase
         .from('enrollments')
         .insert([
@@ -321,6 +396,11 @@ const Portal: React.FC = () => {
         .single();
 
       if (error) {
+        if (error.message.includes('JWT')) {
+          await logout();
+          return;
+        }
+        
         console.error('Enrollment error:', error);
         setEnrollmentMessage({
           type: 'error',
@@ -328,6 +408,7 @@ const Portal: React.FC = () => {
         });
       } else {
         // Add the new enrollment to local state
+        console.log('Enrollment successful');
         setEnrollments(prev => [...prev, data]);
         setEnrollmentMessage({
           type: 'success',
@@ -390,6 +471,13 @@ const Portal: React.FC = () => {
   const handleSaveProfile = async () => {
     if (!user || !profile) return;
 
+    const session = await verifySession();
+    if (!session) {
+      navigate('/login', { replace: true });
+      return;
+    }
+    
+    console.log('Saving profile changes...');
     setProfileLoading(true);
     setProfileMessage(null);
 
@@ -404,8 +492,14 @@ const Portal: React.FC = () => {
       }
 
       if (Object.keys(authUpdates).length > 0) {
+        console.log('Updating auth user...');
         const { error: authError } = await supabase.auth.updateUser(authUpdates);
         if (authError) {
+          if (authError.message.includes('JWT')) {
+            await logout();
+            return;
+          }
+          
           if (authError.message.includes('New password should be different from the old password')) {
             setProfileMessage({
               type: 'error',
@@ -430,6 +524,7 @@ const Portal: React.FC = () => {
       // Only make database call if there are changes to student fields
       if (Object.keys(studentUpdates).length > 0) {
         // Use targeted update to avoid RLS policy violations
+        console.log('Updating student profile...');
         const { data, error: profileError } = await supabase
           .from('students')
           .update(studentUpdates)
@@ -437,7 +532,13 @@ const Portal: React.FC = () => {
           .select()
           .single();
 
-        if (profileError) throw profileError;
+        if (profileError) {
+          if (profileError.message.includes('JWT')) {
+            await logout();
+            return;
+          }
+          throw profileError;
+        }
         
         // Update successful, use returned data
         updatedProfile = data;
@@ -448,6 +549,7 @@ const Portal: React.FC = () => {
 
       // Update local state
       setProfile(updatedProfile);
+      console.log('Profile updated successfully');
       setIsEditingProfile(false);
       setProfileMessage({
         type: 'success',
@@ -462,6 +564,11 @@ const Portal: React.FC = () => {
 
     } catch (error: any) {
       console.error('Error updating profile:', error);
+      
+      if (error.message?.includes('JWT')) {
+        await logout();
+        return;
+      }
       
       // Handle specific RLS error
       if (error.message?.includes('row-level security policy')) {
@@ -493,7 +600,8 @@ const Portal: React.FC = () => {
 
   const handleSignOut = async () => {
     try {
-      await signOut();
+      console.log('Signing out...');
+      await logout();
     } catch (error) {
       console.error('Sign out error:', error);
     }
@@ -501,6 +609,23 @@ const Portal: React.FC = () => {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  // Add session check on component mount
+  useEffect(() => {
+    const checkSession = async () => {
+      const session = await verifySession();
+      if (!session && !loading) {
+        navigate('/login', { replace: true });
+      }
+    };
+
+    checkSession();
+  }, [navigate, loading]);
       year: 'numeric',
       month: 'long',
       day: 'numeric'
