@@ -120,13 +120,13 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({
         const containerWidth = containerRef.current?.clientWidth || window.innerWidth - 100;
         const containerHeight = window.innerHeight - 200; // Leave room for header/footer
         
-// Determine whether we are in landscape (wider than tall)
-const isLandscape = containerWidth > containerHeight;
-
-// In landscape, scale to fit width; in portrait, scale to fit height
-const baseScale = isLandscape
-  ? Math.min((containerWidth - 40) / viewport.width, 3.0) // Bigger scale for landscape
-  : Math.min((containerHeight - 40) / viewport.height, 2.0);
+      // Determine whether we are in landscape (wider than tall)
+      const isLandscape = containerWidth > containerHeight;
+      
+      // In landscape, scale to fit width; in portrait, scale to fit height
+      const baseScale = isLandscape
+        ? Math.min((containerWidth - 40) / viewport.width, 3.0) // Bigger scale for landscape
+        : Math.min((containerHeight - 40) / viewport.height, 2.0);
         
         // Apply user zoom factor to base scale
         const finalScale = baseScale * scale;
