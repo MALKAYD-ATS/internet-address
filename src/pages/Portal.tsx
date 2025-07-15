@@ -358,6 +358,15 @@ const Portal: React.FC = () => {
                   className="h-8 w-auto"
                 />
               )}
+
+              <a
+  href="/"
+  className="hidden sm:inline-flex items-center space-x-1 px-3 py-2 text-sm text-gray-700 hover:text-blue-600 hover:bg-gray-100 rounded-lg transition-colors"
+>
+  <ChevronLeft className="w-4 h-4" />
+  <span>Back to Website</span>
+</a>
+
             </div>
 
             {/* User Menu */}
