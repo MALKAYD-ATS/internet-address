@@ -1007,7 +1007,7 @@ const handleSubmit = async (e: React.FormEvent) => {
               Subscribe to Our Newsletter
             </h2>
             <p className="text-gray-600 mb-6">
-              Stay updated with the latest rpas technology news, training opportunities, and industry insights.
+              Stay updated with the latest RPAS technology news, training opportunities, and industry insights.
             </p>
             
             {isNewsletterSubmitted ? (
