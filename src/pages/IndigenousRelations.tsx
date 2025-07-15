@@ -540,7 +540,7 @@ const IndigenousRelations: React.FC = () => {
                 Cultural Integration in Technology
               </h2>
               <p className="text-lg sm:text-xl text-white max-w-3xl mx-auto leading-relaxed bg-black/50 backdrop-blur-md rounded-lg p-4 shadow-2xl border border-white/20">
-                How we blend traditional Indigenous knowledge with modern drone technology 
+                How we blend traditional Indigenous knowledge with modern RPAS technology 
                 to create respectful and effective solutions.
               </p>
             </div>
