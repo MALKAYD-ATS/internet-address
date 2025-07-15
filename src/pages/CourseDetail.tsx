@@ -191,9 +191,10 @@ const CourseDetail: React.FC = () => {
 
 const generateCertificate = async () => {
   try {
+    console.log('Checking if certificate already exists...');
     // Check if certificate already exists
     const { data: existing, error: existingError } = await supabase
-      .from('student_certificates')
+      .from('certificates')
       .select('*')
       .eq('student_id', user.id)
       .eq('course_id', courseId)
@@ -208,24 +209,23 @@ const generateCertificate = async () => {
       throw existingError;
     }
 
-    // Insert certificate
-    const { error: insertError } = await supabase
-      .from('student_certificates')
-      .insert([
-        {
-          student_id: user.id,
-          course_id: courseId,
-          issued_at: new Date().toISOString(),
-          url: null // or a URL if you have a generated PDF
-        }
-      ]);
+    console.log('Generating certificate with Edge Function...');
+    // Call Edge Function
+    const { data, error } = await supabase.functions.invoke('generate-certificate', {
+      body: {
+        studentId: user.id,
+        studentName: user.user_metadata.full_name || user.email || 'Student',
+        courseId: courseId
+      }
+    });
 
-    if (insertError) {
-      console.error('Error inserting certificate:', insertError);
-      throw insertError;
+    if (error) {
+      console.error('Edge Function error:', error);
+      throw error;
     }
 
-    console.log('Certificate generated successfully!');
+    console.log('Certificate generation complete:', data);
+
   } catch (error) {
     console.error('Error generating certificate:', error);
   }
