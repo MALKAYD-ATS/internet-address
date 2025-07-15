@@ -978,7 +978,7 @@ const handleSubmit = async (e: React.FormEvent) => {
             Start Your RPAS Career Today
           </h2>
           <p className="text-xl text-blue-100 mb-8 max-w-3xl mx-auto">
-            Join hundreds of successful graduates who have launched their careers in the rapidly growing drone industry.
+            Join hundreds of successful graduates who have launched their careers in the rapidly growing RPAS industry.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
