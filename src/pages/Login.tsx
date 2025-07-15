@@ -229,7 +229,7 @@ const Login: React.FC = () => {
               Access Your Training Portal
             </h1>
             <p className="text-xl text-blue-100 mb-8 leading-relaxed">
-              Everything you need for professional drone certification and training in one easily accessible dashboard.
+              Everything you need for professional RPAS certification and training in one easily accessible dashboard.
             </p>
 
             {/* Features List */}
