@@ -767,7 +767,7 @@ const IndigenousRelations: React.FC = () => {
                 Join Us in Protecting Our Heritage
               </h2>
               <p className="text-lg sm:text-xl text-gray-600 mb-6 sm:mb-8 max-w-3xl mx-auto">
-                Learn how drone technology can serve your community while honoring Indigenous values 
+                Learn how RPAS technology can serve your community while honoring Indigenous values 
                 and protecting the environment for future generations.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
