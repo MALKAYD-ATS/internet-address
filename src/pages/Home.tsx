@@ -272,61 +272,55 @@ const Home: React.FC = () => {
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    try {
-      // Send email to majid@abtraining.ca
-      const emailData = {
-        to: 'majid@abtraining.ca',
-        subject: `New Contact Form Submission from ${formData.name}`,
-        body: `
-          Name: ${formData.name}
-          Email: ${formData.email}
-          Phone: ${formData.phone}
-          Newsletter: ${formData.newsletter ? 'Yes' : 'No'}
-          
-          Message:
-          ${formData.message}
-        `
-      };
-      
-      console.log('Email would be sent:', emailData);
-      
-      // Simulate email sending
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      setIsSubmitted(true);
-      
-      // Reset form after 3 seconds
-      setTimeout(() => {
-        setIsSubmitted(false);
-        setFormData({
-          name: '',
-          email: '',
-          phone: '',
-          message: '',
-          newsletter: false
-        });
-      }, 3000);
-    } catch (error) {
-      console.error('Error sending email:', error);
-      setIsSubmitted(true);
-      setTimeout(() => {
-        setIsSubmitted(false);
-        setFormData({
-          name: '',
-          email: '',
-          phone: '',
-          message: '',
-          newsletter: false
-        });
-      }, 3000);
-    } finally {
-      setIsSubmitting(false);
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsSubmitting(true);
+
+  try {
+    const { error } = await supabase.from("contact_messages").insert([
+      {
+        name: formData.name,
+        email: formData.email,
+        phone_number: formData.phone || null,
+        subscribe_to_newsletter: formData.newsletter,
+        message: formData.message
+      }
+    ]);
+
+    if (error) {
+      throw error;
     }
-  };
+
+    setIsSubmitted(true);
+
+    // Reset form after 3 seconds
+    setTimeout(() => {
+      setIsSubmitted(false);
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        message: '',
+        newsletter: false
+      });
+    }, 3000);
+  } catch (error) {
+    console.error('Error saving contact message:', error);
+    setIsSubmitted(true);
+    setTimeout(() => {
+      setIsSubmitted(false);
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        message: '',
+        newsletter: false
+      });
+    }, 3000);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
