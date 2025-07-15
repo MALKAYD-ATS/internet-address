@@ -281,11 +281,6 @@ const Training: React.FC = () => {
                         {course.title}
                       </h3>
 
-                      {/* Course Description */}
-                      <p className="text-gray-600 mb-4 flex-grow">
-                        {course.description}
-                      </p>
-
                       {/* Course Info */}
                       <div className="space-y-2 mb-6">
                         {course.duration && (
