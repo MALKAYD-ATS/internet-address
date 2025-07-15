@@ -89,7 +89,7 @@ const StudentDashboard: React.FC = () => {
     },
     {
       id: 2,
-      course: "Commercial Drone Operations",
+      course: "Commercial RPAS Operations",
       date: "April 5, 2024",
       time: "9:00 AM - 12:00 PM",
       location: "Edmonton Training Center",
