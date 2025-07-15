@@ -12,7 +12,7 @@ const Footer: React.FC = () => {
             <h3 className="text-lg font-semibold text-blue-400">Aboriginal Training Services</h3>
             <p className="text-gray-300 text-sm leading-relaxed">
               Keepers of the land, keepers of the data, and keepers of the environment. 
-              Professional drone training with Indigenous excellence and land and environmental stewardship.
+              Professional RPAS training with Indigenous excellence and land and environmental stewardship.
             </p>
             <div className="flex items-center space-x-3">
               <Plane className="h-5 w-5 text-blue-400 flex-shrink-0" />
