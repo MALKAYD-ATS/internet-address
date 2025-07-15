@@ -45,6 +45,14 @@ function App() {
             } 
           />
           <Route 
+            path="/course/:courseId" 
+            element={
+              <ProtectedRoute>
+                <CourseDetail />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
             path="/portal/practice-questions/:courseId" 
             element={
               <ProtectedRoute>
