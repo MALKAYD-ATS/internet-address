@@ -80,7 +80,7 @@ interface StudentCertificate {
   id: string;
   student_id: string;
   course_id: string;
-  certificate_url: string | null;
+  url: string | null;
   issued_at: string;
   course?: {
     title: string;
@@ -565,9 +565,9 @@ const Portal: React.FC = () => {
                         <p className="text-sm text-gray-500 mb-3">
                           Issued: {formatDate(certificate.issued_at)}
                         </p>
-                        {certificate.certificate_url && (
+                        {certificate.url && (
                           <a
-                            href={certificate.certificate_url}
+                            href={certificate.url}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-800 text-sm font-medium"
