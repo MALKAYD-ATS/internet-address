@@ -284,7 +284,7 @@ const PDFSlideViewer: React.FC<PDFSlideViewerProps> = ({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-90 flex flex-col z-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b px-4 py-3 flex items-center justify-between sticky top-0 z-20">
+<div className="fixed top-0 left-0 right-0 bg-white shadow-sm border-b px-4 py-3 flex items-center justify-between z-50">
         <div className="flex items-center">
           <h2 className="text-lg font-semibold text-gray-900 truncate mr-4">
             {lessonTitle}
