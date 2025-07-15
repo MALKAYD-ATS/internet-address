@@ -975,7 +975,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       <section className="py-20 bg-blue-900 text-white transform transition-all duration-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            Start Your Drone Career Today
+            Start Your RPAS Career Today
           </h2>
           <p className="text-xl text-blue-100 mb-8 max-w-3xl mx-auto">
             Join hundreds of successful graduates who have launched their careers in the rapidly growing drone industry.
