@@ -154,7 +154,7 @@ const Portal: React.FC = () => {
 
         // Fetch certificates
         const { data: certificateData, error: certificateError } = await supabase
-          .from('student_certificates')
+          .from('certificates')
           .select(`
             *,
             course:courses_ats(title, type)
