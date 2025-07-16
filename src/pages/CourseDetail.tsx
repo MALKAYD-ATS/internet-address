@@ -218,7 +218,7 @@ const generateCertificate = async () => {
     }
 
     console.log('Generating certificate with Edge Function...');
-    const { data, error } = await supabase.functions.invoke('generate-certificate', {
+    const { data: functionData, error: functionError } = await supabase.functions.invoke('generate-certificate', {
       body: {
         studentId: user.id,
         studentName: profile?.full_name || 'Student',
@@ -226,12 +226,12 @@ const generateCertificate = async () => {
       }
     });
 
-    if (error) {
-      console.error('Error invoking function:', error);
-      throw error;
+    if (functionError) {
+      console.error('Error invoking function:', functionError);
+      throw functionError;
     }
 
-    console.log('Certificate generated!', data);
+    console.log('Certificate generated!', functionData);
   } catch (error) {
     console.error('Error generating certificate:', error);
   }
