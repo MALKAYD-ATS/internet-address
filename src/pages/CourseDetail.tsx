@@ -214,7 +214,7 @@ const generateCertificate = async () => {
 const { data, error } = await supabase.functions.invoke('generate-certificate', {
   body: {
     studentId: user.id,
-    studentName: user.user_metadata.full_name || 'Student',
+    studentName: profile?.full_name || 'Student',
     courseId: courseId
   }
 });
