@@ -160,23 +160,24 @@ const CourseDetail: React.FC = () => {
     moduleId: null,
   });
 
-  useEffect(() => {
-    if (courseId) {
-      // Verify session before fetching data
-      const initializeData = async () => {
-        const session = await verifySession();
-        if (!session) {
-          navigate('/login', { replace: true });
-          return;
-        }
-        
-        fetchCourseData();
-        fetchModuleProgress();
-      };
-      
-      initializeData();
-    }
-  }, [courseId, user]);
+useEffect(() => {
+  if (courseId) {
+    // Verify session before fetching data
+    const initializeData = async () => {
+      const session = await verifySession();
+      if (!session) {
+        navigate('/login', { replace: true });
+        return;
+      }
+
+      fetchCourseData();
+      fetchModuleProgress();
+      fetchProfile(); // 👉 Add this line
+    };
+
+    initializeData();
+  }
+}, [courseId, user]);
 
   // Calculate course progress
   useEffect(() => {
