@@ -127,6 +127,13 @@ interface ModuleProgress {
   completed_at: string;
 }
 
+interface StudentProfile {
+  id: string;
+  full_name: string;
+  phone_number: string;
+  created_at: string;
+}
+
 const CourseDetail: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
