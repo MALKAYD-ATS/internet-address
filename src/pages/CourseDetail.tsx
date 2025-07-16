@@ -190,12 +190,12 @@ const CourseDetail: React.FC = () => {
     setCourseProgress(progress);
   }, [modules, moduleProgress]);
 
-  // Check for certificate eligibility when progress reaches 100%
-  useEffect(() => {
-    if (courseProgress === 100 && user && course) {
-      generateCertificate();
-    }
-  }, [courseProgress, user, course]);
+// Check for certificate eligibility when progress reaches 100%
+useEffect(() => {
+  if (courseProgress === 100 && user && course && profile) {
+    generateCertificate();
+  }
+}, [courseProgress, user, course, profile]);
 
 const generateCertificate = async () => {
   try {
