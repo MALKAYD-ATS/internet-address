@@ -143,6 +143,7 @@ const CourseDetail: React.FC = () => {
   const [moduleProgress, setModuleProgress] = useState<ModuleProgress[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [completingLesson, setCompletingLesson] = useState<string | null>(null);
   const [courseProgress, setCourseProgress] = useState(0);
   const [pdfViewer, setPdfViewer] = useState<{
