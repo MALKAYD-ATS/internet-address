@@ -218,6 +218,25 @@ const generateCertificate = async () => {
     }
 
     console.log('Generating certificate with Edge Function...');
+    const { data, error } = await supabase.functions.invoke('generate-certificate', {
+      body: {
+        studentId: user.id,
+        studentName: profile?.full_name || 'Student',
+        courseId: courseId
+      }
+    });
+
+    if (error) {
+      console.error('Error invoking function:', error);
+      throw error;
+    }
+
+    console.log('Certificate generated!', data);
+  } catch (error) {
+    console.error('Error generating certificate:', error);
+  }
+};
+
     // Call Edge Function
 const { data, error } = await supabase.functions.invoke('generate-certificate', {
   body: {
@@ -337,6 +356,30 @@ console.log('Certificate generated!', data);
     }
   };
 
+const fetchProfile = async () => {
+  if (!user) return;
+
+  try {
+    console.log('Fetching profile...');
+    const { data, error } = await supabase
+      .from('students')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching profile:', error);
+      return;
+    }
+
+    setProfile(data);
+    console.log('Profile loaded:', data);
+  } catch (err) {
+    console.error('Error fetching profile:', err);
+  }
+};
+
+  
   const isModuleCompleted = (moduleId: string): boolean => {
     return moduleProgress.some(progress => 
       progress.module_id === moduleId && progress.completed
