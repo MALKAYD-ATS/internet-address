@@ -220,8 +220,8 @@ const Training: React.FC = () => {
 
   const getFilteredStats = () => {
     const totalCourses = courses.length;
-    const regulationCourses = courses.filter(course => course.type === 'regulation').length;
-    const applicationCourses = courses.filter(course => course.type === 'application').length;
+    const regulationCourses = courses.filter(course => course.type === 'Regulation').length;
+    const applicationCourses = courses.filter(course => course.type === 'Application').length;
     
     return {
       total: totalCourses,
