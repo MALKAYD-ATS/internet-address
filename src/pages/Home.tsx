@@ -34,12 +34,21 @@ import StudentSuccessCarousel from '../components/StudentSuccessCarousel';
 
 // Icon mapping for dynamic icon rendering
 const iconMap: { [key: string]: React.ComponentType<any> } = {
+  // choose_ats symbols
   certificate: Award,
   airplane: Plane,
   cpu: Cpu,
   users: Users,
   triangle: Triangle,
   shield: Shield,
+
+  // drone_solutions symbols
+  award: Award,
+  building: Building,
+  target: Target,
+  briefcase: Building, // Lucide-react doesn't have Briefcase, use Building or find custom icon
+  lightbulb: Lightbulb,
+
   // fallback
   default: Award
 };
