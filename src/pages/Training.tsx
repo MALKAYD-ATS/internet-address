@@ -310,7 +310,7 @@ const Training: React.FC = () => {
             <div className="flex items-center justify-center mb-3">
               <Filter className="h-8 w-8 text-green-600" />
             </div>
-            <div className="text-2xl font-bold text-gray-900 mb-1">{stats.regulation}</div>
+            <div className="text-2xl font-bold text-gray-900 mb-1">{stats.Regulation}</div>
             <div className="text-sm text-gray-600">Regulation</div>
           </div>
           
