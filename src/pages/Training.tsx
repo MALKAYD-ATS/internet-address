@@ -225,7 +225,7 @@ const Training: React.FC = () => {
     
     return {
       total: totalCourses,
-      regulation: regulationCourses,
+      Regulation: RegulationCourses,
       application: applicationCourses,
       graduates: totalGraduates
     };
