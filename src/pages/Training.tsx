@@ -366,7 +366,7 @@ const Training: React.FC = () => {
                       {/* Course Type Badge */}
                       <div className="flex items-center justify-between mb-4">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          course.type === 'regulation' 
+                          course.type === 'Regulation' 
                             ? 'bg-blue-100 text-blue-800' 
                             : 'bg-green-100 text-green-800'
                         }`}>
