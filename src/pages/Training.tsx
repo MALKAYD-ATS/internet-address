@@ -69,6 +69,7 @@ const Training: React.FC = () => {
         .from('courses_ats')
         .select('*')
         .eq('is_active', true)
+        .eq('is_online', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
