@@ -104,7 +104,7 @@ BEGIN
     ('What is the primary advantage of online RPAS training?', 'Lower cost', 'Self-paced learning', 'No exams required', 'Shorter duration', 'B', 'Online training allows students to learn at their own pace and schedule.', course_uuid_3),
     ('How long is an RPAS certificate valid?', '1 year', '2 years', '5 years', '10 years', 'C', 'RPAS certificates are valid for 5 years from the date of issue.', course_uuid_3),
     ('What happens if you fail the RPAS exam?', 'Retake immediately', 'Wait 24 hours', 'Wait 30 days', 'Retake training', 'B', 'If you fail the RPAS exam, you must wait 24 hours before retaking it.', course_uuid_3),
-    ('Which organization regulates RPAS in Canada?', 'NAV CANADA', 'Transport Canada', 'Canadian Aviation Regulations', 'ICAO', 'B', 'Transport Canada is the regulation authority for RPAS operations in Canada.', course_uuid_3),
+    ('Which organization regulates RPAS in Canada?', 'NAV CANADA', 'Transport Canada', 'Canadian Aviation Regulations', 'ICAO', 'B', 'Transport Canada is the Regulation authority for RPAS operations in Canada.', course_uuid_3),
     ('What is the maximum takeoff weight for small RPAS?', '25 kg', '35 kg', '45 kg', '55 kg', 'A', 'Small RPAS category includes aircraft with maximum takeoff weight of 25 kg or less.', course_uuid_3),
     ('What documentation is required for RPAS registration?', 'Proof of purchase only', 'Owner information only', 'Both owner info and aircraft details', 'Insurance documents', 'C', 'RPAS registration requires both owner information and detailed aircraft specifications.', course_uuid_3);
   END IF;
