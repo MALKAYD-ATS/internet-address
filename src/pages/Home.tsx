@@ -55,10 +55,10 @@ const iconMap: { [key: string]: React.ComponentType<any> } = {
 
   // Where we are heading symbols
   users: Users,
-leaf: Leaf,
-zap: Zap,
-recycle: Recycle,
-rocket: Rocket,
+  leaf: Leaf,
+  zap: Zap,
+  recycle: Recycle,
+  rocket: Rocket,
 
 
   // fallback
