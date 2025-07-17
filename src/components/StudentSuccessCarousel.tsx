@@ -163,25 +163,17 @@ const StudentSuccessCarousel: React.FC<StudentSuccessCarouselProps> = ({ student
                   {/* Student Info */}
                   <div className="flex items-center mb-6">
                     <div className="flex-shrink-0 mr-4">
-                      {story.photo_url ? (
-                        <img
-                          src={story.photo_url}
-                          alt={`${story.name}'s photo`}
-                          className="w-16 h-16 rounded-full object-cover"
-                          onError={(e) => {
-                            // Replace with default avatar on error
-                            const target = e.currentTarget;
-                            const parent = target.parentElement;
-                            if (parent) {
-                              parent.innerHTML = '';
-                              const defaultAvatar = getDefaultAvatar(story.name);
-                              parent.appendChild(defaultAvatar);
-                            }
-                          }}
-                        />
-                      ) : (
-                        getDefaultAvatar(story.name)
-                      )}
+{!avatarFallback[index] && story.photo_url ? (
+  <img
+    src={story.photo_url}
+    alt={`${story.name}'s photo`}
+    className="w-16 h-16 rounded-full object-cover"
+    onError={() => setAvatarFallback(prev => ({ ...prev, [index]: true }))}
+  />
+) : (
+  getDefaultAvatar(story.name)
+)}
+
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-bold text-gray-900 text-lg mb-1">
