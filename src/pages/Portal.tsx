@@ -508,7 +508,7 @@ const Portal: React.FC = () => {
                         <div className="flex items-start justify-between mb-3">
                           <h3 className="font-semibold text-gray-900 text-sm">{course.title}</h3>
                           <span className={`px-2 py-1 text-xs rounded-full ${
-                            course.type === 'regulation' 
+                            course.type === 'Regulation' 
                               ? 'bg-blue-100 text-blue-800' 
                               : 'bg-green-100 text-green-800'
                           }`}>
