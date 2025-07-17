@@ -33,7 +33,6 @@ import GoogleReviewsCarousel from '../components/GoogleReviewsCarousel';
 import StudentSuccessCarousel from '../components/StudentSuccessCarousel';
 
 // Icon mapping for dynamic icon rendering
-// Icon mapping for dynamic icon rendering
 const iconMap: { [key: string]: React.ComponentType<any> } = {
   // choose_ats symbols
   certificate: Award,
