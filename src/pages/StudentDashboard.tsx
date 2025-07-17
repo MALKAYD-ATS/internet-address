@@ -227,8 +227,8 @@ const StudentDashboard: React.FC = () => {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
+        <div className="flex flex-wrap gap-4 sm:gap-6 mb-6 sm:mb-8">
+          <div className="w-full sm:w-[48%] md:w-[23%] bg-white rounded-xl shadow-lg p-4 sm:p-6">
             <div className="flex items-center">
               <BookOpen className="h-6 sm:h-8 w-6 sm:w-8 text-blue-600 mr-2 sm:mr-3" />
               <div>
@@ -238,7 +238,7 @@ const StudentDashboard: React.FC = () => {
             </div>
           </div>
           
-          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
+          <div className="w-full sm:w-[48%] md:w-[23%] bg-white rounded-xl shadow-lg p-4 sm:p-6">
             <div className="flex items-center">
               <CheckCircle className="h-6 sm:h-8 w-6 sm:w-8 text-green-600 mr-2 sm:mr-3" />
               <div>
@@ -248,7 +248,7 @@ const StudentDashboard: React.FC = () => {
             </div>
           </div>
           
-          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
+          <div className="w-full sm:w-[48%] md:w-[23%] bg-white rounded-xl shadow-lg p-4 sm:p-6">
             <div className="flex items-center">
               <Award className="h-6 sm:h-8 w-6 sm:w-8 text-yellow-600 mr-2 sm:mr-3" />
               <div>
@@ -258,7 +258,7 @@ const StudentDashboard: React.FC = () => {
             </div>
           </div>
           
-          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
+          <div className="w-full sm:w-[48%] md:w-[23%] bg-white rounded-xl shadow-lg p-4 sm:p-6">
             <div className="flex items-center">
               <User className="h-6 sm:h-8 w-6 sm:w-8 text-purple-600 mr-2 sm:mr-3" />
               <div>
