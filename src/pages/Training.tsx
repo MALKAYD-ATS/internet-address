@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Clock, Users, Calendar, DollarSign, BookOpen, Award, ChevronRight, Loader2 } from 'lucide-react';
+import { Clock, Users, Calendar, DollarSign, BookOpen, Award, ChevronRight, Loader2, Filter, GraduationCap } from 'lucide-react';
 
 interface Course {
   id: string;
@@ -33,13 +33,16 @@ interface Enrollment {
 
 const Training: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
+  const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedFilter, setSelectedFilter] = useState<'all' | 'regulation' | 'application'>('all');
   const [flippedCards, setFlippedCards] = useState<Set<string>>(new Set());
   const [courseDetails, setCourseDetails] = useState<Record<string, Course>>({});
   const [loadingDetails, setLoadingDetails] = useState<Set<string>>(new Set());
   const [registering, setRegistering] = useState<Set<string>>(new Set());
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [totalGraduates] = useState(247); // Mock data - replace with actual data from database
   
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -50,6 +53,15 @@ const Training: React.FC = () => {
       fetchEnrollments();
     }
   }, [user]);
+
+  // Filter courses when courses or selectedFilter changes
+  useEffect(() => {
+    if (selectedFilter === 'all') {
+      setFilteredCourses(courses);
+    } else {
+      setFilteredCourses(courses.filter(course => course.type === selectedFilter));
+    }
+  }, [courses, selectedFilter]);
 
   const fetchCourses = async () => {
     try {
@@ -206,6 +218,21 @@ const Training: React.FC = () => {
     });
   };
 
+  const getFilteredStats = () => {
+    const totalCourses = courses.length;
+    const regulationCourses = courses.filter(course => course.type === 'regulation').length;
+    const applicationCourses = courses.filter(course => course.type === 'application').length;
+    
+    return {
+      total: totalCourses,
+      regulation: regulationCourses,
+      application: applicationCourses,
+      graduates: totalGraduates
+    };
+  };
+
+  const stats = getFilteredStats();
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -228,6 +255,83 @@ const Training: React.FC = () => {
         </div>
       </div>
 
+      {/* Filter Toggle */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="flex items-center justify-center">
+            <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setSelectedFilter('all')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+                  selectedFilter === 'all'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                All Courses
+              </button>
+              <button
+                onClick={() => setSelectedFilter('regulation')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+                  selectedFilter === 'regulation'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                Regulation
+              </button>
+              <button
+                onClick={() => setSelectedFilter('application')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+                  selectedFilter === 'application'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                Application
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Information Cards */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-white rounded-lg shadow-sm p-6 text-center">
+            <div className="flex items-center justify-center mb-3">
+              <BookOpen className="h-8 w-8 text-blue-600" />
+            </div>
+            <div className="text-2xl font-bold text-gray-900 mb-1">{stats.total}</div>
+            <div className="text-sm text-gray-600">Total Courses</div>
+          </div>
+          
+          <div className="bg-white rounded-lg shadow-sm p-6 text-center">
+            <div className="flex items-center justify-center mb-3">
+              <Filter className="h-8 w-8 text-green-600" />
+            </div>
+            <div className="text-2xl font-bold text-gray-900 mb-1">{stats.regulation}</div>
+            <div className="text-sm text-gray-600">Regulation</div>
+          </div>
+          
+          <div className="bg-white rounded-lg shadow-sm p-6 text-center">
+            <div className="flex items-center justify-center mb-3">
+              <Award className="h-8 w-8 text-purple-600" />
+            </div>
+            <div className="text-2xl font-bold text-gray-900 mb-1">{stats.application}</div>
+            <div className="text-sm text-gray-600">Application</div>
+          </div>
+          
+          <div className="bg-white rounded-lg shadow-sm p-6 text-center">
+            <div className="flex items-center justify-center mb-3">
+              <GraduationCap className="h-8 w-8 text-yellow-600" />
+            </div>
+            <div className="text-2xl font-bold text-gray-900 mb-1">{stats.graduates}</div>
+            <div className="text-sm text-gray-600">Graduates</div>
+          </div>
+        </div>
+      </div>
+
       {/* Message Display */}
       {message && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -244,7 +348,7 @@ const Training: React.FC = () => {
       {/* Courses Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {courses.map((course) => {
+          {filteredCourses.map((course) => {
             const isFlipped = flippedCards.has(course.id);
             const details = courseDetails[course.id];
             const isLoadingDetails = loadingDetails.has(course.id);
@@ -464,11 +568,18 @@ const Training: React.FC = () => {
           })}
         </div>
 
-        {courses.length === 0 && (
+        {filteredCourses.length === 0 && !loading && (
           <div className="text-center py-12">
             <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No courses available</h3>
-            <p className="text-gray-500">Check back later for new training opportunities.</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              {selectedFilter === 'all' ? 'No courses available' : `No ${selectedFilter} courses available`}
+            </h3>
+            <p className="text-gray-500">
+              {selectedFilter === 'all' 
+                ? 'Check back later for new training opportunities.' 
+                : `Try selecting a different filter or check back later for new ${selectedFilter} courses.`
+              }
+            </p>
           </div>
         )}
       </div>
