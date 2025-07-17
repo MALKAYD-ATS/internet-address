@@ -271,7 +271,7 @@ const Training: React.FC = () => {
                 All Courses
               </button>
               <button
-                onClick={() => setSelectedFilter('regulation')}
+                onClick={() => setSelectedFilter('Regulation')}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
                   selectedFilter === 'regulation'
                     ? 'bg-blue-600 text-white shadow-sm'
