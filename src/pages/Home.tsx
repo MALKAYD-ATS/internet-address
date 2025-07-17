@@ -33,6 +33,7 @@ import GoogleReviewsCarousel from '../components/GoogleReviewsCarousel';
 import StudentSuccessCarousel from '../components/StudentSuccessCarousel';
 
 // Icon mapping for dynamic icon rendering
+// Icon mapping for dynamic icon rendering
 const iconMap: { [key: string]: React.ComponentType<any> } = {
   // choose_ats symbols
   certificate: Award,
@@ -46,8 +47,12 @@ const iconMap: { [key: string]: React.ComponentType<any> } = {
   award: Award,
   building: Building,
   target: Target,
-  briefcase: Building, // Lucide-react doesn't have Briefcase, use Building or find custom icon
+  briefcase: Building, // fallback used for corporate training
   lightbulb: Lightbulb,
+
+  // principles symbols
+  eye: Eye,
+  zap: Zap,
 
   // fallback
   default: Award
