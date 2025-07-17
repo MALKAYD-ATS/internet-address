@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import GoogleReviewsCarousel from '../components/GoogleReviewsCarousel';
+import StudentSuccessCarousel from '../components/StudentSuccessCarousel';
 
 // Icon mapping for dynamic icon rendering
 const iconMap: { [key: string]: React.ComponentType<any> } = {
@@ -939,35 +940,7 @@ const handleSubmit = async (e: React.FormEvent) => {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {studentStories.map((testimonial, index) => (
-              <div key={index} className="bg-white rounded-xl shadow-lg p-8 transform transition-all duration-500 hover:scale-105 hover:shadow-2xl">
-                <div className="flex items-center mb-6">
-                  <img
-                    src={testimonial.photo_url}
-                    alt={testimonial.name}
-                    className="h-16 w-16 rounded-full object-cover mr-4"
-                  />
-                  <div>
-                    <h3 className="font-bold text-gray-900 text-lg">{testimonial.name}</h3>
-                    <p className="text-blue-700 font-medium">{testimonial.position}</p>
-                    <p className="text-gray-600 text-sm">{testimonial.company}</p>
-                  </div>
-                </div>
-                
-                <div className="flex mb-4">
-                  {renderStars(testimonial.rating)}
-                </div>
-                
-                <div className="relative">
-                  <Quote className="absolute top-0 left-0 h-8 w-8 text-blue-200 -mt-2 -ml-2" />
-                  <p className="text-gray-700 italic leading-relaxed pl-6">
-                    {testimonial.text}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
+          <StudentSuccessCarousel studentStories={studentStories} />
         </div>
       </section>
 
