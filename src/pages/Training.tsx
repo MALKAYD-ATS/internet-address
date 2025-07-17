@@ -281,7 +281,7 @@ const Training: React.FC = () => {
                 Regulation
               </button>
               <button
-                onClick={() => setSelectedFilter('application')}
+                onClick={() => setSelectedFilter('Application')}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
                   selectedFilter === 'application'
                     ? 'bg-blue-600 text-white shadow-sm'
