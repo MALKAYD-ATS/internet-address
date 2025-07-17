@@ -209,6 +209,10 @@ const Training: React.FC = () => {
     return `${currency || 'USD'} $${price.toLocaleString()}`;
   };
 
+  const shouldShowPrice = (course: Course) => {
+    return course.is_online === true;
+  };
+
   const formatDate = (dateString: string) => {
     if (!dateString) return 'TBD';
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -405,7 +409,7 @@ const Training: React.FC = () => {
                             {formatDate(course.start_date)}
                           </div>
                         )}
-                        {course.price && (
+                        {course.price && shouldShowPrice(course) && (
                           <div className="flex items-center text-sm text-gray-500">
                             <DollarSign className="w-4 h-4 mr-2" />
                             {formatPrice(course.price, course.currency)}
@@ -508,7 +512,7 @@ const Training: React.FC = () => {
                             </div>
                           )}
 
-                          {details.price && (
+                          {details.price && shouldShowPrice(details) && (
                             <div>
                               <h4 className="font-medium text-gray-900 mb-1">Price</h4>
                               <p className="text-sm text-gray-600">{formatPrice(details.price, details.currency)}</p>
