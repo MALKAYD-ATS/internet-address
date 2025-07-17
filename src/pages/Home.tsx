@@ -34,23 +34,14 @@ import StudentSuccessCarousel from '../components/StudentSuccessCarousel';
 
 // Icon mapping for dynamic icon rendering
 const iconMap: { [key: string]: React.ComponentType<any> } = {
-  Award,
-  Shield,
-  Users,
-  Plane,
-  Triangle,
-  Cpu,
-  CheckCircle,
-  Eye,
-  Target,
-  Leaf,
-  Zap: Energy,
-  Recycle,
-  Rocket,
-  Globe,
-  Heart: Users, // fallback
-  Mountain,
-  Lightbulb
+  certificate: Award,
+  airplane: Plane,
+  cpu: Cpu,
+  users: Users,
+  triangle: Triangle,
+  shield: Shield,
+  // fallback
+  default: Award
 };
 
 // Interface definitions for database tables
