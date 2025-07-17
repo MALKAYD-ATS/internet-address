@@ -392,7 +392,7 @@ const Portal: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Navigation Tabs */}
         <div className="mb-8">
-          <nav className="flex space-x-8">
+          <nav className="flex flex-col sm:flex-row gap-4 sm:gap-8">
             {[
               { id: 'dashboard', label: 'Dashboard', icon: User },
               { id: 'courses', label: 'My Courses', icon: BookOpen },
@@ -402,7 +402,7 @@ const Portal: React.FC = () => {
               <button
                 key={id}
                 onClick={() => setActiveTab(id)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                className={`flex items-center justify-center sm:justify-start space-x-2 px-4 py-2 rounded-lg font-medium transition-colors w-full sm:w-auto ${
                   activeTab === id
                     ? 'bg-blue-100 text-blue-700 border-b-2 border-blue-700'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
