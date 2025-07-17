@@ -21,6 +21,8 @@ const StudentSuccessCarousel: React.FC<StudentSuccessCarouselProps> = ({ student
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoSliding, setIsAutoSliding] = useState(true);
   const [slidesPerView, setSlidesPerView] = useState(3);
+  const [avatarFallback, setAvatarFallback] = useState<{ [key: number]: boolean }>({});
+
 
   // Handle responsive slides per view
   useEffect(() => {
