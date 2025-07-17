@@ -418,7 +418,7 @@ const Portal: React.FC = () => {
         {/* Tab Content */}
         {activeTab === 'dashboard' && (
           <div className="space-y-6">
-            {/* Welcome Section */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
             <div className="bg-white rounded-lg shadow p-6">
               <h1 className="text-2xl font-bold text-gray-900 mb-2">
                 Welcome back, {profile.full_name}!
@@ -502,23 +502,23 @@ const Portal: React.FC = () => {
               </div>
               <div className="p-6">
                 {enrolledCourses.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                     {enrolledCourses.map((course) => (
-                      <div key={course.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <div key={course.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow min-w-0">
                         <div className="flex items-start justify-between mb-3">
-                          <h3 className="font-semibold text-gray-900 text-sm">{course.title}</h3>
+                          <h3 className="font-semibold text-gray-900 text-sm break-words min-w-0 flex-1 mr-2">{course.title}</h3>
                           <span className={`px-2 py-1 text-xs rounded-full ${
                             course.type === 'Regulation' 
                               ? 'bg-blue-100 text-blue-800' 
                               : 'bg-green-100 text-green-800'
-                          }`}>
+                          } flex-shrink-0`}>
                             {course.type}
                           </span>
                         </div>
-                        <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                        <p className="text-gray-600 text-sm mb-3 break-words">
                           {course.description}
                         </p>
-                        <div className="flex items-center justify-between text-sm">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm gap-2">
                           <span className="text-gray-500">
                             Duration: {course.duration}
                           </span>
@@ -557,19 +557,19 @@ const Portal: React.FC = () => {
               </div>
               <div className="p-6">
                 {certificates.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                     {certificates.map((certificate) => (
-                      <div key={certificate.id} className="border border-gray-200 rounded-lg p-4">
+                      <div key={certificate.id} className="border border-gray-200 rounded-lg p-4 min-w-0">
                         <div className="flex items-start justify-between mb-3">
-                          <div>
-                            <h3 className="font-semibold text-gray-900">
+                          <div className="min-w-0 flex-1 mr-2">
+                            <h3 className="font-semibold text-gray-900 break-words">
                               {certificate.course?.title || 'Certificate'}
                             </h3>
                             <p className="text-sm text-gray-600">
                               {certificate.course?.type}
                             </p>
                           </div>
-                          <Award className="w-6 h-6 text-yellow-500" />
+                          <Award className="w-6 h-6 text-yellow-500 flex-shrink-0" />
                         </div>
                         <p className="text-sm text-gray-500 mb-3">
                           Issued: {formatDate(certificate.issued_at)}
@@ -665,12 +665,12 @@ const Portal: React.FC = () => {
                 <div className="space-y-4">
                   {/* Student ID - Read Only */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       Student ID
                     </label>
-                    <div className="flex items-center space-x-2">
-                      <User className="w-5 h-5 text-gray-400" />
-                      <span className="text-gray-900 font-mono bg-gray-50 px-3 py-2 rounded border">
+                    <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+                      <User className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                      <span className="text-gray-900 font-mono bg-gray-50 px-3 py-2 rounded border break-all min-w-0">
                         {profile.id}
                       </span>
                       <span className="text-xs text-gray-500">(Read-only)</span>
@@ -679,63 +679,63 @@ const Portal: React.FC = () => {
 
                   {/* Full Name - Editable */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       Full Name
                     </label>
                     {isEditing ? (
-                      <div className="flex items-center space-x-2">
-                        <User className="w-5 h-5 text-gray-400" />
+                      <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+                        <User className="w-5 h-5 text-gray-400 flex-shrink-0" />
                         <input
                           type="text"
                           name="full_name"
                           value={editingProfile.full_name}
                           onChange={handleInputChange}
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          className="w-full sm:flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-0"
                           placeholder="Enter your full name"
                           required
                         />
                       </div>
                     ) : (
-                      <div className="flex items-center space-x-2">
-                        <User className="w-5 h-5 text-gray-400" />
-                        <span className="text-gray-900">{profile.full_name}</span>
+                      <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+                        <User className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                        <span className="text-gray-900 break-words min-w-0">{profile.full_name}</span>
                       </div>
                     )}
                   </div>
                   
                   {/* Email - Read Only (managed by Supabase Auth) */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       Email
                     </label>
-                    <div className="flex items-center space-x-2">
-                      <Mail className="w-5 h-5 text-gray-400" />
-                      <span className="text-gray-900">{user?.email}</span>
+                    <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+                      <Mail className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                      <span className="text-gray-900 break-all min-w-0">{user?.email}</span>
                       <span className="text-xs text-gray-500">(Managed by account settings)</span>
                     </div>
                   </div>
 
                   {/* Phone Number - Editable */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       Phone Number
                     </label>
                     {isEditing ? (
-                      <div className="flex items-center space-x-2">
-                        <Phone className="w-5 h-5 text-gray-400" />
+                      <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+                        <Phone className="w-5 h-5 text-gray-400 flex-shrink-0" />
                         <input
                           type="tel"
                           name="phone_number"
                           value={editingProfile.phone_number}
                           onChange={handleInputChange}
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          className="w-full sm:flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-0"
                           placeholder="Enter your phone number (optional)"
                         />
                       </div>
                     ) : (
-                      <div className="flex items-center space-x-2">
-                        <Phone className="w-5 h-5 text-gray-400" />
-                        <span className="text-gray-900">
+                      <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+                        <Phone className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                        <span className="text-gray-900 break-words min-w-0">
                           {profile.phone_number || 'Not provided'}
                         </span>
                       </div>
@@ -744,11 +744,11 @@ const Portal: React.FC = () => {
 
                   {/* Member Since - Read Only */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       Member Since
                     </label>
-                    <div className="flex items-center space-x-2">
-                      <Calendar className="w-5 h-5 text-gray-400" />
+                    <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+                      <Calendar className="w-5 h-5 text-gray-400 flex-shrink-0" />
                       <span className="text-gray-900">{formatDate(profile.created_at)}</span>
                     </div>
                   </div>
