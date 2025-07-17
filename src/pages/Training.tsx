@@ -36,7 +36,7 @@ const Training: React.FC = () => {
   const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedFilter, setSelectedFilter] = useState<'all' | 'regulation' | 'application'>('all');
+  const [selectedFilter, setSelectedFilter] = useState<'all' | 'Regulation' | 'Application'>('all');
   const [flippedCards, setFlippedCards] = useState<Set<string>>(new Set());
   const [courseDetails, setCourseDetails] = useState<Record<string, Course>>({});
   const [loadingDetails, setLoadingDetails] = useState<Set<string>>(new Set());
