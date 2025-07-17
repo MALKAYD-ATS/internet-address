@@ -360,12 +360,12 @@ const Portal: React.FC = () => {
               )}
 
               <a
-  href="/"
-  className="hidden sm:inline-flex items-center space-x-1 px-3 py-2 text-sm text-gray-700 hover:text-blue-600 hover:bg-gray-100 rounded-lg transition-colors"
->
-  <ChevronLeft className="w-4 h-4" />
-  <span>Back to Website</span>
-</a>
+                href="/"
+                className="hidden sm:inline-flex items-center space-x-1 px-3 py-2 text-sm text-gray-700 hover:text-blue-600 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                <span>Back to Website</span>
+              </a>
 
             </div>
 
@@ -418,77 +418,78 @@ const Portal: React.FC = () => {
         {/* Tab Content */}
         {activeTab === 'dashboard' && (
           <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                Welcome back, {profile.full_name}!
-              </h1>
-              <p className="text-gray-600">
-                Member since {formatDate(profile.created_at)}
-              </p>
-            </div>
-
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
               <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-center">
-                  <BookOpen className="w-8 h-8 text-blue-600" />
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Enrolled Courses</p>
-                    <p className="text-2xl font-bold text-gray-900">{enrollments.length}</p>
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                  Welcome back, {profile.full_name}!
+                </h1>
+                <p className="text-gray-600">
+                  Member since {formatDate(profile.created_at)}
+                </p>
+              </div>
+
+              {/* Stats Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-white rounded-lg shadow p-6">
+                  <div className="flex items-center">
+                    <BookOpen className="w-8 h-8 text-blue-600" />
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-600">Enrolled Courses</p>
+                      <p className="text-2xl font-bold text-gray-900">{enrollments.length}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg shadow p-6">
+                  <div className="flex items-center">
+                    <Award className="w-8 h-8 text-green-600" />
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-600">Certificates</p>
+                      <p className="text-2xl font-bold text-gray-900">{certificates.length}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg shadow p-6">
+                  <div className="flex items-center">
+                    <Clock className="w-8 h-8 text-orange-600" />
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-600">In Progress</p>
+                      <p className="text-2xl font-bold text-gray-900">{enrollments.length}</p>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-center">
-                  <Award className="w-8 h-8 text-green-600" />
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Certificates</p>
-                    <p className="text-2xl font-bold text-gray-900">{certificates.length}</p>
-                  </div>
+              {/* Recent Activity */}
+              <div className="bg-white rounded-lg shadow">
+                <div className="p-6 border-b border-gray-200">
+                  <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
                 </div>
-              </div>
-
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-center">
-                  <Clock className="w-8 h-8 text-orange-600" />
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">In Progress</p>
-                    <p className="text-2xl font-bold text-gray-900">{enrollments.length}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Recent Activity */}
-            <div className="bg-white rounded-lg shadow">
-              <div className="p-6 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
-              </div>
-              <div className="p-6">
-                {enrollments.length > 0 ? (
-                  <div className="space-y-4">
-                    {enrollments.slice(0, 3).map((enrollment) => {
-                      const course = courses.find(c => c.id.toString() === enrollment.course_id);
-                      return (
-                        <div key={enrollment.id} className="flex items-center space-x-4">
-                          <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">
-                              Enrolled in {course?.title || 'Unknown Course'}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {formatDate(enrollment.enrolled_at)}
-                            </p>
+                <div className="p-6">
+                  {enrollments.length > 0 ? (
+                    <div className="space-y-4">
+                      {enrollments.slice(0, 3).map((enrollment) => {
+                        const course = courses.find(c => c.id.toString() === enrollment.course_id);
+                        return (
+                          <div key={enrollment.id} className="flex items-center space-x-4">
+                            <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">
+                                Enrolled in {course?.title || 'Unknown Course'}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {formatDate(enrollment.enrolled_at)}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="text-gray-500">No recent activity</p>
-                )}
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">No recent activity</p>
+                  )}
+                </div>
               </div>
             </div>
           </div>
