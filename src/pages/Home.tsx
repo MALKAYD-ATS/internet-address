@@ -240,10 +240,10 @@ const Home: React.FC = () => {
   }, []);
 
   // Helper function to render icons dynamically
-  const renderIcon = (iconName: string, className: string = "h-8 w-8") => {
-    const IconComponent = iconMap[iconName] || Award; // fallback to Award icon
-    return <IconComponent className={className} />;
-  };
+const renderIcon = (iconName: string, className: string = "h-8 w-8") => {
+  const IconComponent = iconMap[iconName] || iconMap.default;
+  return <IconComponent className={className} />;
+};
 
   // Helper function to toggle principle flip state
   const togglePrincipleFlip = (title: string) => {
