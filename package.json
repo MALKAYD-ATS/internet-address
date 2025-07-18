@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://MALKAYD-ATS.github.io/internet-address",
+  "homepage": "https://malkayd-ats.github.io/internet-address",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
