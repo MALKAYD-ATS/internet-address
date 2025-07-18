@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route } from 'react-router-dom'; // 🔄 Use HashRouter
 import { AuthProvider } from './contexts/AuthContext';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -18,16 +18,11 @@ function App() {
     <AuthProvider>
       <Router>
         <Routes>
-          {/* Public routes with layout */}
           <Route path="/" element={<Layout><Home /></Layout>} />
           <Route path="/training" element={<Layout><Training /></Layout>} />
           <Route path="/indigenous-relations" element={<Layout><IndigenousRelations /></Layout>} />
           <Route path="/dashboard" element={<Layout><StudentDashboard /></Layout>} />
-          
-          {/* Login page without layout */}
           <Route path="/login" element={<Login />} />
-          
-          {/* Protected portal routes without main layout */}
           <Route 
             path="/portal" 
             element={
